@@ -1,0 +1,7 @@
+[package]
+name = "hodos"
+version = "0.1.0"
+edition = "2024"
+authors = ["Victor Fouquet <victor.fouquet@gmail.com>"]
+description = "A crate for building dynamic and policy driven graph traversals"
+license = "MIT"
