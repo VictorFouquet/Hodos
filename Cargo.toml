@@ -5,3 +5,4 @@ edition = "2024"
 authors = ["Victor Fouquet <victor.fouquet@gmail.com>"]
 description = "A crate for building dynamic and policy driven graph traversals"
 license = "MIT"
+repository = "https://github.com/VictorFouquet/Hodos"
