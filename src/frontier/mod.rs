@@ -25,11 +25,12 @@ pub trait Frontier {
     /// # Arguments
     ///
     /// * `node` - Optional reference to the node to add
+    /// * `cost` - Optional cost to handle priority
     ///
     /// # Returns
     ///
     /// `true` if the node was added, `false` if rejected (duplicate/None)
-    fn push(&mut self, node: Option<&Self::DataType>) -> bool;
+    fn push(&mut self, node: Option<&Self::DataType>, cost: Option<f64>) -> bool;
 
     /// Removes and returns the next node ID to visit.
     ///
