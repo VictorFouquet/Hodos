@@ -1,0 +1,32 @@
+use crate::graph::Edge;
+
+/// A weighted edge connecting two nodes.
+///
+/// Represents a directional connection between nodes with a given cost.
+/// Suitable for algorithms like Dijkstra and A* when cost influences priority.
+///
+/// # Examples
+///
+/// ```
+/// use hodos::preset::edges::WeightedEdge;
+/// use hodos::graph::Edge;
+///
+/// let edge = WeightedEdge::new(0, 1, Some(5.0));
+/// assert_eq!(edge.from(), 0);
+/// assert_eq!(edge.to(), 1);
+/// assert_eq!(edge.cost(), 5.0);
+/// ```
+pub struct WeightedEdge {
+    to: u32,
+    from: u32,
+    cost: f64,
+}
+
+impl Edge for WeightedEdge {
+    fn new(from: u32, to: u32, cost: Option<f64>) -> Self {
+        WeightedEdge { from: from, to: to, cost: cost.unwrap_or(1.0) }
+    }
+    fn to(&self) -> u32 { self.to }
+    fn from(&self) -> u32 { self.from }
+    fn cost(&self) -> f64 { self.cost }
+}
