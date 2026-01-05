@@ -2,7 +2,7 @@ use crate::graph::Edge;
 use crate::graph::Node;
 use crate::preset::nodes::empty_node::EmptyNode;
 use crate::preset::edges::unweighted_edge::UnweightedEdge;
-use crate::strategies::Sampler;
+use crate::strategy::Sampler;
 
 /// Samples a graph from an adjacency list representation.
 ///
