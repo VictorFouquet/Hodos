@@ -1,8 +1,10 @@
 pub mod queue;
 pub mod stack;
+pub mod min_heap;
 
 pub use queue::Queue;
 pub use stack::Stack;
+pub use min_heap::MinHeap;
 
 
 /// A strategy for managing which nodes to explore next during graph traversal.
