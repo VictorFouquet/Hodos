@@ -10,29 +10,18 @@ pub use min_heap::MinHeap;
 /// A strategy for managing which nodes to explore next during graph traversal.
 ///
 /// Frontiers determine the order in which nodes are visited. Different implementations
-/// produce different traversal behaviors (BFS with Queue, DFS with Stack, etc.).
-///
-/// # Type Parameters
-///
-/// The `DataType` associated type specifies the node type this frontier works with.
+/// can be used to match predefined search algorith (BFS, DFS, Dijkstra...)
 pub trait Frontier {
-    /// The type of nodes this frontier manages
-    type DataType;
-
     /// Creates a new empty frontier.
     fn new() -> Self where Self: Sized;
 
-    /// Attempts to add a node to the frontier.
+    /// Adds a node to the frontier.
     ///
     /// # Arguments
     ///
-    /// * `node` - Optional reference to the node to add
+    /// * `id`   - Id of the node to add
     /// * `cost` - Optional cost to handle priority
-    ///
-    /// # Returns
-    ///
-    /// `true` if the node was added, `false` if rejected (duplicate/None)
-    fn push(&mut self, node: Option<&Self::DataType>, cost: Option<f64>) -> bool;
+    fn push(&mut self, id: u32, cost: Option<f64>);
 
     /// Removes and returns the next node ID to visit.
     ///

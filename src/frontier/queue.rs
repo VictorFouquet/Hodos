@@ -1,55 +1,31 @@
 use super::Frontier;
-use crate::graph::Node;
-use std::{collections::{HashSet, VecDeque}, marker::PhantomData};
+use std::collections::VecDeque;
 
 /// A FIFO (First-In-First-Out) frontier implementation for graph traversal.
-///
-/// `Queue` processes nodes in breadth-first order, visiting all nodes at depth N
-/// before moving to depth N+1. Automatically tracks visited nodes to prevent cycles.
-///
-/// # Type Parameters
-///
-/// * `T` - The node type, must implement `Node`
-pub struct Queue<T> {
-    pub opened: VecDeque<u32>,
-    pub visited: HashSet<u32>,
-    _node_data: PhantomData<T>
+pub struct Queue {
+    pub data: VecDeque<u32>,
 }
 
-
-impl<T: Node> Frontier for Queue<T> {
-    type DataType = T;
-
+impl Frontier for Queue {
     fn new() -> Self {
-        Queue::<T> {
-            opened:     VecDeque::new(),
-            visited:    HashSet::new(),
-            _node_data: PhantomData,
+        Queue {
+            data: VecDeque::new(),
         }
     }
 
-    fn push(&mut self, node: Option<&T>, _cost: Option<f64>) -> bool
+    fn push(&mut self, id: u32, _cost: Option<f64>)
     {
-        if let Some(node) = node {
-            let id = node.id();
-    
-            if !self.visited.contains(&id) {
-                self.opened.push_back(id);
-                self.visited.insert(id);
-                return true;
-            }
-        }
-        false
+        self.data.push_back(id);
     }
 
     fn pop(&mut self) -> Option<u32>
     {
-        self.opened.pop_front()
+        self.data.pop_front()
     }
 
     fn is_empty(&self) -> bool
     {
-        self.opened.is_empty()
+        self.data.is_empty()
     }
 }
 
@@ -59,77 +35,46 @@ mod tests {
     use super::*;
     use crate::graph::Node;
 
-    #[derive(Debug, PartialEq)]
-    struct TestNode {
-        id: u32,
-        data: (),
-    }
-
-    impl Node for TestNode {
-        type Data = ();
-        
-        fn new(data: Self::Data) -> Self {
-            TestNode { id: 0, data }
-        }
-        
-        fn id(&self) -> u32 {
-            self.id
-        }
-        
-        fn data(&mut self) -> &mut Self::Data {
-            &mut self.data
-        }
-    }
-
     #[test]
     fn test_queue_new_should_be_empty() {
-        let queue = Queue::<TestNode>::new();
+        let queue = Queue::new();
         assert!(queue.is_empty());
     }
 
     #[test]
     fn test_queue_push_should_add_value_id() {
-        let mut queue = Queue::<TestNode>::new();
-        let node = TestNode { id: 0, data: () };
+        let mut queue = Queue::new();
+        let id = 0;
         
-        assert!(queue.push(Some(&node), None));
+        queue.push(id, None);
         assert!(!queue.is_empty());
-        assert_eq!(queue.pop(), Some(0));
+        assert_eq!(queue.pop(), Some(id));
     }
 
     #[test]
     fn test_queue_pop_should_follow_insertion_order() {
-        let mut queue = Queue::<TestNode>::new();
-        let node0 = TestNode { id: 0, data: () };
-        let node1 = TestNode { id: 1, data: () };
+        let mut queue = Queue::new();
+        let id0 = 0;
+        let id1 = 1;
         
-        assert!(queue.push(Some(&node0), None));
-        assert!(queue.push(Some(&node1), None));
+        queue.push(id0, None);
+        queue.push(id1, None);
 
         assert!(!queue.is_empty());
 
-        assert_eq!(queue.pop(), Some(0));
-        assert_eq!(queue.pop(), Some(1));
+        assert_eq!(queue.pop(), Some(id0));
+        assert_eq!(queue.pop(), Some(id1));
     }
 
     #[test]
     fn test_queue_pop_should_empty_the_queue_if_it_contains_a_single_element() {
-        let mut queue = Queue::<TestNode>::new();
-        let node = TestNode { id: 0, data: () };
+        let mut queue = Queue::new();
+        let id = 0;
         
-        assert!(queue.push(Some(&node), None));
+        queue.push(id, None);
         assert!(!queue.is_empty());
 
-        assert_eq!(queue.pop(), Some(0));
+        assert_eq!(queue.pop(), Some(id));
         assert!(queue.is_empty());
-    }
-
-    #[test]
-    fn test_queue_push_shoud_not_allow_no_duplicates() {
-        let mut queue = Queue::<TestNode>::new();
-        let node = TestNode { id: 42, data: () };
-        
-        assert!(queue.push(Some(&node), None));
-        assert!(!queue.push(Some(&node), None));
     }
 }
