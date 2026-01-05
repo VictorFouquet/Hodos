@@ -56,7 +56,6 @@ impl Ord for MinHeapItem {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::Node;
 
     #[test]
     fn test_min_heap_new_should_be_empty() {

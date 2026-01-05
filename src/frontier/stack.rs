@@ -32,7 +32,6 @@ impl Frontier for Stack {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::Node;
 
     #[test]
     fn test_stack_new_should_be_empty() {

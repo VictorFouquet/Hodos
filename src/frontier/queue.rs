@@ -33,7 +33,6 @@ impl Frontier for Queue {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::Node;
 
     #[test]
     fn test_queue_new_should_be_empty() {
