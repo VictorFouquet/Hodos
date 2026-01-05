@@ -21,31 +21,17 @@ pub trait Authorize<Ctx> {
 
 /// A policy for determining when graph traversal should terminate.
 ///
-/// Termination policies define both success conditions (goal reached) and
-/// exhaustion conditions (no more nodes to explore).
-pub trait Terminate<Ctx> {
-    type Entity: Node;
-
-    /// Checks if the traversal goal has been reached.
+/// Termination policies can be composed to handle target-reached based stop,
+/// budget-based stop, or any other business rule setting the end of the traversal.
+pub trait Terminate {
+    /// Checks if the traversal should stop.
     ///
     /// # Arguments
     ///
-    /// * `entity` - The current entity being evaluated
-    /// * `context` - Contextual information for the decision
+    /// * `context` - The current visited node, a number of iteration...
     ///
     /// # Returns
     ///
-    /// `true` if the goal is satisfied, `false` otherwise
-    fn is_solved(&self, entity: &Self::Entity, context: &Ctx) -> bool;
-
-    /// Checks if traversal has been exhausted without finding a solution.
-    ///
-    /// # Arguments
-    ///
-    /// * `context` - Contextual information for the decision
-    ///
-    /// # Returns
-    ///
-    /// `true` if no more exploration is possible, `false` otherwise
-    fn is_exhausted(&self, context: &Ctx) -> bool;
+    /// `true` if the exploration should stop, `false` otherwise
+    fn stop(&self, context: Option<u32>) -> bool;
 }
