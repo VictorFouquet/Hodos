@@ -30,7 +30,7 @@ pub trait Visitor<Ctx> {
     ///
     /// * `node_id` - The start node index
     /// * `context` - Contextual information available during traversal
-    fn init_cost(&self, node_id: u32, context: &Ctx) -> f64 { 0.0 }
+    fn init_cost(&self, _node_id: u32, _context: &Ctx) -> f64 { 0.0 }
 
     /// Computes global exploration cost to reach a given node.
     ///
@@ -41,7 +41,7 @@ pub trait Visitor<Ctx> {
     /// * `from`    - The connection's source node id
     /// * `to`      - The connection's target node id
     /// * `context` - Contextual information available during traversal
-    fn exploration_cost(&self, from: u32, to: u32, context: &Ctx) -> f64 { 1.0 }
+    fn exploration_cost(&self, _from: u32, _to: u32, _context: &Ctx) -> f64 { 1.0 }
 
     /// Determines if a connection should be explored.
     ///

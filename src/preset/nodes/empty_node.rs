@@ -22,7 +22,7 @@ pub struct EmptyNode {
 impl Node for EmptyNode {
     type Data = ();
 
-    fn new(id: u32, data: Self::Data) -> Self { EmptyNode { id } }
+    fn new(id: u32, _data: Self::Data) -> Self { EmptyNode { id } }
     fn id(&self) -> u32 { self.id }
     fn data(&mut self) -> Option<&mut Self::Data> { None }
 }
