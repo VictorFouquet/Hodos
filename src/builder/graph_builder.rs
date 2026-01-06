@@ -92,12 +92,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
     use super::*;
     use crate::graph::Edge;
     use crate::graph::Node;
-    use crate::preset::nodes::empty_node::EmptyNode;
-    use crate::preset::edges::unweighted_edge::UnweightedEdge;
     use crate::strategy::Sampler;
 
     #[test]
@@ -196,16 +193,6 @@ mod tests {
             self.count += 1;
             res
         }
-    }
-
-    #[derive(Default)]
-    pub struct MockUniqueNode {
-        added: HashSet<u32>
-    }
-
-    #[derive(Default)]
-    pub struct MockUniqueEdge {
-        added: HashSet<(u32, u32)>
     }
 
     #[derive(Default)]
