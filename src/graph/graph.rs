@@ -47,6 +47,11 @@ where
         self.nodes.insert(node.id(), node);
     }
 
+    /// Gets all nodes of the graph.
+    pub fn get_nodes(&self) -> Vec<&TNode> {
+        self.nodes.values().collect()
+    }
+
     /// Adds a directed edge to the graph.
     ///
     /// The edge is added to the source node's adjacency list. If the source
@@ -63,6 +68,11 @@ where
             .entry(from)
             .or_insert_with(Vec::new)
             .push(edge);
+    }
+
+    /// Gets all nodes of the graph.
+    pub fn get_edges(&self) -> Vec<&TEdge> {
+        self.edges.values().flatten().collect()
     }
 
     /// Traverses the graph using pluggable exploration strategies.
