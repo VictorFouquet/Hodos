@@ -2,23 +2,51 @@ use std::collections::HashSet;
 use crate::policy::Authorize;
 use crate::graph::{Edge, Node};
 
+/// Authorization policy that ensures each node is added only once.
+///
+/// Tracks node IDs in a HashSet and rejects duplicate additions. Useful for
+/// preventing redundant nodes during graph construction.
 #[derive(Debug, Default)]
 pub struct UniqueNode {
     added: HashSet<u32>
 }
 
 impl<Entity: Node, Ctx> Authorize<Entity, Ctx> for UniqueNode {
+    /// Authorizes a node if its ID hasn't been seen before.
+    ///
+    /// # Arguments
+    ///
+    /// * `entity` - The node to authorize
+    /// * `_context` - Context (unused for this policy)
+    ///
+    /// # Returns
+    ///
+    /// `true` if this is the first time seeing this node ID, `false` otherwise
     fn add(&mut self, entity: &Entity, _context: &Ctx) -> bool {
         self.added.insert(entity.id())
     }
 }
 
+/// Authorization policy that ensures each edge is added only once.
+///
+/// Tracks edge pairs (from, to) in a HashSet and rejects duplicate additions.
+/// Treats edges as directed - (0→1) is different from (1→0).
 #[derive(Debug, Default)]
 pub struct UniqueUnweightedEdge {
     added: HashSet<(u32, u32)>
 }
 
 impl<Entity: Edge, Ctx> Authorize<Entity, Ctx> for UniqueUnweightedEdge {
+    /// Authorizes an edge if this (from, to) pair hasn't been seen before.
+    ///
+    /// # Arguments
+    ///
+    /// * `entity` - The edge to authorize
+    /// * `_context` - Context (unused for this policy)
+    ///
+    /// # Returns
+    ///
+    /// `true` if this is the first time seeing this edge pair, `false` otherwise
     fn add(&mut self, entity: &Entity, _context: &Ctx) -> bool {
         self.added.insert((entity.from(), entity.to()))
     }
