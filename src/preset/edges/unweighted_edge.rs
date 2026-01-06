@@ -2,7 +2,7 @@ use crate::graph::Edge;
 
 /// An unweighted edge connecting two nodes.
 ///
-/// Represents a bidirectional connection between nodes with unit cost (1.0).
+/// Represents a bidirectional connection between nodes with unit weight (1.0).
 /// Suitable for algorithms like BFS and DFS where edge weights are irrelevant.
 ///
 /// # Examples
@@ -14,7 +14,7 @@ use crate::graph::Edge;
 /// let edge = UnweightedEdge::new(0, 1, None);
 /// assert_eq!(edge.from(), 0);
 /// assert_eq!(edge.to(), 1);
-/// assert_eq!(edge.weight(), 1.0);  // Default unit cost
+/// assert_eq!(edge.weight(), 1.0);  // Default unit weight
 /// ```
 pub struct UnweightedEdge {
     to: u32,
@@ -22,7 +22,7 @@ pub struct UnweightedEdge {
 }
 
 impl Edge for UnweightedEdge {
-    fn new(from: u32, to: u32, _cost: Option<f64>) -> Self {
+    fn new(from: u32, to: u32, _weight: Option<f64>) -> Self {
         UnweightedEdge { from: from, to: to }
     }
     fn to(&self) -> u32 { self.to }

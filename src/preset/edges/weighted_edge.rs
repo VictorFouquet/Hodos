@@ -2,8 +2,8 @@ use crate::graph::Edge;
 
 /// A weighted edge connecting two nodes.
 ///
-/// Represents a directional connection between nodes with a given cost.
-/// Suitable for algorithms like Dijkstra and A* when cost influences priority.
+/// Represents a directional connection between nodes with a given weight.
+/// Suitable for algorithms like Dijkstra and A* when weight influences priority.
 ///
 /// # Examples
 ///
@@ -19,14 +19,14 @@ use crate::graph::Edge;
 pub struct WeightedEdge {
     to: u32,
     from: u32,
-    cost: f64,
+    weight: f64,
 }
 
 impl Edge for WeightedEdge {
-    fn new(from: u32, to: u32, cost: Option<f64>) -> Self {
-        WeightedEdge { from: from, to: to, cost: cost.unwrap_or(1.0) }
+    fn new(from: u32, to: u32, weight: Option<f64>) -> Self {
+        WeightedEdge { from: from, to: to, weight: weight.unwrap_or(1.0) }
     }
     fn to(&self) -> u32 { self.to }
     fn from(&self) -> u32 { self.from }
-    fn weight(&self) -> f64 { self.cost }
+    fn weight(&self) -> f64 { self.weight }
 }
