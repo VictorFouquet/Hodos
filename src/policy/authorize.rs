@@ -1,11 +1,8 @@
-use crate::graph::Node;
-
 /// A policy for authorizing the addition of entities to the graph.
 ///
 /// Authorization policies decide whether nodes or edges should be accepted
 /// during graph construction based on domain-specific rules.
-pub trait Authorize<Ctx> {
-    type Entity: Node;
+pub trait Authorize<Entity, Ctx> {
     /// Determines whether an entity should be added.
     ///
     /// # Arguments
@@ -16,5 +13,5 @@ pub trait Authorize<Ctx> {
     /// # Returns
     ///
     /// `true` if the entity should be added, `false` otherwise
-    fn add(&self, entity: &Self::Entity, context: &Ctx) -> bool;
+    fn add(&mut self, entity: &Entity, context: &Ctx) -> bool;
 }
