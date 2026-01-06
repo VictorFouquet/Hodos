@@ -16,11 +16,13 @@ pub trait Node {
     ///
     /// * `id` - Unique identifier for this node
     /// * `data` - Associated data (use `()` if no data needed)
-    fn new(id: u32, data: Self::Data) -> Self;
+    fn new(id: u32, data: Option<Self::Data>) -> Self;
 
     /// Returns the node's ID.
     fn id(&self) -> u32;
 
     /// Returns the node's data if it has some, else None.
-    fn data(&mut self) -> Option<&mut Self::Data>;
+    fn data(&self) -> Option<&Self::Data> { None }
+
+    fn set_data(&mut self, data: &Self::Data) {}
 }

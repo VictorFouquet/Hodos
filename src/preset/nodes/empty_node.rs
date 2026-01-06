@@ -11,7 +11,7 @@ use crate::graph::Node;
 /// use hodos::preset::nodes::EmptyNode;
 /// use hodos::graph::Node;
 ///
-/// let mut node = EmptyNode::new(42, ());
+/// let mut node = EmptyNode::new(42, None);
 /// assert_eq!(node.id(), 42);
 /// assert!(node.data().is_none());
 /// ```
@@ -22,7 +22,6 @@ pub struct EmptyNode {
 impl Node for EmptyNode {
     type Data = ();
 
-    fn new(id: u32, _data: Self::Data) -> Self { EmptyNode { id } }
+    fn new(id: u32, _data: Option<Self::Data>) -> Self { EmptyNode { id } }
     fn id(&self) -> u32 { self.id }
-    fn data(&mut self) -> Option<&mut Self::Data> { None }
 }
