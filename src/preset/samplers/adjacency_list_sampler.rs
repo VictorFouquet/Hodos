@@ -22,25 +22,28 @@ use crate::strategy::Sampler;
 /// - Returns `None` when all nodes have been sampled
 #[derive(Debug, Default)]
 pub struct AdjacencyListSampler {
-    idx: u32
+    current_id: u32
 }
 
 impl Sampler<Vec<Vec<u32>>> for AdjacencyListSampler {
     type Node = EmptyNode;
     type Edge = UnweightedEdge;
+
     fn next(&mut self, context: &Vec<Vec<u32>>) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
-        if self.idx as usize >= context.len() {
+        let i = self.current_id as usize;
+
+        if i >= context.len() {
             return None;
         }
 
-        let mut edges = Vec::<UnweightedEdge>::new();
-        for &adj in &context[self.idx as usize] {
-            edges.push(UnweightedEdge::new(self.idx, adj, None));
+        let mut edges = Vec::new();
+        for &adj in &context[i] {
+            edges.push(UnweightedEdge::new(self.current_id, adj, None));
         }
 
-        let mut nodes = Vec::<EmptyNode>::new();
-        nodes.push(EmptyNode::new(self.idx, ()));
-        self.idx += 1;
+        let mut nodes = Vec::new();
+        nodes.push(EmptyNode::new(self.current_id, None));
+        self.current_id += 1;
 
         Some((nodes, edges))
     }
@@ -52,13 +55,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_adjacency_list_sample_default_should_set_private_idx_to_zero() {
+    fn test_adjacency_list_sample_default_should_set_private_current_id_to_zero() {
         let sampler = AdjacencyListSampler::default();
-        assert_eq!(sampler.idx, 0);
+        assert_eq!(sampler.current_id, 0);
     }
 
     #[test]
-    fn test_adjacency_list_sample_should_map_nodesfrom_internal_id() {
+    fn test_adjacency_list_sample_should_map_nodes_from_internal_id() {
         let mut sampler = AdjacencyListSampler::default();
         let data: Vec<Vec<u32>> = vec![ vec![1], vec![0, 2], vec![1] ];
 
@@ -76,7 +79,7 @@ mod tests {
     }
 
     #[test]
-    fn test_adjacency_list_sample_should_map_edgesfrom_adjacency_list() {
+    fn test_adjacency_list_sample_should_map_edges_from_adjacency_list() {
         let mut sampler = AdjacencyListSampler::default();
         let data: Vec<Vec<u32>> = vec![ vec![1], vec![0, 2], vec![1] ];
 
