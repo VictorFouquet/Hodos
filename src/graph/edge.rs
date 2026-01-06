@@ -11,7 +11,7 @@ pub trait Edge {
     ///
     /// * `from` - Source node ID
     /// * `to` - Destination node ID
-    /// * `cost` - Optional edge weight (ignored for unweighted edges)
+    /// * `weight` - Optional edge weight (ignored for unweighted edges)
     fn new(from: u32, to: u32, cost: Option<f64>) -> Self;
     
     /// Returns the destination node ID.
@@ -21,8 +21,8 @@ pub trait Edge {
     fn from(&self) -> u32;
 
     /// Returns the weight of the connection.
-    fn cost(&self) -> f64 { 1.0 }
+    fn weight(&self) -> f64 { 1.0 }
 
     /// Set the weight of the
-    fn set_cost(&mut self, _cost: f64) {}
+    fn set_weight(&mut self, _weight: f64) {}
 }

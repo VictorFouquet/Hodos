@@ -14,7 +14,7 @@ use crate::graph::Edge;
 /// let edge = WeightedEdge::new(0, 1, Some(5.0));
 /// assert_eq!(edge.from(), 0);
 /// assert_eq!(edge.to(), 1);
-/// assert_eq!(edge.cost(), 5.0);
+/// assert_eq!(edge.weight(), 5.0);
 /// ```
 pub struct WeightedEdge {
     to: u32,
@@ -28,5 +28,5 @@ impl Edge for WeightedEdge {
     }
     fn to(&self) -> u32 { self.to }
     fn from(&self) -> u32 { self.from }
-    fn cost(&self) -> f64 { self.cost }
+    fn weight(&self) -> f64 { self.cost }
 }
