@@ -1,5 +1,6 @@
 pub mod edges;
 pub mod nodes;
+pub mod policies;
 pub mod samplers;
 
 pub use edges::unweighted_edge::UnweightedEdge;
