@@ -77,6 +77,7 @@ mod tests {
         assert!(policy.add(&MockNode::new(2, None), &()));
     }
 
+    #[test]
     fn test_unique_node_should_refuse_duplicates() {
         let mut policy = UniqueNode::default();
 
@@ -106,10 +107,11 @@ mod tests {
         assert!(policy.add(&MockEdge::new(1, 2, None), &()));
     }
 
+    #[test]
     fn test_unique_unweighted_edge_should_refuse_duplicates() {
         let mut policy = UniqueUnweightedEdge::default();
 
         assert!(policy.add(&MockEdge::new(0, 1, None), &()));
-        assert!(policy.add(&MockEdge::new(0, 1, None), &()));
+        assert!(!policy.add(&MockEdge::new(0, 1, None), &()));
     }
 }
