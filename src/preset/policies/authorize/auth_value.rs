@@ -146,13 +146,17 @@ mod tests {
         fn data(&self) -> Option<&Self::Data> { Some(&true) }
     }
 
+    fn make_node() -> MockValueNode { MockValueNode }
+
     #[test]
     fn test_allow_node_value_rejects_any_node_when_whitelist_is_empty() {
         let mut policy = AllowNodeValue::<bool>::default();
-
         assert_eq!(policy.allowed_values.len(), 0);
-        assert!(!policy.add(&MockValueNode::new(0, None), &()));
-        assert!(!policy.add(&MockValueNode::new(1, None), &()));
+        
+        let node = make_node();
+        assert_eq!(node.data(), Some(&true));
+
+        assert!(!policy.add(&node, &()));
     }
 
     #[test]
@@ -160,12 +164,12 @@ mod tests {
         let mut policy = AllowNodeValue::<bool>::default();
 
         policy.add_allowed_value(true);
-
         assert_eq!(policy.allowed_values.len(), 1);
         
-        assert!(policy.add(&MockValueNode::new(0, None), &()));
-        assert!(policy.add(&MockValueNode::new(1, None), &()));
-        assert!(policy.add(&MockValueNode::new(2, None), &()));
+        let node = make_node();
+        assert_eq!(node.data(), Some(&true));
+        
+        assert!(policy.add(&node, &()));
     }
 
     #[test]
@@ -175,9 +179,10 @@ mod tests {
         policy.add_allowed_value(false);
         assert_eq!(policy.allowed_values.len(), 1);
         
-        assert!(!policy.add(&MockValueNode::new(0, None), &()));
-        assert!(!policy.add(&MockValueNode::new(1, None), &()));
-        assert!(!policy.add(&MockValueNode::new(2, None), &()));
+        let node = make_node();
+        assert_eq!(node.data(), Some(&true));
+
+        assert!(!policy.add(&node, &()));
     }
 
     #[derive(Default)]
@@ -190,10 +195,12 @@ mod tests {
         fn weight(&self) -> f64 { 5.0 }
     }
 
+    fn make_edge() -> MockWeightedEdge { MockWeightedEdge::new(0, 0, None) }
+
     #[test]
     fn test_allow_weight_above_allows_edges_with_weight_above_threshold() {
         let mut policy = AllowWeightAbove::new(1.0);
-        let edge = MockWeightedEdge::new(0, 0, None);
+        let edge = make_edge();
 
         assert_eq!(policy.threshold, 1.0);
         assert_eq!(edge.weight(), 5.0);
@@ -204,7 +211,7 @@ mod tests {
     #[test]
     fn test_allow_weight_above_rejects_edges_with_weight_equal_to_threshold() {
         let mut policy = AllowWeightAbove::new(5.0);
-        let edge = MockWeightedEdge::new(0, 0, None);
+        let edge = make_edge();
 
         assert_eq!(policy.threshold, 5.0);
         assert_eq!(edge.weight(), 5.0);
@@ -215,7 +222,7 @@ mod tests {
     #[test]
     fn test_allow_weight_above_rejects_edges_with_weight_under_threshold() {
         let mut policy = AllowWeightAbove::new(10.0);
-        let edge = MockWeightedEdge::new(0, 0, None);
+        let edge = make_edge();
 
         assert_eq!(policy.threshold, 10.0);
         assert_eq!(edge.weight(), 5.0);
@@ -226,7 +233,7 @@ mod tests {
     #[test]
     fn test_allow_weight_under_allows_edges_with_weight_under_threshold() {
         let mut policy = AllowWeightUnder::new(10.0);
-        let edge = MockWeightedEdge::new(0, 0, None);
+        let edge = make_edge();
 
         assert_eq!(policy.threshold, 10.0);
         assert_eq!(edge.weight(), 5.0);
@@ -237,7 +244,7 @@ mod tests {
     #[test]
     fn test_allow_weight_under_rejects_edges_with_weight_equal_to_threshold() {
         let mut policy = AllowWeightUnder::new(5.0);
-        let edge = MockWeightedEdge::new(0, 0, None);
+        let edge = make_edge();
 
         assert_eq!(policy.threshold, 5.0);
         assert_eq!(edge.weight(), 5.0);
@@ -248,7 +255,7 @@ mod tests {
     #[test]
     fn test_allow_weight_under_rejects_edges_with_weight_above_threshold() {
         let mut policy = AllowWeightUnder::new(1.0);
-        let edge = MockWeightedEdge::new(0, 0, None);
+        let edge = make_edge();
 
         assert_eq!(policy.threshold, 1.0);
         assert_eq!(edge.weight(), 5.0);
