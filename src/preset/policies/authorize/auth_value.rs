@@ -141,7 +141,7 @@ mod tests {
     impl Node for MockValueNode {
         type Data = bool;
     
-        fn new(id: u32, data: Option<Self::Data>) -> Self { MockValueNode }
+        fn new(_id: u32, _data: Option<Self::Data>) -> Self { MockValueNode }
         fn id(&self) -> u32 { 0 }
         fn data(&self) -> Option<&Self::Data> { Some(&true) }
     }
@@ -189,7 +189,7 @@ mod tests {
     pub struct MockWeightedEdge;
     
     impl Edge for MockWeightedEdge {
-        fn new(from: u32, to: u32, weight: Option<f64>) -> Self { MockWeightedEdge }
+        fn new(_from: u32, _to: u32, _weight: Option<f64>) -> Self { MockWeightedEdge }
         fn to(&self) -> u32 { 0 }
         fn from(&self) -> u32 { 0 }
         fn weight(&self) -> f64 { 5.0 }
