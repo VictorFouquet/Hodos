@@ -131,3 +131,128 @@ impl<Entity: Edge, Ctx> Authorize<Entity, Ctx> for AllowWeightUnder {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Default)]
+    pub struct MockValueNode;
+    
+    impl Node for MockValueNode {
+        type Data = bool;
+    
+        fn new(id: u32, data: Option<Self::Data>) -> Self { MockValueNode }
+        fn id(&self) -> u32 { 0 }
+        fn data(&self) -> Option<&Self::Data> { Some(&true) }
+    }
+
+    #[test]
+    fn test_allow_node_value_rejects_any_node_when_whitelist_is_empty() {
+        let mut policy = AllowNodeValue::<bool>::default();
+
+        assert_eq!(policy.allowed_values.len(), 0);
+        assert!(!policy.add(&MockValueNode::new(0, None), &()));
+        assert!(!policy.add(&MockValueNode::new(1, None), &()));
+    }
+
+    #[test]
+    fn test_allow_node_value_accepts_nodes_when_their_value_is_in_whitelist() {
+        let mut policy = AllowNodeValue::<bool>::default();
+
+        policy.add_allowed_value(true);
+
+        assert_eq!(policy.allowed_values.len(), 1);
+        
+        assert!(policy.add(&MockValueNode::new(0, None), &()));
+        assert!(policy.add(&MockValueNode::new(1, None), &()));
+        assert!(policy.add(&MockValueNode::new(2, None), &()));
+    }
+
+    #[test]
+    fn test_allow_node_value_rejects_nodes_when_their_value_is_not_in_whitelist() {
+        let mut policy = AllowNodeValue::<bool>::default();
+
+        policy.add_allowed_value(false);
+        assert_eq!(policy.allowed_values.len(), 1);
+        
+        assert!(!policy.add(&MockValueNode::new(0, None), &()));
+        assert!(!policy.add(&MockValueNode::new(1, None), &()));
+        assert!(!policy.add(&MockValueNode::new(2, None), &()));
+    }
+
+    #[derive(Default)]
+    pub struct MockWeightedEdge;
+    
+    impl Edge for MockWeightedEdge {
+        fn new(from: u32, to: u32, weight: Option<f64>) -> Self { MockWeightedEdge }
+        fn to(&self) -> u32 { 0 }
+        fn from(&self) -> u32 { 0 }
+        fn weight(&self) -> f64 { 5.0 }
+    }
+
+    #[test]
+    fn test_allow_weight_above_allows_edges_with_weight_above_threshold() {
+        let mut policy = AllowWeightAbove::new(1.0);
+        let edge = MockWeightedEdge::new(0, 0, None);
+
+        assert_eq!(policy.threshold, 1.0);
+        assert_eq!(edge.weight(), 5.0);
+
+        assert!(policy.add(&edge, &()));
+    }
+
+    #[test]
+    fn test_allow_weight_above_rejects_edges_with_weight_equal_to_threshold() {
+        let mut policy = AllowWeightAbove::new(5.0);
+        let edge = MockWeightedEdge::new(0, 0, None);
+
+        assert_eq!(policy.threshold, 5.0);
+        assert_eq!(edge.weight(), 5.0);
+
+        assert!(!policy.add(&edge, &()));
+    }
+
+    #[test]
+    fn test_allow_weight_above_rejects_edges_with_weight_under_threshold() {
+        let mut policy = AllowWeightAbove::new(10.0);
+        let edge = MockWeightedEdge::new(0, 0, None);
+
+        assert_eq!(policy.threshold, 10.0);
+        assert_eq!(edge.weight(), 5.0);
+
+        assert!(!policy.add(&edge, &()));
+    }
+
+    #[test]
+    fn test_allow_weight_under_allows_edges_with_weight_under_threshold() {
+        let mut policy = AllowWeightUnder::new(10.0);
+        let edge = MockWeightedEdge::new(0, 0, None);
+
+        assert_eq!(policy.threshold, 10.0);
+        assert_eq!(edge.weight(), 5.0);
+
+        assert!(policy.add(&edge, &()));
+    }
+
+    #[test]
+    fn test_allow_weight_under_rejects_edges_with_weight_equal_to_threshold() {
+        let mut policy = AllowWeightUnder::new(5.0);
+        let edge = MockWeightedEdge::new(0, 0, None);
+
+        assert_eq!(policy.threshold, 5.0);
+        assert_eq!(edge.weight(), 5.0);
+
+        assert!(!policy.add(&edge, &()));
+    }
+
+    #[test]
+    fn test_allow_weight_under_rejects_edges_with_weight_above_threshold() {
+        let mut policy = AllowWeightUnder::new(1.0);
+        let edge = MockWeightedEdge::new(0, 0, None);
+
+        assert_eq!(policy.threshold, 1.0);
+        assert_eq!(edge.weight(), 5.0);
+
+        assert!(!policy.add(&edge, &()));
+    }
+}
