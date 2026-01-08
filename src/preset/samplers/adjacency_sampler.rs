@@ -6,6 +6,15 @@ use crate::preset::{ EmptyNode, DataNode };
 use crate::preset::{ UnweightedEdge, WeightedEdge };
 use crate::strategy::Sampler;
 
+/// Samples a graph from an adjacency list representation.
+///
+/// Converts an adjacency list context into nodes and edges. Each outer
+/// vector index represents a node ID, and its contents are the adjacent node IDs.
+///
+/// # Sampling Behavior
+///
+/// - Returns one node per call with all its outgoing edges
+/// - Iterates through nodes sequentially by ID
 #[derive(Debug)]
 pub struct AdjacencySampler<N, E> {
     current_id: u32,
@@ -150,303 +159,188 @@ impl<T: Clone> Sampler<WeightedAdjacencyListWithData<T>> for AdjacencySampler<Da
 mod tests {
     use super::*;
 
-    // Simple adjacency
-    #[test]
-    fn adjacency_sampler_default_sets_private_current_id_to_zero() {
-        let sampler = AdjacencySampler::<EmptyNode, UnweightedEdge>::default();
-        assert_eq!(sampler.current_id, 0);
+    // ==================== Test Data ====================
+    
+    #[derive(Clone, Debug, PartialEq)]
+    struct NodeContent { v: u8 }
+    
+    fn node(v: u8) -> NodeContent {
+        NodeContent { v }
     }
 
-    #[test]
-    fn adjacency_sampler_maps_nodes_from_internal_id() {
-        let mut sampler = AdjacencySampler::<EmptyNode, UnweightedEdge>::default();
-        let data: AdjacencyList = vec![ vec![1], vec![0] ];
+    // ==================== Macro for common tests ====================
+    
+    macro_rules! test_sampler_common {
+        ($sampler_type:ty, $context_type:ty, $context:expr) => {
+            #[test]
+            fn default_initializes_at_zero() {
+                let sampler = <$sampler_type>::default();
+                assert_eq!(sampler.current_id, 0);
+            }
 
-        let (res_node1, _) = sampler.next(&data).unwrap();
-        assert_eq!(res_node1.len(), 1);
-        assert_eq!(res_node1[0].id(), 0);
+            #[test]
+            fn maps_sequential_node_ids() {
+                let mut sampler = <$sampler_type>::default();
+                let context = $context;
 
-        let (res_node2, _) = sampler.next(&data).unwrap();
-        assert_eq!(res_node2.len(), 1);
-        assert_eq!(res_node2[0].id(), 1);
-    }
+                let (nodes1, _) = sampler.next(&context).unwrap();
+                assert_eq!(nodes1[0].id(), 0);
 
-    #[test]
-    fn adjacency_sampler_maps_edges_from_adjacency_list() {
-        let mut sampler = AdjacencySampler::<EmptyNode, UnweightedEdge>::default();
-        let data: AdjacencyList = vec![ vec![1], vec![0, 2], vec![1] ];
+                let (nodes2, _) = sampler.next(&context).unwrap();
+                assert_eq!(nodes2[0].id(), 1);
+            }
 
-        let (_, res_edg1) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg1.len(), 1);
-        assert_eq!(res_edg1[0].from(), 0);
-        assert_eq!(res_edg1[0].to(), 1);
+            #[test]
+            fn returns_none_when_exhausted() {
+                let mut sampler = <$sampler_type>::default();
+                let context = $context;
 
-        let (_, res_edg2) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg2.len(), 2);
-        assert_eq!(res_edg2[0].from(), 1);
-        assert_eq!(res_edg2[0].to(), 0);
-        assert_eq!(res_edg2[1].from(), 1);
-        assert_eq!(res_edg2[1].to(), 2);
-
-        let (_, res_edg3) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg3.len(), 1);
-        assert_eq!(res_edg3[0].from(), 2);
-        assert_eq!(res_edg3[0].to(), 1);
-    }
-
-    #[test]
-    fn adjacency_sampler_returns_none_when_context_is_exhausted() {
-        let mut sampler = AdjacencySampler::<EmptyNode, UnweightedEdge>::default();
-        let data: AdjacencyList = vec![ vec![1] ];
-
-        assert!(sampler.next(&data).is_some());
-        assert!(sampler.next(&data).is_none());
-    }
-
-    // Weighted adjacency
-    #[test]
-    fn weighted_adjacency_sampler_default_sets_private_current_id_to_zero() {
-        let sampler = AdjacencySampler::<EmptyNode, WeightedEdge>::default();
-        assert_eq!(sampler.current_id, 0);
-    }
-
-    #[test]
-    fn weighted_adjacency_sampler_maps_nodes_from_internal_id() {
-        let mut sampler = AdjacencySampler::<EmptyNode, WeightedEdge>::default();
-        let data = vec![ vec![(1, 1.0)], vec![(0, 1.0)] ];
-
-        let (res_node1, _) = sampler.next(&data).unwrap();
-        assert_eq!(res_node1.len(), 1);
-        assert_eq!(res_node1[0].id(), 0);
-
-        let (res_node2, _) = sampler.next(&data).unwrap();
-        assert_eq!(res_node2.len(), 1);
-        assert_eq!(res_node2[0].id(), 1);
-    }
-
-    #[test]
-    fn weighted_adjacency_sampler_maps_edges_from_adjacency_list() {
-        let mut sampler = AdjacencySampler::<EmptyNode, WeightedEdge>::default();
-        let data = vec![
-            vec![(1, 1.0)],
-            vec![(0, 2.0), (2, 3.0)],
-            vec![(1, 4.0)]
-        ];
-
-        let (_, res_edg1) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg1.len(), 1);
-        assert_eq!(res_edg1[0].from(), 0);
-        assert_eq!(res_edg1[0].to(), 1);
-        assert_eq!(res_edg1[0].weight(), 1.0);
-
-        let (_, res_edg2) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg2.len(), 2);
-        assert_eq!(res_edg2[0].from(), 1);
-        assert_eq!(res_edg2[0].to(), 0);
-        assert_eq!(res_edg2[0].weight(), 2.0);
-
-        assert_eq!(res_edg2[1].from(), 1);
-        assert_eq!(res_edg2[1].to(), 2);
-        assert_eq!(res_edg2[1].weight(), 3.0);
-
-        let (_, res_edg3) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg3.len(), 1);
-        assert_eq!(res_edg3[0].from(), 2);
-        assert_eq!(res_edg3[0].to(), 1);
-        assert_eq!(res_edg3[0].weight(), 4.0);
-    }
-
-    #[test]
-    fn weighted_adjacency_sampler_returns_none_when_context_is_exhausted() {
-        let mut sampler = AdjacencySampler::<EmptyNode, WeightedEdge>::default();
-        let data = vec![ vec![(1, 1.0)] ];
-
-        assert!(sampler.next(&data).is_some());
-        assert!(sampler.next(&data).is_none());
-    }
-
-    // List with data
-    #[derive(Clone)]
-    struct NodeContent {
-        v: u8,
-    }
-    fn make_node_content(v: u8) -> NodeContent { NodeContent { v } }
-
-    #[test]
-    fn adjacency_sampler_with_data_default_sets_private_current_id_to_zero() {
-        let sampler = AdjacencySampler::<DataNode<NodeContent>, UnweightedEdge>::default();
-        assert_eq!(sampler.current_id, 0);
-    }
-
-    #[test]
-    #[should_panic(expected = "Adjacency list length and data length should be the same.")]
-    fn adjacency_sampler_with_data_with_mismatching_data_and_adjacency_panics() {
-        let mut sampler = AdjacencySampler::<DataNode<NodeContent>, UnweightedEdge>::default();
-        let data = AdjacencyListWithData {
-            adjacency: vec![ vec![1], vec![0] ],
-            data: vec![ make_node_content(1) ]
+                while sampler.next(&context).is_some() {}
+                
+                assert!(sampler.next(&context).is_none());
+            }
         };
-        assert_ne!(data.adjacency.len(), data.data.len());
-        sampler.next(&data);
     }
 
-    #[test]
-    fn adjacency_sampler_with_data_maps_nodes_from_internal_id() {
-        let mut sampler = AdjacencySampler::<DataNode<NodeContent>, UnweightedEdge>::default();
-        let data = AdjacencyListWithData {
-            adjacency: vec![ vec![1] ],
-            data: vec![ make_node_content(1) ]
-        };
+    // ==================== Simple Adjacency ====================
+    
+    mod simple_adjacency {
+        use super::*;
+        
+        type TestSampler = AdjacencySampler<EmptyNode, UnweightedEdge>;
+        
+        fn test_context() -> AdjacencyList {
+            vec![vec![1], vec![0, 2], vec![1]]
+        }
+        
+        test_sampler_common!(TestSampler, AdjacencyList, test_context());
+        
+        #[test]
+        fn maps_edges_correctly() {
+            let mut sampler = TestSampler::default();
+            let context = test_context();
 
-        let (res_node1, _) = sampler.next(&data).unwrap();
-        assert_eq!(res_node1.len(), 1);
-        assert_eq!(res_node1[0].id(), 0);
+            let (_, edges) = sampler.next(&context).unwrap();
+            assert_eq!(edges.len(), 1);
+            assert_eq!(edges[0].from(), 0);
+            assert_eq!(edges[0].to(), 1);
+
+            let (_, edges) = sampler.next(&context).unwrap();
+            assert_eq!(edges.len(), 2);
+            assert_eq!(edges[0].to(), 0);
+            assert_eq!(edges[1].to(), 2);
+        }
     }
 
-    #[test]
-    fn adjacency_sampler_with_data_maps_nodes_values_from_adjacency_list() {
-        let mut sampler = AdjacencySampler::<DataNode<NodeContent>, UnweightedEdge>::default();
-        let nctt1 = make_node_content(10);
-
-        let data = AdjacencyListWithData {
-            adjacency: vec![ vec![1] ],
-            data: vec![ nctt1 ]
-        };
-
-        let (res_node1, _) = sampler.next(&data).unwrap();
-        assert_eq!(res_node1.len(), 1);
-        assert!(res_node1[0].data().is_some());
-        assert_eq!(res_node1[0].data().unwrap().v, 10);
-    }
-
-    #[test]
-    fn adjacency_sampler_with_values_maps_edges_from_adjacency_list() {
-        let mut sampler = AdjacencySampler::<EmptyNode, UnweightedEdge>::default();
-        let data: AdjacencyList = vec![ vec![1], vec![0, 2], vec![1] ];
-
-        let (_, res_edg1) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg1.len(), 1);
-        assert_eq!(res_edg1[0].from(), 0);
-        assert_eq!(res_edg1[0].to(), 1);
-
-        let (_, res_edg2) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg2.len(), 2);
-        assert_eq!(res_edg2[0].from(), 1);
-        assert_eq!(res_edg2[0].to(), 0);
-        assert_eq!(res_edg2[1].from(), 1);
-        assert_eq!(res_edg2[1].to(), 2);
-
-        let (_, res_edg3) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg3.len(), 1);
-        assert_eq!(res_edg3[0].from(), 2);
-        assert_eq!(res_edg3[0].to(), 1);
-    }
-
-    #[test]
-    fn adjacency_sampler_with_data_returns_none_when_context_is_exhausted() {
-        let mut sampler = AdjacencySampler::<DataNode<NodeContent>, UnweightedEdge>::default();
-        let data = AdjacencyListWithData {
-            adjacency: vec![ vec![1] ],
-            data: vec![ make_node_content(1) ]
-        };
-
-        assert!(sampler.next(&data).is_some());
-        assert!(sampler.next(&data).is_none());
-    }
-
-
-    // Weighted list with data
-    #[test]
-    fn weighted_adjacency_sampler_with_data_default_sets_private_current_id_to_zero() {
-        let sampler = AdjacencySampler::<DataNode<NodeContent>, WeightedEdge>::default();
-        assert_eq!(sampler.current_id, 0);
-    }
-
-    #[test]
-    #[should_panic(expected = "Weighted adjacency list length and data length should be the same.")]
-    fn weighted_adjacency_sampler_with_data_with_mismatching_data_and_adjacency_panics() {
-        let mut sampler = AdjacencySampler::<DataNode<NodeContent>, WeightedEdge>::default();
-        let data = WeightedAdjacencyListWithData {
-            adjacency: vec![ vec![(1, 1.0)], vec![(0, 1.0)] ],
-            data: vec![ make_node_content(1) ]
-        };
-        assert_ne!(data.adjacency.len(), data.data.len());
-        sampler.next(&data);
-    }
-
-    #[test]
-    fn weighted_adjacency_sampler_with_data_maps_nodes_from_internal_id() {
-        let mut sampler = AdjacencySampler::<DataNode<NodeContent>, WeightedEdge>::default();
-        let data = WeightedAdjacencyListWithData {
-            adjacency: vec![ vec![(1, 1.0)] ],
-            data: vec![ make_node_content(1) ]
-        };
-
-        let (res_node1, _) = sampler.next(&data).unwrap();
-        assert_eq!(res_node1.len(), 1);
-        assert_eq!(res_node1[0].id(), 0);
-    }
-
-    #[test]
-    fn weighted_adjacency_sampler_with_data_maps_nodes_values_from_adjacency_list() {
-        let mut sampler = AdjacencySampler::<DataNode<NodeContent>, WeightedEdge>::default();
-        let nctt1 = make_node_content(10);
-
-        let data = WeightedAdjacencyListWithData {
-            adjacency: vec![ vec![(1, 1.0)] ],
-            data: vec![ nctt1 ]
-        };
-
-        let (res_node1, _) = sampler.next(&data).unwrap();
-        assert_eq!(res_node1.len(), 1);
-        assert!(res_node1[0].data().is_some());
-        assert_eq!(res_node1[0].data().unwrap().v, 10);
-    }
-
-    #[test]
-    fn weighted_adjacency_sampler_with_values_maps_edges_from_adjacency_list() {
-        let mut sampler = AdjacencySampler::<DataNode<NodeContent>, WeightedEdge>::default();
-        let data = WeightedAdjacencyListWithData {
-            adjacency: vec![
+    // ==================== Weighted Adjacency ====================
+    
+    mod weighted_adjacency {
+        use super::*;
+        
+        type TestSampler = AdjacencySampler<EmptyNode, WeightedEdge>;
+        
+        fn test_context() -> WeightedAdjacencyList {
+            vec![
                 vec![(1, 1.0)],
                 vec![(0, 2.0), (2, 3.0)],
                 vec![(1, 4.0)]
-            ],
-            data: vec![make_node_content(0), make_node_content(0), make_node_content(0)]
-        };
+            ]
+        }
+        
+        test_sampler_common!(TestSampler, WeightedAdjacencyList, test_context());
+        
+        #[test]
+        fn maps_edges_with_weights() {
+            let mut sampler = TestSampler::default();
+            let context = test_context();
 
-        let (_, res_edg1) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg1.len(), 1);
-        assert_eq!(res_edg1[0].from(), 0);
-        assert_eq!(res_edg1[0].to(), 1);
-        assert_eq!(res_edg1[0].weight(), 1.0);
+            let (_, edges) = sampler.next(&context).unwrap();
+            assert_eq!(edges[0].weight(), 1.0);
 
-        let (_, res_edg2) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg2.len(), 2);
-        assert_eq!(res_edg2[0].from(), 1);
-        assert_eq!(res_edg2[0].to(), 0);
-        assert_eq!(res_edg2[0].weight(), 2.0);
-
-        assert_eq!(res_edg2[1].from(), 1);
-        assert_eq!(res_edg2[1].to(), 2);
-        assert_eq!(res_edg2[1].weight(), 3.0);
-
-        let (_, res_edg3) = sampler.next(&data).unwrap();
-        assert_eq!(res_edg3.len(), 1);
-        assert_eq!(res_edg3[0].from(), 2);
-        assert_eq!(res_edg3[0].to(), 1);
-        assert_eq!(res_edg3[0].weight(), 4.0);
+            let (_, edges) = sampler.next(&context).unwrap();
+            assert_eq!(edges[0].weight(), 2.0);
+            assert_eq!(edges[1].weight(), 3.0);
+        }
     }
 
-    #[test]
-    fn weighted_adjacency_sampler_with_data_returns_none_when_context_is_exhausted() {
-        let mut sampler = AdjacencySampler::<DataNode<NodeContent>, WeightedEdge>::default();
-        let data = WeightedAdjacencyListWithData {
-            adjacency: vec![ vec![(1, 1.0)] ],
-            data: vec![ make_node_content(1) ]
-        };
+    // ==================== With Data ====================
+    
+    mod with_data {
+        use super::*;
+        
+        type TestSampler = AdjacencySampler<DataNode<NodeContent>, UnweightedEdge>;
+        
+        fn test_context() -> AdjacencyListWithData<NodeContent> {
+            AdjacencyListWithData {
+                adjacency: vec![vec![1], vec![0]],
+                data: vec![node(10), node(20)],
+            }
+        }
+        
+        test_sampler_common!(TestSampler, AdjacencyListWithData<NodeContent>, test_context());
+        
+        #[test]
+        #[should_panic(expected = "Adjacency list length and data length should be the same.")]
+        fn panics_on_mismatched_lengths() {
+            let mut sampler = TestSampler::default();
+            let bad_context = AdjacencyListWithData {
+                adjacency: vec![vec![1], vec![0]],
+                data: vec![node(1)], // Mismatch
+            };
+            sampler.next(&bad_context);
+        }
+        
+        #[test]
+        fn maps_node_data() {
+            let mut sampler = TestSampler::default();
+            let context = test_context();
+            
+            let (nodes, _) = sampler.next(&context).unwrap();
+            assert_eq!(nodes[0].data().unwrap().v, 10);
+            
+            let (nodes, _) = sampler.next(&context).unwrap();
+            assert_eq!(nodes[0].data().unwrap().v, 20);
+        }
+    }
 
-        assert!(sampler.next(&data).is_some());
-        assert!(sampler.next(&data).is_none());
+    // ==================== Weighted With Data ====================
+    
+    mod weighted_with_data {
+        use super::*;
+        
+        type TestSampler = AdjacencySampler<DataNode<NodeContent>, WeightedEdge>;
+        
+        fn test_context() -> WeightedAdjacencyListWithData<NodeContent> {
+            WeightedAdjacencyListWithData {
+                adjacency: vec![
+                    vec![(1, 1.0)],
+                    vec![(0, 2.0), (2, 3.0)],
+                ],
+                data: vec![node(10), node(20)],
+            }
+        }
+        
+        test_sampler_common!(TestSampler, WeightedAdjacencyListWithData<NodeContent>, test_context());
+        
+        #[test]
+        #[should_panic(expected = "Weighted adjacency list length and data length should be the same.")]
+        fn panics_on_mismatched_lengths() {
+            let mut sampler = TestSampler::default();
+            let bad_context = WeightedAdjacencyListWithData {
+                adjacency: vec![vec![(1, 1.0)]],
+                data: vec![node(1), node(2)], // Mismatch
+            };
+            sampler.next(&bad_context);
+        }
+        
+        #[test]
+        fn maps_edges_and_data() {
+            let mut sampler = TestSampler::default();
+            let context = test_context();
+            
+            let (nodes, edges) = sampler.next(&context).unwrap();
+            assert_eq!(nodes[0].data().unwrap().v, 10);
+            assert_eq!(edges[0].weight(), 1.0);
+        }
     }
 }
