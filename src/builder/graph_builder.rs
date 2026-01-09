@@ -56,8 +56,9 @@ where
     /// The builder will:
     /// 1. Request samples from the sampling strategy
     /// 2. Filter nodes through the node authorization policy
-    /// 3. Filter edges through the edge authorization policy
-    /// 4. Add authorized nodes and edges to the graph
+    /// 3. Add authorized nodes and edges to the graph
+    /// 4. Filter edges through the edge authorization policy
+    /// 5. Add authorized nodes and edges to the graph
     ///
     /// This process continues until the sampler returns `None`.
     ///
@@ -70,18 +71,21 @@ where
     /// A fully constructed `Graph` containing all authorized nodes and edges
     pub fn build(&mut self, context: &Ctx) -> Graph<Samp::Node, Samp::Edge> {
         let mut graph = Graph::new();
-    
+        let mut edges_buffer = Vec::new();
+
         while let Some((nodes, edges)) = self.sample_strategy.next(context) {
             for node in nodes {
                 if self.auth_node_policy.add(&node, context) {
                     graph.add_node(node);
                 }
             }
+            edges_buffer.extend(edges);
     
-            for edge in edges {
-                if self.auth_edge_policy.add(&edge, context) {
-                    graph.add_edge(edge);
-                }
+        }
+        
+        for edge in edges_buffer {
+            if self.auth_edge_policy.add(&edge, context) {
+                graph.add_edge(edge);
             }
         }
 
