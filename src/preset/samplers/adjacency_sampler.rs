@@ -6,6 +6,10 @@ use crate::preset::{ EmptyNode, DataNode };
 use crate::preset::{ UnweightedEdge, WeightedEdge };
 use crate::strategy::Sampler;
 
+
+pub type AdjacencyList = Vec<Vec<u32>>;
+pub type WeightedAdjacencyList = Vec<Vec<(u32, f64)>>;
+
 /// Samples a graph from an adjacency list representation.
 ///
 /// Converts an adjacency list context into nodes and edges. Each outer
@@ -35,10 +39,6 @@ impl<N, E> Default for AdjacencySampler<N, E> {
         Self::new()
     }
 }
-
-pub type AdjacencyList = Vec<Vec<u32>>;
-
-pub type WeightedAdjacencyList = Vec<Vec<(u32, f64)>>;
 
 pub struct AdjacencyListWithData<T> {
     data: Vec<T>,
@@ -242,7 +242,8 @@ mod tests {
         fn test_context() -> WeightedAdjacencyList {
             vec![
                 vec![(1, 1.0)],
-                vec![(0, 2.0), (2, 3.0)],
+                vec![(0, 2.0), 
+                     (2, 3.0)],
                 vec![(1, 4.0)]
             ]
         }
