@@ -21,6 +21,19 @@ impl<T> AllowNodeValue<T>
 where
     T: Eq + Hash,
 {
+    /// Creates a node value policy from a whitelist.
+    ///
+    /// Nodes with data matching these values will be authorized.
+    ///
+    /// # Arguments
+    ///
+    /// * `values` - The data values to allow
+    pub fn with_allowed_values(values: Vec<T>) -> Self {
+        AllowNodeValue {
+            allowed_values: HashSet::from_iter(values)
+        }
+    }
+
     /// Adds a value to the whitelist.
     ///
     /// Nodes with data matching this value will be authorized.
