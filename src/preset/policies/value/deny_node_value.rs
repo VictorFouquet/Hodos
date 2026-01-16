@@ -3,11 +3,11 @@ use crate::policy::Policy;
 use crate::graph::{ Graph, Node, Edge };
 
 
-/// Authorization policy that only allows nodes with specific data values.
+/// Authorization policy that denies nodes with specific data values.
 ///
 /// Maintains a blacklist of denied values and rejects nodes whose data
-/// doesn't match any value in the set. Nodes without data (returning `None`)
-/// are always rejected.
+/// matches any value in the set. Nodes without data (returning `None`)
+/// are always accepted.
 ///
 /// # Type Parameters
 ///
@@ -54,7 +54,7 @@ where
     Entity: Node,
     Entity::Data: Eq + Hash,
 {
-    /// Allows a node if its data doesn't match a blacklisted value.
+    /// Denies a node if its data matches a blacklisted value.
     ///
     /// # Arguments
     ///
