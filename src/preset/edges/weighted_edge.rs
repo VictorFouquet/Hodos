@@ -16,6 +16,7 @@ use crate::graph::Edge;
 /// assert_eq!(edge.to(), 1);
 /// assert_eq!(edge.weight(), 5.0);
 /// ```
+#[derive(Copy, Clone, Debug)]
 pub struct WeightedEdge {
     to: u32,
     from: u32,
