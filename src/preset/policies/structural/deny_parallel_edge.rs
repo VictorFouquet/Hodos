@@ -73,4 +73,20 @@ mod tests {
 
         assert!(!policy.apply(&edge, &graph));
     }
+
+    #[test]
+    fn allows_reversed_edges() {
+        let policy = DenyParallelEdge::default();
+
+        let mut graph = Graph::<MockNode, MockEdge>::new();
+        
+        let forward = MockEdge::new(0, 1, None);
+        let reverse = MockEdge::new(1, 0, None);
+        
+        assert!(policy.apply(&forward, &graph));
+
+        graph.add_edge(forward);
+
+        assert!(policy.apply(&reverse, &graph)); // Different (from, to) pair
+    }
 }

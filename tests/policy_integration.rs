@@ -62,38 +62,6 @@ mod policy_integration {
             use hodos::preset::policies::value::AllowWeightAbove;
             use hodos::preset::policies::value::AllowWeightBelow;
             use hodos::preset::policies::structural::DenyParallelEdge;
-    
-            #[test]
-            fn rejects_duplicate_edges_when_unique_policy_active() {
-                let policy = DenyParallelEdge::default();
-                
-                let mut graph = Graph::<EmptyNode, WeightedEdge>::new();
-                
-                let edge1 = WeightedEdge::new(0, 1, Some(1.0));
-                let edge2 = WeightedEdge::new(0, 1, Some(2.0)); // Same endpoints, different weight
-                
-                assert!(policy.apply(&edge1, &graph));
-                
-                graph.add_edge(edge1);
-
-                assert!(!policy.apply(&edge2, &graph)); // Duplicate endpoints
-            }
-        
-            #[test]
-            fn accepts_reverse_edges_as_different_with_unique_policy() {
-                let policy = DenyParallelEdge::default();
-
-                let mut graph = Graph::<EmptyNode, UnweightedEdge>::new();
-                
-                let forward = UnweightedEdge::new(0, 1, None);
-                let reverse = UnweightedEdge::new(1, 0, None);
-                
-                assert!(policy.apply(&forward, &graph));
-
-                graph.add_edge(forward);
-
-                assert!(policy.apply(&reverse, &graph)); // Different (from, to) pair
-            }
         
             #[test]
             fn rejects_edges_above_weight_threshold() {
