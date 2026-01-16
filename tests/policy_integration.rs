@@ -2,7 +2,7 @@ mod policy_integration {
     use hodos::graph::{ Graph, Node };
     use hodos::policy::Composite;
     use hodos::preset::{ DataNode, EmptyNode, UnweightedEdge };
-    use hodos::preset::policies::allow::allow_budget::{ NodeBudget, EdgeBudget };
+    use hodos::preset::policies::budget::{ NodeBudget, EdgeBudget };
     
     mod allow {
         use super::*;
