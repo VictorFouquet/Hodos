@@ -64,17 +64,6 @@ mod policy_integration {
             use hodos::preset::policies::structural::DenyParallelEdge;
         
             #[test]
-            fn rejects_edges_above_weight_threshold() {
-                let graph = Graph::<EmptyNode, WeightedEdge>::new();
-
-                let policy = AllowWeightBelow::new(5.0);
-                
-                assert!(policy.apply(&WeightedEdge::new(0, 1, Some(4.9)), &graph));
-                assert!(!policy.apply(&WeightedEdge::new(0, 2, Some(5.0)), &graph)); // Equal to threshold
-                assert!(!policy.apply(&WeightedEdge::new(0, 3, Some(10.0)), &graph));
-            }
-        
-            #[test]
             fn accepts_edges_under_budget_regardless_of_uniqueness() {
                 let mut graph = Graph::<EmptyNode, UnweightedEdge>::new();
 

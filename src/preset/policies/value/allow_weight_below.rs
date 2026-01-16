@@ -72,7 +72,7 @@ mod tests {
     fn make_edge() -> MockWeightedEdge { MockWeightedEdge::new(0, 0, None) }
 
     #[test]
-    fn test_allow_weight_under_allows_edges_with_weight_under_threshold() {
+    fn allows_edges_with_weight_below_threshold() {
         let policy = AllowWeightBelow::new(10.0);
         
         let graph = Graph::<MockValueNode, MockWeightedEdge>::new();
@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn test_allow_weight_under_rejects_edges_with_weight_equal_to_threshold() {
+    fn rejects_edges_with_weight_equal_to_threshold() {
         let graph = Graph::<MockValueNode, MockWeightedEdge>::new();
 
         let policy = AllowWeightBelow::new(5.0);
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn test_allow_weight_under_rejects_edges_with_weight_above_threshold() {
+    fn rejects_edges_with_weight_above_threshold() {
         let graph = Graph::<MockValueNode, MockWeightedEdge>::new();
 
         let policy = AllowWeightBelow::new(1.0);
