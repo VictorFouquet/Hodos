@@ -10,7 +10,7 @@ mod policy_integration {
 
         mod composite_for_nodes {
             use super::*;
-            use hodos::preset::policies::allow::auth_unique::UniqueNode;
+            use hodos::preset::policies::mutation::DenyNodeOverride;
             use hodos::preset::policies::value::AllowNodeValue;
             
             
@@ -34,7 +34,7 @@ mod policy_integration {
             #[test]
             fn accepts_unique_nodes_or_whitelisted_values() {
                 let policy = Composite::Or(
-                    UniqueNode::default(),
+                    DenyNodeOverride::default(),
                     AllowNodeValue::with_allowed_values(vec![999])
                 );
                 let mut graph = Graph::<DataNode<u32>, UnweightedEdge>::new();
@@ -61,11 +61,11 @@ mod policy_integration {
             use hodos::preset::UnweightedEdge;
             use hodos::preset::policies::allow::AllowWeightAbove;
             use hodos::preset::policies::allow::AllowWeightUnder;
-            use hodos::preset::policies::allow::UniqueEdge;
+            use hodos::preset::policies::structural::DenyParallelEdge;
     
             #[test]
             fn rejects_duplicate_edges_when_unique_policy_active() {
-                let policy = UniqueEdge::default();
+                let policy = DenyParallelEdge::default();
                 
                 let mut graph = Graph::<EmptyNode, WeightedEdge>::new();
                 
@@ -81,7 +81,7 @@ mod policy_integration {
         
             #[test]
             fn accepts_reverse_edges_as_different_with_unique_policy() {
-                let policy = UniqueEdge::default();
+                let policy = DenyParallelEdge::default();
 
                 let mut graph = Graph::<EmptyNode, UnweightedEdge>::new();
                 
@@ -112,7 +112,7 @@ mod policy_integration {
 
                 let policy = Composite::Or(
                     EdgeBudget::new(2),
-                    UniqueEdge::default()
+                    DenyParallelEdge::default()
                 );
                 
                 let edge = UnweightedEdge::new(0, 1, None);
@@ -129,7 +129,7 @@ mod policy_integration {
             #[test]
             fn rejects_heavy_edges_even_when_unique() {
                 let policy = Composite::And(
-                    UniqueEdge::default(),
+                    DenyParallelEdge::default(),
                     AllowWeightUnder::new(5.0)
                 );
                 
@@ -148,7 +148,7 @@ mod policy_integration {
             fn enforces_uniqueness_weight_and_budget_constraints() {
                 let policy = Composite::And(
                     Composite::And(
-                        UniqueEdge::default(),
+                        DenyParallelEdge::default(),
                         AllowWeightUnder::new(5.0)
                     ),
                     EdgeBudget::new(2)
@@ -207,7 +207,7 @@ mod policy_integration {
                 let policy = Composite::And(
                     AllowWeightAbove::new(5.0),
                     AllowWeightUnder::new(10.0)
-                ).and(UniqueEdge::default());
+                ).and(DenyParallelEdge::default());
 
                 let in_range_unique_1 = WeightedEdge::new(0, 1, Some(6.0));
                 let in_range_unique_2 = WeightedEdge::new(1, 2, Some(9.0));
