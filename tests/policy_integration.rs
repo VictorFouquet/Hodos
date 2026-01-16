@@ -11,7 +11,7 @@ mod policy_integration {
         mod composite_for_nodes {
             use super::*;
             use hodos::preset::policies::allow::auth_unique::UniqueNode;
-            use hodos::preset::policies::allow::allow_value::AllowNodeValue;
+            use hodos::preset::policies::value::AllowNodeValue;
             
             
             #[test]
