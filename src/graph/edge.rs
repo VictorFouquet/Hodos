@@ -15,10 +15,10 @@ pub trait Edge {
     fn new(from: u32, to: u32, weight: Option<f64>) -> Self;
     
     /// Returns the destination node ID.
-    fn to(&self)   -> u32;
+    fn to(&self)   -> u32 { 0 }
     
     /// Returns the source node ID.
-    fn from(&self) -> u32;
+    fn from(&self) -> u32 { 0 }
 
     /// Returns the weight of the connection.
     fn weight(&self) -> f64 { 1.0 }
