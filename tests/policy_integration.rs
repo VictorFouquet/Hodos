@@ -59,8 +59,8 @@ mod policy_integration {
             use hodos::graph::Edge;
             use hodos::preset::WeightedEdge;
             use hodos::preset::UnweightedEdge;
-            use hodos::preset::policies::allow::AllowWeightAbove;
-            use hodos::preset::policies::allow::AllowWeightUnder;
+            use hodos::preset::policies::value::AllowWeightAbove;
+            use hodos::preset::policies::value::AllowWeightBelow;
             use hodos::preset::policies::structural::DenyParallelEdge;
     
             #[test]
@@ -99,7 +99,7 @@ mod policy_integration {
             fn rejects_edges_above_weight_threshold() {
                 let graph = Graph::<EmptyNode, WeightedEdge>::new();
 
-                let policy = AllowWeightUnder::new(5.0);
+                let policy = AllowWeightBelow::new(5.0);
                 
                 assert!(policy.apply(&WeightedEdge::new(0, 1, Some(4.9)), &graph));
                 assert!(!policy.apply(&WeightedEdge::new(0, 2, Some(5.0)), &graph)); // Equal to threshold
@@ -130,7 +130,7 @@ mod policy_integration {
             fn rejects_heavy_edges_even_when_unique() {
                 let policy = Composite::And(
                     DenyParallelEdge::default(),
-                    AllowWeightUnder::new(5.0)
+                    AllowWeightBelow::new(5.0)
                 );
                 
                 let mut graph = Graph::<EmptyNode, WeightedEdge>::new();
@@ -149,7 +149,7 @@ mod policy_integration {
                 let policy = Composite::And(
                     Composite::And(
                         DenyParallelEdge::default(),
-                        AllowWeightUnder::new(5.0)
+                        AllowWeightBelow::new(5.0)
                     ),
                     EdgeBudget::new(2)
                 );
@@ -181,7 +181,7 @@ mod policy_integration {
                 let mut graph = Graph::<EmptyNode, WeightedEdge>::new();
 
                 let policy = Composite::Or(
-                    AllowWeightUnder::new(3.0),
+                    AllowWeightBelow::new(3.0),
                     EdgeBudget::new(2)
                 );
                 
@@ -206,7 +206,7 @@ mod policy_integration {
 
                 let policy = Composite::And(
                     AllowWeightAbove::new(5.0),
-                    AllowWeightUnder::new(10.0)
+                    AllowWeightBelow::new(10.0)
                 ).and(DenyParallelEdge::default());
 
                 let in_range_unique_1 = WeightedEdge::new(0, 1, Some(6.0));
