@@ -1,8 +1,8 @@
 /// A composable policy combinator supporting AND and OR logic.
 ///
 /// Composite policies combine two policies with boolean logic:
-/// - `And`: Both policies must authorize
-/// - `Or`: Either policy must authorize
+/// - `And`: Both policies must comply
+/// - `Or`: Either policy must comply
 ///
 /// Composites can be chained to create complex authorization logic.
 ///
@@ -21,14 +21,14 @@ pub enum Composite<P1, P2> {
 impl<P1, P2> Composite<P1, P2> {
     /// Combine with another policy using AND logic.
     ///
-    /// Returns a new composite where both this composite and the other policy must authorize.
+    /// Returns a new composite where both this composite and the other policy must comply.
     pub fn and<P3>(self, other: P3) -> Composite<Self, P3> {
         Composite::And(self, other)
     }
     
     /// Combine with another policy using OR logic.
     ///
-    /// Returns a new composite where either this composite or the other policy must authorize.
+    /// Returns a new composite where either this composite or the other policy must comply.
     pub fn or<P3>(self, other: P3) -> Composite<Self, P3> {
         Composite::Or(self, other)
     }
@@ -67,7 +67,7 @@ mod tests {
 
 
     #[test]
-    fn and_requires_both_policies_to_authorize() {
+    fn and_requires_both_policies_to_allow() {
         let comp = Composite::And(AlwaysTrue, AlwaysFalse);
         assert!(!comp.allow());
 
@@ -76,7 +76,7 @@ mod tests {
     }
 
     #[test]
-    fn or_requires_either_policy_to_authorize() {
+    fn or_requires_either_policy_to_allow() {
         let comp = Composite::Or(AlwaysTrue, AlwaysFalse);
         assert!(comp.allow());
 

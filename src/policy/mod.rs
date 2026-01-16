@@ -1,7 +1,7 @@
-pub mod authorize;
 pub mod composite;
+pub mod policy;
 pub mod terminate;
 
-pub use authorize::Authorize;
+pub use policy::Policy;
 pub use terminate::Terminate;
 pub use composite::Composite;

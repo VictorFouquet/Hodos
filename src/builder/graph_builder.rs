@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::graph::Graph;
 use crate::strategy::Sampler;
-use crate::policy::Authorize;
+use crate::policy::Policy;
 
 /// A builder for constructing graphs using configurable policies and sampling strategies.
 ///
@@ -13,8 +13,8 @@ use crate::policy::Authorize;
 ///
 /// # Type Parameters
 ///
-/// * `NodeAuth` - Policy type that authorizes node additions
-/// * `EdgeAuth` - Policy type that authorizes edge additions
+/// * `NodeAuth` - Policy type that allows node additions
+/// * `EdgeAuth` - Policy type that allows edge additions
 /// * `Samp` - Strategy type that generates graph samples
 pub struct GraphBuilder<NodeAuth, EdgeAuth, Samp, Ctx> {
     auth_edge_policy: EdgeAuth,
@@ -27,8 +27,8 @@ pub struct GraphBuilder<NodeAuth, EdgeAuth, Samp, Ctx> {
 impl<NodeAuth, EdgeAuth, Samp, Ctx> 
     GraphBuilder<NodeAuth, EdgeAuth, Samp, Ctx>
 where 
-    NodeAuth:    Authorize<Samp::Node, Ctx>,
-    EdgeAuth:    Authorize<Samp::Edge, Ctx>,
+    NodeAuth:    Policy<Samp::Node, Graph<Samp::Node, Samp::Edge>>,
+    EdgeAuth:    Policy<Samp::Edge, Graph<Samp::Node, Samp::Edge>>,
     Samp:        Sampler<Ctx>,
 {
     /// Creates a new `GraphBuilder` with the specified policies and sampling strategy.
@@ -56,9 +56,9 @@ where
     /// The builder will:
     /// 1. Request samples from the sampling strategy
     /// 2. Filter nodes through the node authorization policy
-    /// 3. Add authorized nodes and edges to the graph
+    /// 3. Add allowed nodes and edges to the graph
     /// 4. Filter edges through the edge authorization policy
-    /// 5. Add authorized nodes and edges to the graph
+    /// 5. Add allowed nodes and edges to the graph
     ///
     /// This process continues until the sampler returns `None`.
     ///
@@ -68,23 +68,22 @@ where
     ///
     /// # Returns
     ///
-    /// A fully constructed `Graph` containing all authorized nodes and edges
+    /// A fully constructed `Graph` containing all allowed nodes and edges
     pub fn build(&mut self, context: &Ctx) -> Graph<Samp::Node, Samp::Edge> {
         let mut graph = Graph::new();
         let mut edges_buffer = Vec::new();
 
         while let Some((nodes, edges)) = self.sample_strategy.next(context) {
             for node in nodes {
-                if self.auth_node_policy.add(&node, context) {
+                if self.auth_node_policy.apply(&node, &graph) {
                     graph.add_node(node);
                 }
             }
             edges_buffer.extend(edges);
-    
         }
         
         for edge in edges_buffer {
-            if self.auth_edge_policy.add(&edge, context) {
+            if self.auth_edge_policy.apply(&edge, &graph) {
                 graph.add_edge(edge);
             }
         }
@@ -201,13 +200,13 @@ mod tests {
 
     #[derive(Default)]
     struct AcceptAllPolicy;
-    impl<E, C> Authorize<E, C> for AcceptAllPolicy {
-        fn add(&mut self, _: &E, _: &C) -> bool { true }
+    impl<E, TNode: Node, TEdge: Edge> Policy<E, Graph<TNode, TEdge>> for AcceptAllPolicy {
+        fn apply(&self, _: &E, _: &Graph<TNode, TEdge>) -> bool { true }
     }
 
     #[derive(Default)]
     struct RejectAllPolicy;
-    impl<E, C> Authorize<E, C> for RejectAllPolicy {
-        fn add(&mut self, _: &E, _: &C) -> bool { false }
+    impl<E, TNode: Node, TEdge: Edge> Policy<E, Graph<TNode, TEdge>> for RejectAllPolicy {
+        fn apply(&self, _: &E, _: &Graph<TNode, TEdge>) -> bool { false }
     }
 }
