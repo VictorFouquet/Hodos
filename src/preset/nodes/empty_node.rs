@@ -15,6 +15,7 @@ use crate::graph::Node;
 /// assert_eq!(node.id(), 42);
 /// assert!(node.data().is_none());
 /// ```
+#[derive(Debug, Default)]
 pub struct EmptyNode {
     id: u32,
 }

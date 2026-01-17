@@ -17,6 +17,7 @@ use crate::graph::Node;
 /// node.set_data(&false);
 /// assert_eq!(node.data(), Some(&false));
 /// ```
+#[derive(Debug, Default)]
 pub struct DataNode<T> {
     id: u32,
     data: T,
