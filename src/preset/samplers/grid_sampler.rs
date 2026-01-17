@@ -31,10 +31,23 @@ pub struct Grid2DSampler<T> {
 }
 
 impl<T> Grid2DSampler<T> {
+    /// Creates a new 2D grid sampler with the default 4-connectivity (N, E, S, W).
+    ///
+    /// # Returns
+    ///
+    /// A `Grid2DSampler` initialized to sample cells using four-way connectivity.
     pub fn new() -> Self {
         Self::with_connect_four()
     }
 
+    /// Creates a 2D grid sampler using four-way connectivity: north, east, south, west.
+    ///
+    /// This is equivalent to the default connectivity and is useful if you want
+    /// to explicitly specify four-way neighbors.
+    ///
+    /// # Returns
+    ///
+    /// A `Grid2DSampler` with four neighbors per cell.
     pub fn with_connect_four() -> Self {
         Self::with_connect(vec![
             (-1,  0), // N
@@ -44,6 +57,13 @@ impl<T> Grid2DSampler<T> {
         ])
     }
 
+    /// Creates a 2D grid sampler using eight-way connectivity: N, NE, E, SE, S, SW, W, NW.
+    ///
+    /// This is useful for samplers that need to consider diagonal neighbors as well as orthogonal.
+    ///
+    /// # Returns
+    ///
+    /// A `Grid2DSampler` with eight neighbors per cell.
     pub fn with_connect_eight() -> Self {
         Self::with_connect(vec![
             (-1,  0), // N
@@ -57,6 +77,15 @@ impl<T> Grid2DSampler<T> {
         ])
     }
 
+    /// Internal helper to create a sampler with a custom neighbor pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `neighbors` - A vector of `(dx, dy)` tuples representing relative neighbor positions.
+    ///
+    /// # Returns
+    ///
+    /// A `Grid2DSampler` configured with the specified neighbor offsets.
     fn with_connect(neighbors: Vec<(i32, i32)>) -> Self {
         Grid2DSampler {
             current_x: 0,
