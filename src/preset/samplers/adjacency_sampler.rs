@@ -46,13 +46,13 @@ impl<N, E> Default for AdjacencySampler<N, E> {
 }
 
 pub struct AdjacencyListWithData<T> {
-    data: Vec<T>,
-    adjacency: AdjacencyList
+    pub data: Vec<T>,
+    pub adjacency: AdjacencyList
 }
 
 pub struct WeightedAdjacencyListWithData<T> {
-    data: Vec<T>,
-    adjacency: WeightedAdjacencyList
+    pub data: Vec<T>,
+    pub adjacency: WeightedAdjacencyList
 }
 
 impl Sampler<AdjacencyList> for SimpleAdjacencySampler {
