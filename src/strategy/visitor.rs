@@ -33,7 +33,7 @@ pub trait Visitor<Ctx> {
     /// * `from`    - The connection's source node id
     /// * `to`      - The connection's target node id
     /// * `context` - Contextual information available during traversal
-    fn should_explore(&self, from: u32, to: u32, context: &Ctx) -> bool;
+    fn should_explore(&mut self, from: u32, to: u32, context: &Ctx) -> bool;
 
     /// Visits a node during traversal.
     ///
@@ -43,5 +43,5 @@ pub trait Visitor<Ctx> {
     ///
     /// * `node_id` - The id of the node being visited
     /// * `context` - Contextual information available during traversal
-    fn visit(&self, node_id: u32, context: &Ctx);
+    fn visit(&mut self, node_id: u32, context: &Ctx);
 }
