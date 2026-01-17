@@ -23,7 +23,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::{Graph, Node, Edge};
 
     struct MockNode {
         id: u32,
