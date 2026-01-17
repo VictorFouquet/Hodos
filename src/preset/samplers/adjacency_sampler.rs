@@ -10,6 +10,11 @@ use crate::strategy::Sampler;
 pub type AdjacencyList = Vec<Vec<u32>>;
 pub type WeightedAdjacencyList = Vec<Vec<(u32, f64)>>;
 
+pub type SimpleAdjacencySampler = AdjacencySampler<EmptyNode, UnweightedEdge>;
+pub type WeightedAdjacencySampler = AdjacencySampler<EmptyNode, WeightedEdge>;
+pub type AdjacencyWithDataSampler<T> = AdjacencySampler<DataNode<T>, UnweightedEdge>;
+pub type WeightedAdjacencyWithDataSampler<T> = AdjacencySampler<DataNode<T>, WeightedEdge>;
+
 /// Samples a graph from an adjacency list representation.
 ///
 /// Converts an adjacency list context into nodes and edges. Each outer
@@ -50,8 +55,7 @@ pub struct WeightedAdjacencyListWithData<T> {
     adjacency: WeightedAdjacencyList
 }
 
-
-impl Sampler<AdjacencyList> for AdjacencySampler<EmptyNode, UnweightedEdge> {
+impl Sampler<AdjacencyList> for SimpleAdjacencySampler {
     type Node = EmptyNode;
     type Edge = UnweightedEdge;
     
@@ -75,7 +79,7 @@ impl Sampler<AdjacencyList> for AdjacencySampler<EmptyNode, UnweightedEdge> {
     }
 }
 
-impl Sampler<WeightedAdjacencyList> for AdjacencySampler<EmptyNode, WeightedEdge> {
+impl Sampler<WeightedAdjacencyList> for WeightedAdjacencySampler {
     type Node = EmptyNode;
     type Edge = WeightedEdge;
     
@@ -99,7 +103,7 @@ impl Sampler<WeightedAdjacencyList> for AdjacencySampler<EmptyNode, WeightedEdge
     }
 }
 
-impl<T: Clone> Sampler<AdjacencyListWithData<T>> for AdjacencySampler<DataNode<T>, UnweightedEdge> {
+impl<T: Clone> Sampler<AdjacencyListWithData<T>> for AdjacencyWithDataSampler<T> {
     type Node = DataNode<T>;
     type Edge = UnweightedEdge;
     
@@ -127,7 +131,7 @@ impl<T: Clone> Sampler<AdjacencyListWithData<T>> for AdjacencySampler<DataNode<T
     }
 }
 
-impl<T: Clone> Sampler<WeightedAdjacencyListWithData<T>> for AdjacencySampler<DataNode<T>, WeightedEdge> {
+impl<T: Clone> Sampler<WeightedAdjacencyListWithData<T>> for WeightedAdjacencyWithDataSampler<T> {
     type Node = DataNode<T>;
     type Edge = WeightedEdge;
     
@@ -206,18 +210,16 @@ mod tests {
     
     mod simple_adjacency {
         use super::*;
-        
-        type TestSampler = AdjacencySampler<EmptyNode, UnweightedEdge>;
-        
+                
         fn test_context() -> AdjacencyList {
             vec![vec![1], vec![0, 2], vec![1]]
         }
         
-        test_sampler_common!(TestSampler, AdjacencyList, test_context());
+        test_sampler_common!(SimpleAdjacencySampler, AdjacencyList, test_context());
         
         #[test]
         fn maps_edges_correctly() {
-            let mut sampler = TestSampler::default();
+            let mut sampler = SimpleAdjacencySampler::default();
             let context = test_context();
 
             let (_, edges) = sampler.next(&context).unwrap();
@@ -236,9 +238,7 @@ mod tests {
     
     mod weighted_adjacency {
         use super::*;
-        
-        type TestSampler = AdjacencySampler<EmptyNode, WeightedEdge>;
-        
+                
         fn test_context() -> WeightedAdjacencyList {
             vec![
                 vec![(1, 1.0)],
@@ -248,11 +248,11 @@ mod tests {
             ]
         }
         
-        test_sampler_common!(TestSampler, WeightedAdjacencyList, test_context());
+        test_sampler_common!(WeightedAdjacencySampler, WeightedAdjacencyList, test_context());
         
         #[test]
         fn maps_edges_with_weights() {
-            let mut sampler = TestSampler::default();
+            let mut sampler = WeightedAdjacencySampler::default();
             let context = test_context();
 
             let (_, edges) = sampler.next(&context).unwrap();
