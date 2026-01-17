@@ -28,7 +28,7 @@ where
     TNode: Node,
     TEdge: Edge,
 {
-    fn apply(&self, _entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, _entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
         context.get_edges().len() < self.budget
     }
 }

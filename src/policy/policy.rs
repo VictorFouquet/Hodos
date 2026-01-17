@@ -15,7 +15,7 @@ pub trait Policy<Entity, Context> {
     /// # Returns
     ///
     /// `true` if the entity should be added, `false` otherwise
-    fn apply(&self, entity: &Entity, context: &Context) -> bool;
+    fn is_compliant(&self, entity: &Entity, context: &Context) -> bool;
 }
 
 impl<E, P1, P2, C> Policy<E, C> for Composite<P1, P2>
@@ -23,10 +23,10 @@ where
     P1: Policy<E, C>,
     P2: Policy<E, C>,
 {
-    fn apply(&self, entity: &E, context: &C) -> bool {
+    fn is_compliant(&self, entity: &E, context: &C) -> bool {
         match self {
-            Composite::And(p1, p2) => p1.apply(entity, context) && p2.apply(entity, context),
-            Composite::Or(p1, p2) => p1.apply(entity, context) || p2.apply(entity, context),
+            Composite::And(p1, p2) => p1.is_compliant(entity, context) && p2.is_compliant(entity, context),
+            Composite::Or(p1, p2) => p1.is_compliant(entity, context) || p2.is_compliant(entity, context),
         }
     }
 }

@@ -25,7 +25,7 @@ where
     /// # Returns
     ///
     /// `true` if this is the first time seeing this edge pair, `false` otherwise
-    fn apply(&self, entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
         !context.get_edges()
             .into_iter()
             .any(|e| e.from() == entity.from() && e.to() == entity.to())
@@ -67,11 +67,11 @@ mod tests {
         let mut graph = Graph::<MockNode, MockEdge>::new();
         let edge = MockEdge::new(0, 1, None);
 
-        assert!(policy.apply(&edge, &graph));
+        assert!(policy.is_compliant(&edge, &graph));
 
         graph.add_edge(edge.clone());
 
-        assert!(!policy.apply(&edge, &graph));
+        assert!(!policy.is_compliant(&edge, &graph));
     }
 
     #[test]
@@ -83,10 +83,10 @@ mod tests {
         let forward = MockEdge::new(0, 1, None);
         let reverse = MockEdge::new(1, 0, None);
         
-        assert!(policy.apply(&forward, &graph));
+        assert!(policy.is_compliant(&forward, &graph));
 
         graph.add_edge(forward);
 
-        assert!(policy.apply(&reverse, &graph)); // Different (from, to) pair
+        assert!(policy.is_compliant(&reverse, &graph)); // Different (from, to) pair
     }
 }

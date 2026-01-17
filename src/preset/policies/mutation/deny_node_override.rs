@@ -22,7 +22,7 @@ where
     /// # Returns
     ///
     /// `true` if this is the first time seeing this node ID, `false` otherwise
-    fn apply(&self, entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
         !context.get_nodes().into_iter().any(|n| n.id() == entity.id())
     }
 }
@@ -58,17 +58,17 @@ mod tests {
         let mut graph = Graph::<MockNode, MockEdge>::new();
         let mut node = MockNode::new(0, None);
 
-        assert!(policy.apply(&node, &graph));
+        assert!(policy.is_compliant(&node, &graph));
 
         graph.add_node(node.clone());
         node = MockNode::new(1, None);
         
-        assert!(policy.apply(&node, &graph));
+        assert!(policy.is_compliant(&node, &graph));
 
         graph.add_node(node.clone());
         node = MockNode::new(2, None);
 
-        assert!(policy.apply(&node, &graph));
+        assert!(policy.is_compliant(&node, &graph));
     }
 
     #[test]
@@ -77,10 +77,10 @@ mod tests {
         let mut graph = Graph::<MockNode, MockEdge>::new();
         let node = MockNode::new(0, None);
 
-        assert!(policy.apply(&node, &graph));
+        assert!(policy.is_compliant(&node, &graph));
 
         graph.add_node(node.clone());
 
-        assert!(!policy.apply(&node, &graph));
+        assert!(!policy.is_compliant(&node, &graph));
     }
 }

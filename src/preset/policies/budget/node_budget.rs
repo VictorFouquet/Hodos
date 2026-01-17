@@ -28,7 +28,7 @@ where
     TNode: Node,
     TEdge: Edge,
 {
-    fn apply(&self, _entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, _entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
         context.get_nodes().len() < self.budget
     }
 }
@@ -62,15 +62,15 @@ mod tests {
         let mut graph = Graph::<MockNode, MockEdge>::new();
         let mut node = MockNode::new(0, None);
         
-        assert!(policy.apply(&node, &graph));
+        assert!(policy.is_compliant(&node, &graph));
         graph.add_node(node);
 
         node = MockNode::new(1, None);
-        assert!(policy.apply(&node, &graph));
+        assert!(policy.is_compliant(&node, &graph));
         graph.add_node(node);
 
         node = MockNode::new(2, None);
-        assert!(!policy.apply(&node, &graph));
+        assert!(!policy.is_compliant(&node, &graph));
     }
 
     #[test]
@@ -78,6 +78,6 @@ mod tests {
         let policy = NodeBudget::new(0);
         let graph = Graph::<MockNode, MockEdge>::new();
 
-        assert!(!policy.apply(&create_node(), &graph));
+        assert!(!policy.is_compliant(&create_node(), &graph));
     }
 }

@@ -39,7 +39,7 @@ where
     /// # Returns
     ///
     /// `true` if `edge.weight() < threshold`, `false` otherwise
-    fn apply(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
         entity.weight() < self.threshold
     }
 }
@@ -82,7 +82,7 @@ mod tests {
         assert_eq!(policy.threshold, 10.0);
         assert_eq!(edge.weight(), 5.0);
 
-        assert!(policy.apply(&edge, &graph));
+        assert!(policy.is_compliant(&edge, &graph));
     }
 
     #[test]
@@ -95,7 +95,7 @@ mod tests {
         assert_eq!(policy.threshold, 5.0);
         assert_eq!(edge.weight(), 5.0);
 
-        assert!(!policy.apply(&edge, &graph));
+        assert!(!policy.is_compliant(&edge, &graph));
     }
 
     #[test]
@@ -108,6 +108,6 @@ mod tests {
         assert_eq!(policy.threshold, 1.0);
         assert_eq!(edge.weight(), 5.0);
 
-        assert!(!policy.apply(&edge, &graph));
+        assert!(!policy.is_compliant(&edge, &graph));
     }
 }

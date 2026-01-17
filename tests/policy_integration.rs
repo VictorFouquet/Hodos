@@ -25,10 +25,10 @@ mod policy_integration {
                 let node1 = DataNode::new(0, Some(true));
                 let node2 = DataNode::new(1, Some(true));
                 
-                assert!(policy.apply(&node1, &graph)); // allowed + under budget
+                assert!(policy.is_compliant(&node1, &graph)); // allowed + under budget
                 graph.add_node(node1);
 
-                assert!(!policy.apply(&node2, &graph)); // allowed but budget exhausted
+                assert!(!policy.is_compliant(&node2, &graph)); // allowed but budget exhausted
             }
         
             #[test]
@@ -43,13 +43,13 @@ mod policy_integration {
                 let whitelisted_dup = DataNode::new(0, Some(999));
                 let forbidden_dup = DataNode::new(0, Some(1));
 
-                assert!(policy.apply(&unique, &graph)); // unique
+                assert!(policy.is_compliant(&unique, &graph)); // unique
                 graph.add_node(unique);
 
-                assert!(policy.apply(&whitelisted_dup, &graph)); // whitelisted (duplicate OK)
+                assert!(policy.is_compliant(&whitelisted_dup, &graph)); // whitelisted (duplicate OK)
                 graph.add_node(whitelisted_dup);
                 
-                assert!(!policy.apply(&forbidden_dup, &graph)); // duplicate + not whitelisted
+                assert!(!policy.is_compliant(&forbidden_dup, &graph)); // duplicate + not whitelisted
             }
         }
     
@@ -74,31 +74,13 @@ mod policy_integration {
                 
                 let edge = UnweightedEdge::new(0, 1, None);
                 
-                assert!(policy.apply(&edge, &graph)); // Unique
+                assert!(policy.is_compliant(&edge, &graph)); // Unique
                 graph.add_edge(edge);
 
-                assert!(policy.apply(&edge, &graph)); // Duplicate but under budget
+                assert!(policy.is_compliant(&edge, &graph)); // Duplicate but under budget
                 graph.add_edge(edge);
 
-                assert!(!policy.apply(&edge, &graph)); // Duplicate and budget exhausted
-            }
-        
-            #[test]
-            fn rejects_heavy_edges_even_when_unique() {
-                let policy = Composite::And(
-                    DenyParallelEdge::default(),
-                    AllowWeightBelow::new(5.0)
-                );
-                
-                let mut graph = Graph::<EmptyNode, WeightedEdge>::new();
-
-                let light = WeightedEdge::new(0, 1, Some(3.0));
-                let heavy = WeightedEdge::new(0, 2, Some(10.0));
-
-                assert!(policy.apply(&light, &graph)); // Unique and light
-                graph.add_edge(light);
-
-                assert!(!policy.apply(&heavy, &graph)); // Unique but heavy
+                assert!(!policy.is_compliant(&edge, &graph)); // Duplicate and budget exhausted
             }
         
             #[test]
@@ -113,24 +95,28 @@ mod policy_integration {
 
                 let mut graph = Graph::<EmptyNode, WeightedEdge>::new();
 
+                let too_heavy = WeightedEdge::new(3, 4, Some(10.0));
+                
                 let unique_light_under_budget_1 = WeightedEdge::new(0, 1, Some(3.0));
+
+                let duplicate = WeightedEdge::new(0, 1, Some(1.0));
+
                 let unique_light_under_budget_2 = WeightedEdge::new(1, 2, Some(4.0));
                 
                 let budget_exhausted = WeightedEdge::new(2, 3, Some(2.0));
-                let duplicate = WeightedEdge::new(0, 1, Some(1.0));
-                let too_heavy = WeightedEdge::new(3, 4, Some(10.0));
 
-                assert!(policy.apply(&unique_light_under_budget_1, &graph)); // ✓ unique, light, under budget
+                assert!(!policy.is_compliant(&too_heavy, &graph)); // ✗ too heavy
+                
+                assert!(policy.is_compliant(&unique_light_under_budget_1, &graph)); // ✓ unique, light, under budget
                 graph.add_edge(unique_light_under_budget_1);
                 
-                assert!(policy.apply(&unique_light_under_budget_2, &graph)); // ✓ unique, light, under budget
+                assert!(!policy.is_compliant(&duplicate, &graph)); // ✗ duplicate
+
+
+                assert!(policy.is_compliant(&unique_light_under_budget_2, &graph)); // ✓ unique, light, under budget
                 graph.add_edge(unique_light_under_budget_2);
 
-                assert!(!policy.apply(&budget_exhausted, &graph)); // ✗ budget exhausted
-
-                assert!(!policy.apply(&duplicate, &graph)); // ✗ duplicate
-
-                assert!(!policy.apply(&too_heavy, &graph)); // ✗ too heavy
+                assert!(!policy.is_compliant(&budget_exhausted, &graph)); // ✗ budget exhausted
             }
         
             #[test]
@@ -147,14 +133,14 @@ mod policy_integration {
                 let heavy_exhausted_budget = WeightedEdge::new(2, 3, Some(15.0));
                 let light_exhausted_budget = WeightedEdge::new(2, 3, Some(1.0));
 
-                assert!(policy.apply(&heavy_under_budget_1, &graph)); // Heavy but under budget
+                assert!(policy.is_compliant(&heavy_under_budget_1, &graph)); // Heavy but under budget
                 graph.add_edge(heavy_under_budget_1);
 
-                assert!(policy.apply(&heavy_under_budget_2, &graph)); // Heavy but under budget
+                assert!(policy.is_compliant(&heavy_under_budget_2, &graph)); // Heavy but under budget
                 graph.add_edge(heavy_under_budget_2);
 
-                assert!(!policy.apply(&heavy_exhausted_budget, &graph)); // Heavy and budget exhausted
-                assert!(policy.apply(&light_exhausted_budget, &graph)); // Light (OR satisfied)
+                assert!(!policy.is_compliant(&heavy_exhausted_budget, &graph)); // Heavy and budget exhausted
+                assert!(policy.is_compliant(&light_exhausted_budget, &graph)); // Light (OR satisfied)
             }
     
             #[test]
@@ -172,15 +158,15 @@ mod policy_integration {
                 let unique_above_range = WeightedEdge::new(2, 3, Some(20.0));
                 let unique_below_range = WeightedEdge::new(3, 4, Some(1.0));
 
-                assert!(policy.apply(&in_range_unique_1, &graph)); // In range and unique
+                assert!(policy.is_compliant(&in_range_unique_1, &graph)); // In range and unique
                 graph.add_edge(in_range_unique_1);
 
-                assert!(policy.apply(&in_range_unique_2, &graph)); // In range and unique
+                assert!(policy.is_compliant(&in_range_unique_2, &graph)); // In range and unique
                 graph.add_edge(in_range_unique_2);
 
-                assert!(!policy.apply(&in_range_duplicate, &graph)); // In range but duplicate
-                assert!(!policy.apply(&unique_above_range, &graph)); // Unique but above range
-                assert!(!policy.apply(&unique_below_range, &graph)); // Unique but below range
+                assert!(!policy.is_compliant(&in_range_duplicate, &graph)); // In range but duplicate
+                assert!(!policy.is_compliant(&unique_above_range, &graph)); // Unique but above range
+                assert!(!policy.is_compliant(&unique_below_range, &graph)); // Unique but below range
             }
         }
     }

@@ -65,7 +65,7 @@ where
     ///
     /// `true` if the node's data is in the whitelist, `false` otherwise.
     /// Nodes without data always return `false`.
-    fn apply(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
         match entity.data() {
             Some(v) => self.allowed_values.contains(v),
             None => false,
@@ -107,7 +107,7 @@ mod tests {
         let node = make_node();
         assert_eq!(node.data(), Some(&true));
 
-        assert!(!policy.apply(&node, &graph));
+        assert!(!policy.is_compliant(&node, &graph));
     }
 
     #[test]
@@ -122,7 +122,7 @@ mod tests {
         let node = make_node();
         assert_eq!(node.data(), Some(&true));
         
-        assert!(policy.apply(&node, &graph));
+        assert!(policy.is_compliant(&node, &graph));
     }
 
     #[test]
@@ -137,6 +137,6 @@ mod tests {
         let node = make_node();
         assert_eq!(node.data(), Some(&true));
 
-        assert!(!policy.apply(&node, &graph));
+        assert!(!policy.is_compliant(&node, &graph));
     }
 }

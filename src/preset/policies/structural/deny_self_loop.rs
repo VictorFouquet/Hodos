@@ -21,7 +21,7 @@ where
     /// # Returns
     ///
     /// `true` from is different than to, `false` otherwise
-    fn apply(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
         entity.from() != entity.to()
     }
 }
@@ -61,6 +61,6 @@ mod tests {
         let graph = Graph::<MockNode, MockEdge>::new();
         let edge = MockEdge::new(0, 0, None);
 
-        assert!(!policy.apply(&edge, &graph));
+        assert!(!policy.is_compliant(&edge, &graph));
     }
 }

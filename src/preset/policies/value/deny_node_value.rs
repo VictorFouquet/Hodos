@@ -65,7 +65,7 @@ where
     ///
     /// `false` if the node's data is in the blacklist, `true` otherwise.
     /// Nodes without data always return `true`.
-    fn apply(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
         match entity.data() {
             Some(v) => !self.denied_values.contains(v),
             None => true,
@@ -102,8 +102,8 @@ mod tests {
         let graph = Graph::<MockValueNode, MockEdge>::new();
         assert_eq!(policy.denied_values.len(), 0);
         
-        assert!(policy.apply(&MockValueNode::new(0, Some(true)), &graph));
-        assert!(policy.apply(&MockValueNode::new(0, Some(false)), &graph));
+        assert!(policy.is_compliant(&MockValueNode::new(0, Some(true)), &graph));
+        assert!(policy.is_compliant(&MockValueNode::new(0, Some(false)), &graph));
     }
 
     #[test]
@@ -115,7 +115,7 @@ mod tests {
         policy.add_denied_value(true);
         assert_eq!(policy.denied_values.len(), 1);
                 
-        assert!(policy.apply(&MockValueNode::new(0, Some(false)), &graph));
+        assert!(policy.is_compliant(&MockValueNode::new(0, Some(false)), &graph));
     }
 
     #[test]
@@ -127,6 +127,6 @@ mod tests {
         policy.add_denied_value(true);
         assert_eq!(policy.denied_values.len(), 1);
 
-        assert!(!policy.apply(&MockValueNode::new(0, Some(true)), &graph));
+        assert!(!policy.is_compliant(&MockValueNode::new(0, Some(true)), &graph));
     }
 }

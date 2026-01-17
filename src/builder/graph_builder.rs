@@ -75,7 +75,7 @@ where
 
         while let Some((nodes, edges)) = self.sample_strategy.next(context) {
             for node in nodes {
-                if self.auth_node_policy.apply(&node, &graph) {
+                if self.auth_node_policy.is_compliant(&node, &graph) {
                     graph.add_node(node);
                 }
             }
@@ -83,7 +83,7 @@ where
         }
         
         for edge in edges_buffer {
-            if self.auth_edge_policy.apply(&edge, &graph) {
+            if self.auth_edge_policy.is_compliant(&edge, &graph) {
                 graph.add_edge(edge);
             }
         }
@@ -201,12 +201,12 @@ mod tests {
     #[derive(Default)]
     struct AcceptAllPolicy;
     impl<E, TNode: Node, TEdge: Edge> Policy<E, Graph<TNode, TEdge>> for AcceptAllPolicy {
-        fn apply(&self, _: &E, _: &Graph<TNode, TEdge>) -> bool { true }
+        fn is_compliant(&self, _: &E, _: &Graph<TNode, TEdge>) -> bool { true }
     }
 
     #[derive(Default)]
     struct RejectAllPolicy;
     impl<E, TNode: Node, TEdge: Edge> Policy<E, Graph<TNode, TEdge>> for RejectAllPolicy {
-        fn apply(&self, _: &E, _: &Graph<TNode, TEdge>) -> bool { false }
+        fn is_compliant(&self, _: &E, _: &Graph<TNode, TEdge>) -> bool { false }
     }
 }
