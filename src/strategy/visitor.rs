@@ -44,4 +44,17 @@ pub trait Visitor<Ctx> {
     /// * `node_id` - The id of the node being visited
     /// * `context` - Contextual information available during traversal
     fn visit(&mut self, node_id: u32, context: &Ctx);
+
+    /// Determines if exploration should be stopped.
+    ///
+    /// Implement to determine if a max depth is required, a path finding goal reached...
+    ///
+    /// # Arguments
+    ///
+    /// * `node_id` - The last visited node id
+    ///
+    /// # Returns
+    ///
+    /// `true` if the exploration should stop, `false` otherwise
+    fn should_stop(&self, _node_id: u32) -> bool { false }
 }

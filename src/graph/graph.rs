@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::frontier::Frontier;
 use crate::graph::Node;
 use crate::graph::Edge;
-use crate::policy::Terminate;
 use crate::strategy::Visitor;
 
 /// A graph data structure storing nodes and directed edges.
@@ -87,7 +86,6 @@ where
     /// * `start` - ID of the starting node
     /// * `frontier` - Strategy controlling which nodes to explore next
     /// * `visitor` - Logic for exploration decisions and node processing
-    /// * `terminate` - Policy determining when to stop traversal
     ///
     /// # Traversal Flow
     ///
@@ -97,13 +95,12 @@ where
     ///    - For each outgoing edge, ask visitor if it should be explored
     ///    - Push unexplored neighbors to frontier with visitor-computed costs
     ///    - Visit the current node (perform side effects, logging, etc.)
-    ///    - Check termination condition
+    ///    - Ask visitor about termination condition
     pub fn traverse(
         &self,
         start:     u32,
         frontier:  &mut dyn Frontier,
-        visitor:   &mut dyn Visitor<Self>,
-        terminate: &mut dyn Terminate
+        visitor:   &mut dyn Visitor<Self>
     ) {
         frontier.push(start, Some(visitor.init_cost(start, &self)));
         
@@ -129,7 +126,7 @@ where
 
             visitor.visit(current_id, &self);
 
-            if terminate.stop(Some(current_id)) {
+            if visitor.should_stop(current_id) {
                 break;
             }
         }
