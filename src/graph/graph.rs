@@ -126,7 +126,7 @@ where
 
             visitor.visit(current_id, &self);
 
-            if visitor.should_stop(current_id) {
+            if visitor.should_stop(current_id, &self) {
                 break;
             }
         }

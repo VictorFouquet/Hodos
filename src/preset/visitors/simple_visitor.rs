@@ -1,5 +1,7 @@
 use std::collections::HashSet;
+use crate::policy::Policy;
 use crate::strategy::Visitor;
+
 
 /// Simple visitor that prevents revisiting the same node twice.
 ///
@@ -11,12 +13,28 @@ use crate::strategy::Visitor;
 /// - Preventing infinite loops in cyclic graphs
 /// - Basic exploration control without domain-specific logic
 #[derive(Debug, Default)]
-pub struct SimpleVisitor {
+pub struct SimpleVisitor<P> {
     /// Set of node IDs that have already been visited.
-    visited: HashSet<u32>
+    visited: HashSet<u32>,
+    terminate: P,
 }
 
-impl<Ctx> Visitor<Ctx> for SimpleVisitor {
+impl<P> SimpleVisitor<P>
+where
+    P: Policy<u32, HashSet<u32>>
+{
+    pub fn new(terminate: P) -> Self {
+        SimpleVisitor::<P> {
+            visited: HashSet::new(),
+            terminate
+        }
+    }
+}
+
+impl<Ctx, P> Visitor<Ctx> for SimpleVisitor<P>
+where
+    P: Policy<u32, HashSet<u32>>
+{
     /// Determines whether traversal should continue toward a target node.
     ///
     /// # Arguments
@@ -41,6 +59,10 @@ impl<Ctx> Visitor<Ctx> for SimpleVisitor {
     fn visit(&mut self, node_id: u32, _context: &Ctx) {
         self.visited.insert(node_id);
     }
+
+    fn should_stop(&self, node_id: u32, _context: &Ctx) -> bool {
+        self.terminate.is_compliant(&node_id, &self.visited)
+    }
 }
 
 
@@ -48,15 +70,26 @@ impl<Ctx> Visitor<Ctx> for SimpleVisitor {
 mod tests {
     use super::*;
 
+    #[derive(Debug, Default)]
+    pub struct Terminate {}
+
+    impl Policy<u32, HashSet<u32>> for Terminate {
+        fn is_compliant(&self, _: &u32, __: &HashSet<u32>) -> bool { true }
+    }
+
     #[test]
     fn defaults_with_empty_visited_hashset() {
-        let visitor = SimpleVisitor::default();
+        let visitor = SimpleVisitor::new(
+            Terminate::default()
+        );
         assert_eq!(visitor.visited.len(), 0);
     }
 
     #[test]
     fn adds_id_to_visited() {
-        let mut visitor = SimpleVisitor::default();
+        let mut visitor = SimpleVisitor::new(
+            Terminate::default()
+        );
         assert_eq!(visitor.visited.len(), 0);
 
         visitor.visit(0, &());
@@ -71,7 +104,9 @@ mod tests {
 
     #[test]
     fn explores_unvisited() {
-        let mut visitor = SimpleVisitor::default();
+        let mut visitor = SimpleVisitor::new(
+            Terminate::default()
+        );
 
         assert!(!visitor.visited.contains(&1));
         assert!(visitor.should_explore(0, 1, &()));
@@ -79,11 +114,22 @@ mod tests {
 
     #[test]
     fn does_not_visit_twice() {
-        let mut visitor = SimpleVisitor::default();
+        let mut visitor = SimpleVisitor::new(
+            Terminate::default()
+        );
 
         visitor.visit(1, &());
 
         assert!(visitor.visited.contains(&1));
         assert!(!visitor.should_explore(0, 1, &()));
+    }
+
+    #[test]
+    fn stops_when_policy_returns_true() {
+        let visitor = SimpleVisitor::new(
+            Terminate::default()
+        );
+
+        assert!(visitor.should_stop(0, &()));
     }
 }

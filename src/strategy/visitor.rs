@@ -52,9 +52,10 @@ pub trait Visitor<Ctx> {
     /// # Arguments
     ///
     /// * `node_id` - The last visited node id
+    /// * `context` - Contextual information available during traversal
     ///
     /// # Returns
     ///
     /// `true` if the exploration should stop, `false` otherwise
-    fn should_stop(&self, _node_id: u32) -> bool { false }
+    fn should_stop(&self, _node_id: u32, _context: &Ctx) -> bool { false }
 }
