@@ -1,4 +1,4 @@
-use crate::policy::policy::Policy;
+use crate::policy::Policy;
 
 #[derive(Debug, Default)]
 pub struct GoalReached {
