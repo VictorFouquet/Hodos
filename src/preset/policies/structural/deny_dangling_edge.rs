@@ -3,7 +3,7 @@ use crate::policy::Policy;
 
 /// Rejects edges whose endpoints don't exist in the graph.
 ///
-/// An edge is considered "dangling" if either its source (`from`) or 
+/// An edge is considered "dangling" if either its source (`from`) or
 /// destination (`to`) node is not present in the graph.
 #[derive(Debug, Default)]
 pub struct DenyDanglingEdge {}
@@ -15,8 +15,7 @@ where
     TEdge: Edge,
 {
     fn is_compliant(&self, entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
-        context.nodes.contains_key(&entity.from()) && 
-        context.nodes.contains_key(&entity.to())
+        context.nodes.contains_key(&entity.from()) && context.nodes.contains_key(&entity.to())
     }
 }
 

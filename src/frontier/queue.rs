@@ -13,22 +13,18 @@ impl Frontier for Queue {
         }
     }
 
-    fn push(&mut self, id: u32, _cost: Option<f64>)
-    {
+    fn push(&mut self, id: u32, _cost: Option<f64>) {
         self.data.push_back(id);
     }
 
-    fn pop(&mut self) -> Option<u32>
-    {
+    fn pop(&mut self) -> Option<u32> {
         self.data.pop_front()
     }
 
-    fn is_empty(&self) -> bool
-    {
+    fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -44,7 +40,7 @@ mod tests {
     fn test_queue_push_should_add_value_id() {
         let mut queue = Queue::new();
         let id = 0;
-        
+
         queue.push(id, None);
         assert!(!queue.is_empty());
         assert_eq!(queue.pop(), Some(id));
@@ -55,7 +51,7 @@ mod tests {
         let mut queue = Queue::new();
         let id0 = 0;
         let id1 = 1;
-        
+
         queue.push(id0, None);
         queue.push(id1, None);
 
@@ -69,7 +65,7 @@ mod tests {
     fn test_queue_pop_should_empty_the_queue_if_it_contains_a_single_element() {
         let mut queue = Queue::new();
         let id = 0;
-        
+
         queue.push(id, None);
         assert!(!queue.is_empty());
 

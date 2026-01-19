@@ -1,13 +1,12 @@
-pub mod queue;
-pub mod stack;
 pub mod max_heap;
 pub mod min_heap;
+pub mod queue;
+pub mod stack;
 
-pub use queue::Queue;
-pub use stack::Stack;
 pub use max_heap::MaxHeap;
 pub use min_heap::MinHeap;
-
+pub use queue::Queue;
+pub use stack::Stack;
 
 /// A strategy for managing which nodes to explore next during graph traversal.
 ///
@@ -15,7 +14,9 @@ pub use min_heap::MinHeap;
 /// can be used to match predefined search algorith (BFS, DFS, Dijkstra...)
 pub trait Frontier {
     /// Creates a new empty frontier.
-    fn new() -> Self where Self: Sized;
+    fn new() -> Self
+    where
+        Self: Sized;
 
     /// Adds a node to the frontier.
     ///

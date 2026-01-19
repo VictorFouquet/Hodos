@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
 use crate::graph::Graph;
-use crate::strategy::Sampler;
 use crate::policy::Policy;
+use crate::strategy::Sampler;
 
 /// A builder for constructing graphs using configurable policies and sampling strategies.
 ///
@@ -19,17 +19,16 @@ use crate::policy::Policy;
 pub struct GraphBuilder<NodeAuth, EdgeAuth, Samp, Ctx> {
     auth_edge_policy: EdgeAuth,
     auth_node_policy: NodeAuth,
-    sample_strategy:  Samp,
-    
-    _ctx: PhantomData<Ctx>
+    sample_strategy: Samp,
+
+    _ctx: PhantomData<Ctx>,
 }
 
-impl<NodeAuth, EdgeAuth, Samp, Ctx> 
-    GraphBuilder<NodeAuth, EdgeAuth, Samp, Ctx>
-where 
-    NodeAuth:    Policy<Samp::Node, Graph<Samp::Node, Samp::Edge>>,
-    EdgeAuth:    Policy<Samp::Edge, Graph<Samp::Node, Samp::Edge>>,
-    Samp:        Sampler<Ctx>,
+impl<NodeAuth, EdgeAuth, Samp, Ctx> GraphBuilder<NodeAuth, EdgeAuth, Samp, Ctx>
+where
+    NodeAuth: Policy<Samp::Node, Graph<Samp::Node, Samp::Edge>>,
+    EdgeAuth: Policy<Samp::Edge, Graph<Samp::Node, Samp::Edge>>,
+    Samp: Sampler<Ctx>,
 {
     /// Creates a new `GraphBuilder` with the specified policies and sampling strategy.
     ///
@@ -41,7 +40,7 @@ where
     pub fn new(
         auth_edge_policy: EdgeAuth,
         auth_node_policy: NodeAuth,
-        sample_strategy:  Samp
+        sample_strategy: Samp,
     ) -> Self {
         GraphBuilder {
             auth_node_policy,
@@ -50,7 +49,7 @@ where
             _ctx: PhantomData,
         }
     }
-    
+
     /// Builds a graph by repeatedly sampling and filtering through authorization policies.
     ///
     /// The builder will:
@@ -81,7 +80,7 @@ where
             }
             edges_buffer.extend(edges);
         }
-        
+
         for edge in edges_buffer {
             if self.auth_edge_policy.is_compliant(&edge, &graph) {
                 graph.add_edge(edge);
@@ -91,7 +90,6 @@ where
         graph
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -105,23 +103,23 @@ mod tests {
         let mut builder = GraphBuilder::new(
             AcceptAllPolicy::default(),
             AcceptAllPolicy::default(),
-            MockSampler::default()
+            MockSampler::default(),
         );
-        
-        let graph = builder.build(&vec![0,1,2]);
+
+        let graph = builder.build(&vec![0, 1, 2]);
         assert_eq!(graph.nodes.len(), 3);
         assert_eq!(graph.edges.len(), 3);
     }
-    
+
     #[test]
     fn builder_should_respect_node_policy_rejection() {
         let mut builder = GraphBuilder::new(
             AcceptAllPolicy::default(),
             RejectAllPolicy::default(),
-            MockSampler::default()
+            MockSampler::default(),
         );
-        
-        let graph = builder.build(&vec![0,1,2]);
+
+        let graph = builder.build(&vec![0, 1, 2]);
         assert_eq!(graph.nodes.len(), 0);
         assert_eq!(graph.edges.len(), 3);
     }
@@ -131,10 +129,10 @@ mod tests {
         let mut builder = GraphBuilder::new(
             RejectAllPolicy::default(),
             AcceptAllPolicy::default(),
-            MockSampler::default()
+            MockSampler::default(),
         );
-        
-        let graph = builder.build(&vec![0,1,2]);
+
+        let graph = builder.build(&vec![0, 1, 2]);
         assert_eq!(graph.nodes.len(), 3);
         assert_eq!(graph.edges.len(), 0);
     }
@@ -144,10 +142,10 @@ mod tests {
         let mut builder = GraphBuilder::new(
             AcceptAllPolicy::default(),
             AcceptAllPolicy::default(),
-            MockSampler::default()
+            MockSampler::default(),
         );
-        
-        let graph = builder.build(&vec![0,1]);
+
+        let graph = builder.build(&vec![0, 1]);
         assert_eq!(graph.nodes.len(), 2);
         assert_eq!(graph.edges.len(), 2);
     }
@@ -155,30 +153,38 @@ mod tests {
     pub struct MockNode {
         id: u32,
     }
-    
+
     impl Node for MockNode {
         type Data = ();
-    
-        fn new(id: u32, _data: Option<Self::Data>) -> Self { MockNode { id } }
-        fn id(&self) -> u32 { self.id }
+
+        fn new(id: u32, _data: Option<Self::Data>) -> Self {
+            MockNode { id }
+        }
+        fn id(&self) -> u32 {
+            self.id
+        }
     }
 
     pub struct MockEdge {
         to: u32,
         from: u32,
     }
-    
+
     impl Edge for MockEdge {
         fn new(from: u32, to: u32, _weight: Option<f64>) -> Self {
             MockEdge { from: from, to: to }
         }
-        fn to(&self) -> u32 { self.to }
-        fn from(&self) -> u32 { self.from }
+        fn to(&self) -> u32 {
+            self.to
+        }
+        fn from(&self) -> u32 {
+            self.from
+        }
     }
 
     #[derive(Default)]
     pub struct MockSampler {
-        count: u32
+        count: u32,
     }
 
     impl Sampler<Vec<u32>> for MockSampler {
@@ -191,7 +197,7 @@ mod tests {
             }
             let res = Some((
                 vec![MockNode::new(self.count, None)],
-                vec![MockEdge::new(self.count, self.count, None)]
+                vec![MockEdge::new(self.count, self.count, None)],
             ));
             self.count += 1;
             res
@@ -201,12 +207,16 @@ mod tests {
     #[derive(Default)]
     struct AcceptAllPolicy;
     impl<E, TNode: Node, TEdge: Edge> Policy<E, Graph<TNode, TEdge>> for AcceptAllPolicy {
-        fn is_compliant(&self, _: &E, _: &Graph<TNode, TEdge>) -> bool { true }
+        fn is_compliant(&self, _: &E, _: &Graph<TNode, TEdge>) -> bool {
+            true
+        }
     }
 
     #[derive(Default)]
     struct RejectAllPolicy;
     impl<E, TNode: Node, TEdge: Edge> Policy<E, Graph<TNode, TEdge>> for RejectAllPolicy {
-        fn is_compliant(&self, _: &E, _: &Graph<TNode, TEdge>) -> bool { false }
+        fn is_compliant(&self, _: &E, _: &Graph<TNode, TEdge>) -> bool {
+            false
+        }
     }
 }

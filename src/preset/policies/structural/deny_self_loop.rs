@@ -1,5 +1,5 @@
-use crate::policy::Policy;
 use crate::graph::{Edge, Graph, Node};
+use crate::policy::Policy;
 
 /// Authorization policy that forbids self looping edges.
 #[derive(Debug, Default)]
@@ -9,8 +9,8 @@ impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenySelfLoop
 where
     Entity: Edge,
     TNode: Node,
-    TEdge: Edge
-{   
+    TEdge: Edge,
+{
     /// Allows an edge if its from node is different than the to node.
     ///
     /// # Arguments
@@ -26,7 +26,6 @@ where
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -36,9 +35,13 @@ mod tests {
 
     impl Node for MockNode {
         type Data = ();
-    
-        fn new(_id: u32, _data: Option<Self::Data>) -> Self { MockNode {} }
-        fn id(&self) -> u32 { 0 }
+
+        fn new(_id: u32, _data: Option<Self::Data>) -> Self {
+            MockNode {}
+        }
+        fn id(&self) -> u32 {
+            0
+        }
     }
 
     #[derive(Clone)]
@@ -46,13 +49,17 @@ mod tests {
         to: u32,
         from: u32,
     }
-    
+
     impl Edge for MockEdge {
         fn new(from: u32, to: u32, _weight: Option<f64>) -> Self {
             MockEdge { from: from, to: to }
         }
-        fn to(&self) -> u32 { self.to }
-        fn from(&self) -> u32 { self.from }
+        fn to(&self) -> u32 {
+            self.to
+        }
+        fn from(&self) -> u32 {
+            self.from
+        }
     }
 
     #[test]

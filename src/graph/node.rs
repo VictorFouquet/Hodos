@@ -22,7 +22,9 @@ pub trait Node {
     fn id(&self) -> u32;
 
     /// Returns the node's data if it has some, else None.
-    fn data(&self) -> Option<&Self::Data> { None }
+    fn data(&self) -> Option<&Self::Data> {
+        None
+    }
 
     /// Sets the node's data
     fn set_data(&mut self, _data: &Self::Data) {}

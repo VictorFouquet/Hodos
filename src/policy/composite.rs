@@ -25,7 +25,7 @@ impl<P1, P2> Composite<P1, P2> {
     pub fn and<P3>(self, other: P3) -> Composite<Self, P3> {
         Composite::And(self, other)
     }
-    
+
     /// Combine with another policy using OR logic.
     ///
     /// Returns a new composite where either this composite or the other policy must comply.
@@ -57,14 +57,17 @@ mod tests {
 
     struct AlwaysTrue;
     impl Policy for AlwaysTrue {
-        fn allow(&self) -> bool { true }
+        fn allow(&self) -> bool {
+            true
+        }
     }
 
     struct AlwaysFalse;
     impl Policy for AlwaysFalse {
-        fn allow(&self) -> bool { false }
+        fn allow(&self) -> bool {
+            false
+        }
     }
-
 
     #[test]
     fn and_requires_both_policies_to_allow() {
@@ -86,44 +89,33 @@ mod tests {
 
     #[test]
     fn and_chains_correctly() {
-        let comp = Composite::And(AlwaysTrue, AlwaysTrue)
-            .and(AlwaysFalse);
+        let comp = Composite::And(AlwaysTrue, AlwaysTrue).and(AlwaysFalse);
         assert!(!comp.allow());
 
-        let comp = Composite::And(AlwaysTrue, AlwaysTrue)
-            .and(AlwaysTrue);
+        let comp = Composite::And(AlwaysTrue, AlwaysTrue).and(AlwaysTrue);
         assert!(comp.allow());
     }
 
     #[test]
     fn or_chains_correctly() {
-        let comp = Composite::Or(AlwaysFalse, AlwaysFalse)
-            .or(AlwaysTrue);
+        let comp = Composite::Or(AlwaysFalse, AlwaysFalse).or(AlwaysTrue);
         assert!(comp.allow());
 
-        let comp = Composite::Or(AlwaysFalse, AlwaysTrue)
-            .or(AlwaysFalse);
+        let comp = Composite::Or(AlwaysFalse, AlwaysTrue).or(AlwaysFalse);
         assert!(comp.allow());
 
-        let comp = Composite::Or(AlwaysFalse, AlwaysFalse)
-            .or(AlwaysFalse);
+        let comp = Composite::Or(AlwaysFalse, AlwaysFalse).or(AlwaysFalse);
         assert!(!comp.allow());
     }
 
     #[test]
     fn complex_nested_composition() {
         // (true AND false) OR true = true
-        let comp = Composite::Or(
-            Composite::And(AlwaysTrue, AlwaysFalse),
-            AlwaysTrue
-        );
+        let comp = Composite::Or(Composite::And(AlwaysTrue, AlwaysFalse), AlwaysTrue);
         assert!(comp.allow());
 
         // (false OR false) AND true = false
-        let comp = Composite::And(
-            Composite::Or(AlwaysFalse, AlwaysFalse),
-            AlwaysTrue
-        );
+        let comp = Composite::And(Composite::Or(AlwaysFalse, AlwaysFalse), AlwaysTrue);
         assert!(!comp.allow());
     }
 }

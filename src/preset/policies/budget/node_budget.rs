@@ -6,7 +6,9 @@ use crate::policy::Policy;
 /// This policy checks the current size of the graph's node collection
 /// and rejects additions once the budget is reached.
 #[derive(Debug)]
-pub struct NodeBudget { budget: usize }
+pub struct NodeBudget {
+    budget: usize,
+}
 
 impl NodeBudget {
     /// Creates a budget policy that limits the number of nodes.
@@ -19,7 +21,9 @@ impl NodeBudget {
     ///
     /// A new `NodeBudget` configured to count nodes
     pub fn new(budget: u32) -> NodeBudget {
-        NodeBudget { budget: budget as usize }
+        NodeBudget {
+            budget: budget as usize,
+        }
     }
 }
 
@@ -38,18 +42,26 @@ mod tests {
     use super::*;
     use crate::graph::Node;
 
-    pub struct MockNode { id: u32 }
+    pub struct MockNode {
+        id: u32,
+    }
     pub struct MockEdge {}
 
     impl Node for MockNode {
         type Data = ();
-    
-        fn new(id: u32, _data: Option<Self::Data>) -> Self { MockNode { id } }
-        fn id(&self) -> u32 { self.id }
+
+        fn new(id: u32, _data: Option<Self::Data>) -> Self {
+            MockNode { id }
+        }
+        fn id(&self) -> u32 {
+            self.id
+        }
     }
 
     impl Edge for MockEdge {
-        fn new(_from: u32, _to: u32, _weight: Option<f64>) -> Self { MockEdge {} }
+        fn new(_from: u32, _to: u32, _weight: Option<f64>) -> Self {
+            MockEdge {}
+        }
     }
 
     fn create_node() -> MockNode {
@@ -61,7 +73,7 @@ mod tests {
         let policy = NodeBudget::new(2);
         let mut graph = Graph::<MockNode, MockEdge>::new();
         let mut node = MockNode::new(0, None);
-        
+
         assert!(policy.is_compliant(&node, &graph));
         graph.add_node(node);
 

@@ -1,7 +1,6 @@
-use std::{collections::HashSet, hash::Hash};
+use crate::graph::{Edge, Graph, Node};
 use crate::policy::Policy;
-use crate::graph::{ Graph, Node, Edge };
-
+use std::{collections::HashSet, hash::Hash};
 
 /// Authorization policy that denies nodes with specific data values.
 ///
@@ -14,7 +13,7 @@ use crate::graph::{ Graph, Node, Edge };
 /// * `T` - The type of node data to filter on (must be `Eq + Hash`)
 #[derive(Default)]
 pub struct DenyNodeValue<T> {
-    denied_values: HashSet<T>
+    denied_values: HashSet<T>,
 }
 
 impl<T> DenyNodeValue<T>
@@ -30,7 +29,7 @@ where
     /// * `values` - The data values to deny
     pub fn with_denied_values(values: Vec<T>) -> Self {
         DenyNodeValue {
-            denied_values: HashSet::from_iter(values)
+            denied_values: HashSet::from_iter(values),
         }
     }
 
@@ -46,8 +45,7 @@ where
     }
 }
 
-impl<Entity, TNode, TEdge>
-Policy<Entity, Graph<TNode, TEdge>> for DenyNodeValue<Entity::Data>
+impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyNodeValue<Entity::Data>
 where
     TNode: Node,
     TEdge: Edge,
@@ -73,27 +71,38 @@ where
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[derive(Default)]
-    pub struct MockValueNode { data: bool }
-    
+    pub struct MockValueNode {
+        data: bool,
+    }
+
     impl Node for MockValueNode {
         type Data = bool;
-    
-        fn new(_id: u32, data: Option<Self::Data>) -> Self { MockValueNode { data: data.unwrap_or(true) } }
-        fn id(&self) -> u32 { 0 }
-        fn data(&self) -> Option<&Self::Data> { Some(&self.data) }
+
+        fn new(_id: u32, data: Option<Self::Data>) -> Self {
+            MockValueNode {
+                data: data.unwrap_or(true),
+            }
+        }
+        fn id(&self) -> u32 {
+            0
+        }
+        fn data(&self) -> Option<&Self::Data> {
+            Some(&self.data)
+        }
     }
 
     #[derive(Default)]
     pub struct MockEdge;
-    
+
     impl Edge for MockEdge {
-        fn new(_from: u32, _to: u32, _weight: Option<f64>) -> Self { MockEdge }
+        fn new(_from: u32, _to: u32, _weight: Option<f64>) -> Self {
+            MockEdge
+        }
     }
 
     #[test]
@@ -101,7 +110,7 @@ mod tests {
         let policy = DenyNodeValue::<bool>::default();
         let graph = Graph::<MockValueNode, MockEdge>::new();
         assert_eq!(policy.denied_values.len(), 0);
-        
+
         assert!(policy.is_compliant(&MockValueNode::new(0, Some(true)), &graph));
         assert!(policy.is_compliant(&MockValueNode::new(0, Some(false)), &graph));
     }
@@ -109,19 +118,19 @@ mod tests {
     #[test]
     fn accepts_node_when_value_not_in_blacklist() {
         let mut policy = DenyNodeValue::<bool>::default();
-        
+
         let graph = Graph::<MockValueNode, MockEdge>::new();
 
         policy.add_denied_value(true);
         assert_eq!(policy.denied_values.len(), 1);
-                
+
         assert!(policy.is_compliant(&MockValueNode::new(0, Some(false)), &graph));
     }
 
     #[test]
     fn rejects_node_when_value_in_blacklist() {
         let mut policy = DenyNodeValue::<bool>::default();
-        
+
         let graph = Graph::<MockValueNode, MockEdge>::new();
 
         policy.add_denied_value(true);

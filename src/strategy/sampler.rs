@@ -1,4 +1,6 @@
-use crate::graph::{Node, Edge};
+use crate::graph::{Edge, Node};
+
+type Sample<N, E> = (Vec<N>, Vec<E>);
 
 /// A strategy for generating graph samples.
 ///
@@ -14,5 +16,5 @@ pub trait Sampler<Ctx> {
     /// # Arguments
     ///
     /// * `context` - Contextual information that guides sample generation
-    fn next(&mut self, context: &Ctx) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)>;
+    fn next(&mut self, context: &Ctx) -> Option<Sample<Self::Node, Self::Edge>>;
 }

@@ -1,7 +1,5 @@
-use crate::policy::Policy;
 use crate::graph::{Edge, Graph, Node};
-
-
+use crate::policy::Policy;
 
 /// Authorization policy that ensures each edge is added only once.
 ///
@@ -13,8 +11,8 @@ impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyParallelE
 where
     Entity: Edge,
     TNode: Node,
-    TEdge: Edge
-{   
+    TEdge: Edge,
+{
     /// Allows an edge if this (from, to) pair hasn't been seen before.
     ///
     /// # Arguments
@@ -26,12 +24,12 @@ where
     ///
     /// `true` if this is the first time seeing this edge pair, `false` otherwise
     fn is_compliant(&self, entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
-        !context.get_edges()
+        !context
+            .get_edges()
             .into_iter()
             .any(|e| e.from() == entity.from() && e.to() == entity.to())
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -42,9 +40,13 @@ mod tests {
 
     impl Node for MockNode {
         type Data = ();
-    
-        fn new(_id: u32, _data: Option<Self::Data>) -> Self { MockNode {} }
-        fn id(&self) -> u32 { 0 }
+
+        fn new(_id: u32, _data: Option<Self::Data>) -> Self {
+            MockNode {}
+        }
+        fn id(&self) -> u32 {
+            0
+        }
     }
 
     #[derive(Clone)]
@@ -52,13 +54,17 @@ mod tests {
         to: u32,
         from: u32,
     }
-    
+
     impl Edge for MockEdge {
         fn new(from: u32, to: u32, _weight: Option<f64>) -> Self {
             MockEdge { from: from, to: to }
         }
-        fn to(&self) -> u32 { self.to }
-        fn from(&self) -> u32 { self.from }
+        fn to(&self) -> u32 {
+            self.to
+        }
+        fn from(&self) -> u32 {
+            self.from
+        }
     }
 
     #[test]
@@ -79,10 +85,10 @@ mod tests {
         let policy = DenyParallelEdge::default();
 
         let mut graph = Graph::<MockNode, MockEdge>::new();
-        
+
         let forward = MockEdge::new(0, 1, None);
         let reverse = MockEdge::new(1, 0, None);
-        
+
         assert!(policy.is_compliant(&forward, &graph));
 
         graph.add_edge(forward);

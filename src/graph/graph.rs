@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::frontier::Frontier;
-use crate::graph::Node;
 use crate::graph::Edge;
+use crate::graph::Node;
 use crate::strategy::Visitor;
 
 /// A graph data structure storing nodes and directed edges.
@@ -15,6 +15,7 @@ use crate::strategy::Visitor;
 ///
 /// * `TNode` - Node type implementing the `Node` trait
 /// * `TEdge` - Edge type implementing the `Edge` trait
+#[derive(Debug, Default)]
 pub struct Graph<TNode, TEdge> {
     /// Map of node IDs to nodes
     pub nodes: HashMap<u32, TNode>,
@@ -25,7 +26,7 @@ pub struct Graph<TNode, TEdge> {
 impl<TNode, TEdge> Graph<TNode, TEdge>
 where
     TNode: Node,
-    TEdge: Edge
+    TEdge: Edge,
 {
     /// Creates a new empty graph.
     pub fn new() -> Self {
@@ -62,11 +63,8 @@ where
     /// * `edge` - The edge to add
     pub fn add_edge(&mut self, edge: TEdge) {
         let from = edge.from();
-    
-        self.edges
-            .entry(from)
-            .or_insert_with(Vec::new)
-            .push(edge);
+
+        self.edges.entry(from).or_default().push(edge);
     }
 
     /// Gets all nodes of the graph.
@@ -98,35 +96,33 @@ where
     ///    - Ask visitor about termination condition
     pub fn traverse(
         &self,
-        start:     u32,
-        frontier:  &mut dyn Frontier,
-        visitor:   &mut dyn Visitor<Self>
+        start: u32,
+        frontier: &mut dyn Frontier,
+        visitor: &mut dyn Visitor<Self>,
     ) {
-        frontier.push(start, Some(visitor.init_cost(start, &self)));
-        
+        frontier.push(start, Some(visitor.init_cost(start, self)));
+
         while !frontier.is_empty() {
             let current_id = match frontier.pop() {
                 Some(current_id) => current_id,
                 None => break,
             };
 
-            let edges = match self.edges.get(&current_id) {
-                Some(edges) => edges,
-                None => break,
-            };
-                
+            let default = Vec::new();
+            let edges = self.edges.get(&current_id).unwrap_or(&default);
+
             for edge in edges {
-                if visitor.should_explore(edge.from(), edge.to(), &self) {
+                if visitor.should_explore(edge.from(), edge.to(), self) {
                     frontier.push(
                         edge.to(),
-                        Some(visitor.exploration_cost(edge.from(), edge.to(), &self))
+                        Some(visitor.exploration_cost(edge.from(), edge.to(), self)),
                     );
                 }
             }
 
-            visitor.visit(current_id, &self);
+            visitor.visit(current_id, self);
 
-            if visitor.should_stop(current_id, &self) {
+            if visitor.should_stop(current_id, self) {
                 break;
             }
         }

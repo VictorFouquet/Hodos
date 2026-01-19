@@ -25,9 +25,19 @@ pub struct WeightedEdge {
 
 impl Edge for WeightedEdge {
     fn new(from: u32, to: u32, weight: Option<f64>) -> Self {
-        WeightedEdge { from: from, to: to, weight: weight.unwrap_or(1.0) }
+        WeightedEdge {
+            from,
+            to,
+            weight: weight.unwrap_or(1.0),
+        }
     }
-    fn to(&self) -> u32 { self.to }
-    fn from(&self) -> u32 { self.from }
-    fn weight(&self) -> f64 { self.weight }
+    fn to(&self) -> u32 {
+        self.to
+    }
+    fn from(&self) -> u32 {
+        self.from
+    }
+    fn weight(&self) -> f64 {
+        self.weight
+    }
 }

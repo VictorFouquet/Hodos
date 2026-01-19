@@ -1,17 +1,14 @@
+use crate::graph::{Edge, Graph, Node};
 use crate::policy::Policy;
-use crate::graph::{ Graph, Node, Edge };
-
 
 /// Authorization policy that denies any entity no matter its value.
 #[derive(Default)]
 pub struct DenyAll {}
 
-
-impl<Entity, TNode, TEdge>
-Policy<Entity, Graph<TNode, TEdge>> for DenyAll
+impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyAll
 where
     TNode: Node,
-    TEdge: Edge
+    TEdge: Edge,
 {
     /// Denies any entity no matter its value.
     ///

@@ -3,9 +3,8 @@ use std::marker::PhantomData;
 use crate::graph::edge::Edge;
 use crate::graph::node::Node;
 use crate::preset::EmptyNode;
-use crate::preset::{ UnweightedEdge, WeightedEdge };
+use crate::preset::{UnweightedEdge, WeightedEdge};
 use crate::strategy::Sampler;
-
 
 pub type BinaryMatrix = Vec<Vec<bool>>;
 pub type WeightedMatrix = Vec<Vec<Option<f64>>>;
@@ -53,26 +52,25 @@ impl<N, E> Default for MatrixSampler<N, E> {
 impl Sampler<BinaryMatrix> for BinaryMatrixSampler {
     type Node = EmptyNode;
     type Edge = UnweightedEdge;
-    
+
     fn next(&mut self, context: &BinaryMatrix) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
         let i = self.current_id as usize;
-        
+
         if i >= context.len() {
             return None;
         }
-        
+
         let edges: Vec<_> = context[i]
             .iter()
             .enumerate()
-            .filter_map(|(j, &v)| {
-                v.then(|| UnweightedEdge::new(self.current_id, j as u32, None))
-            })
+            .filter(|(_, v)| **v)
+            .map(|(j, _)| UnweightedEdge::new(self.current_id, j as u32, None))
             .collect();
-        
+
         let nodes = vec![EmptyNode::new(self.current_id, None)];
-        
+
         self.current_id += 1;
-        
+
         Some((nodes, edges))
     }
 }
@@ -80,14 +78,14 @@ impl Sampler<BinaryMatrix> for BinaryMatrixSampler {
 impl Sampler<WeightedMatrix> for WeightedMatrixSampler {
     type Node = EmptyNode;
     type Edge = WeightedEdge;
-    
+
     fn next(&mut self, context: &WeightedMatrix) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
         let i = self.current_id as usize;
-        
+
         if i >= context.len() {
             return None;
         }
-        
+
         let edges: Vec<_> = context[i]
             .iter()
             .enumerate()
@@ -95,22 +93,21 @@ impl Sampler<WeightedMatrix> for WeightedMatrixSampler {
                 w.map(|weight| WeightedEdge::new(self.current_id, j as u32, Some(weight)))
             })
             .collect();
-        
+
         let nodes = vec![EmptyNode::new(self.current_id, None)];
-        
+
         self.current_id += 1;
-        
+
         Some((nodes, edges))
     }
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     // ==================== Macro for common tests ====================
-    
+
     macro_rules! test_sampler_common {
         ($sampler_type:ty, $context_type:ty, $context:expr) => {
             #[test]
@@ -137,27 +134,27 @@ mod tests {
                 let context = $context;
 
                 while sampler.next(&context).is_some() {}
-                
+
                 assert!(sampler.next(&context).is_none());
             }
         };
     }
 
     // ==================== Binary Matrix ====================
-    
+
     mod binary_matrix {
         use super::*;
-        
+
         fn test_context() -> BinaryMatrix {
             vec![
-                vec![false, true,  false], // 0->1
-                vec![true,  false, true],  // 1->0, 1->2
-                vec![false, true,  false]  // 2->1
+                vec![false, true, false], // 0->1
+                vec![true, false, true],  // 1->0, 1->2
+                vec![false, true, false], // 2->1
             ]
         }
-        
+
         test_sampler_common!(BinaryMatrixSampler, BinaryMatrix, test_context());
-        
+
         #[test]
         fn maps_edges_correctly() {
             let mut sampler = BinaryMatrixSampler::default();
@@ -184,20 +181,20 @@ mod tests {
     }
 
     // ==================== Weighted Matrix ====================
-    
+
     mod weighted_matrix {
         use super::*;
-        
+
         fn test_context() -> WeightedMatrix {
             vec![
-                vec![None,      Some(0.0),  None],       // 0->1  0.0
-                vec![Some(4.0), None,       Some(2.0)],  // 1->0  4.0, 1->2 2.0
-                vec![None,      Some(-1.0), None]        // 2->1 -1.0
+                vec![None, Some(0.0), None],      // 0->1  0.0
+                vec![Some(4.0), None, Some(2.0)], // 1->0  4.0, 1->2 2.0
+                vec![None, Some(-1.0), None],     // 2->1 -1.0
             ]
         }
-        
+
         test_sampler_common!(WeightedMatrixSampler, WeightedMatrix, test_context());
-                
+
         #[test]
         fn maps_edges_with_weights() {
             let mut sampler = WeightedMatrixSampler::default();

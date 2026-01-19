@@ -1,7 +1,6 @@
-use std::{collections::HashSet, hash::Hash};
+use crate::graph::{Edge, Graph, Node};
 use crate::policy::Policy;
-use crate::graph::{ Graph, Node, Edge };
-
+use std::{collections::HashSet, hash::Hash};
 
 /// Authorization policy that only allows nodes with specific data values.
 ///
@@ -14,7 +13,7 @@ use crate::graph::{ Graph, Node, Edge };
 /// * `T` - The type of node data to filter on (must be `Eq + Hash`)
 #[derive(Default)]
 pub struct AllowNodeValue<T> {
-    allowed_values: HashSet<T>
+    allowed_values: HashSet<T>,
 }
 
 impl<T> AllowNodeValue<T>
@@ -30,7 +29,7 @@ where
     /// * `values` - The data values to allow
     pub fn with_allowed_values(values: Vec<T>) -> Self {
         AllowNodeValue {
-            allowed_values: HashSet::from_iter(values)
+            allowed_values: HashSet::from_iter(values),
         }
     }
 
@@ -46,8 +45,7 @@ where
     }
 }
 
-impl<Entity, TNode, TEdge>
-Policy<Entity, Graph<TNode, TEdge>> for AllowNodeValue<Entity::Data>
+impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for AllowNodeValue<Entity::Data>
 where
     TNode: Node,
     TEdge: Edge,
@@ -73,29 +71,38 @@ where
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[derive(Default)]
     pub struct MockValueNode;
-    
+
     impl Node for MockValueNode {
         type Data = bool;
-    
-        fn new(_id: u32, _data: Option<Self::Data>) -> Self { MockValueNode }
-        fn id(&self) -> u32 { 0 }
-        fn data(&self) -> Option<&Self::Data> { Some(&true) }
+
+        fn new(_id: u32, _data: Option<Self::Data>) -> Self {
+            MockValueNode
+        }
+        fn id(&self) -> u32 {
+            0
+        }
+        fn data(&self) -> Option<&Self::Data> {
+            Some(&true)
+        }
     }
 
-    fn make_node() -> MockValueNode { MockValueNode }
+    fn make_node() -> MockValueNode {
+        MockValueNode
+    }
 
     #[derive(Default)]
     pub struct MockEdge;
-    
+
     impl Edge for MockEdge {
-        fn new(_from: u32, _to: u32, _weight: Option<f64>) -> Self { MockEdge }
+        fn new(_from: u32, _to: u32, _weight: Option<f64>) -> Self {
+            MockEdge
+        }
     }
 
     #[test]
@@ -103,7 +110,7 @@ mod tests {
         let policy = AllowNodeValue::<bool>::default();
         let graph = Graph::<MockValueNode, MockEdge>::new();
         assert_eq!(policy.allowed_values.len(), 0);
-        
+
         let node = make_node();
         assert_eq!(node.data(), Some(&true));
 
@@ -113,27 +120,27 @@ mod tests {
     #[test]
     fn test_allow_node_value_accepts_nodes_when_their_value_is_in_whitelist() {
         let mut policy = AllowNodeValue::<bool>::default();
-        
+
         let graph = Graph::<MockValueNode, MockEdge>::new();
 
         policy.add_allowed_value(true);
         assert_eq!(policy.allowed_values.len(), 1);
-        
+
         let node = make_node();
         assert_eq!(node.data(), Some(&true));
-        
+
         assert!(policy.is_compliant(&node, &graph));
     }
 
     #[test]
     fn test_allow_node_value_rejects_nodes_when_their_value_is_not_in_whitelist() {
         let mut policy = AllowNodeValue::<bool>::default();
-        
+
         let graph = Graph::<MockValueNode, MockEdge>::new();
 
         policy.add_allowed_value(false);
         assert_eq!(policy.allowed_values.len(), 1);
-        
+
         let node = make_node();
         assert_eq!(node.data(), Some(&true));
 

@@ -6,7 +6,6 @@ use crate::preset::DataNode;
 use crate::preset::UnweightedEdge;
 use crate::strategy::Sampler;
 
-
 pub type Grid2D<T> = Vec<Vec<T>>;
 
 /// Samples a graph from a 2D Grid representation.
@@ -50,10 +49,10 @@ impl<T> Grid2DSampler<T> {
     /// A `Grid2DSampler` with four neighbors per cell.
     pub fn with_connect_four() -> Self {
         Self::with_connect(vec![
-            (-1,  0), // N
-            ( 0,  1), // E
-            ( 1,  0), // S
-            ( 0, -1)  // W
+            (-1, 0), // N
+            (0, 1),  // E
+            (1, 0),  // S
+            (0, -1), // W
         ])
     }
 
@@ -66,14 +65,14 @@ impl<T> Grid2DSampler<T> {
     /// A `Grid2DSampler` with eight neighbors per cell.
     pub fn with_connect_eight() -> Self {
         Self::with_connect(vec![
-            (-1,  0), // N
-            (-1,  1), // NE
-            ( 0,  1), // E
-            ( 1,  1), // SE
-            ( 1,  0), // S
-            ( 1, -1), // SW
-            ( 0, -1), // W
-            (-1, -1)  // NW
+            (-1, 0),  // N
+            (-1, 1),  // NE
+            (0, 1),   // E
+            (1, 1),   // SE
+            (1, 0),   // S
+            (1, -1),  // SW
+            (0, -1),  // W
+            (-1, -1), // NW
         ])
     }
 
@@ -104,14 +103,14 @@ impl<T> Default for Grid2DSampler<T> {
 
 impl<T> Sampler<Grid2D<T>> for Grid2DSampler<T>
 where
-    T: Clone + Copy
+    T: Clone + Copy,
 {
     type Node = DataNode<T>;
     type Edge = UnweightedEdge;
-    
+
     fn next(&mut self, context: &Grid2D<T>) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
         let i = self.current_y as usize;
-        
+
         if i >= context.len() {
             return None;
         }
@@ -119,31 +118,34 @@ where
         let j = self.current_x as usize;
 
         let current_id = self.current_y * (context[i].len() as i32) + self.current_x;
-        
-        let edges: Vec<_> = self.cell_neighbors
+
+        let edges: Vec<_> = self
+            .cell_neighbors
             .iter()
-            .filter_map(|&v| {
-                (
-                    v.0 + self.current_y >= 0
+            .filter(|&v| {
+                v.0 + self.current_y >= 0
                     && v.0 + self.current_y < (context.len() as i32)
                     && v.1 + self.current_x >= 0
                     && v.1 + self.current_x < (context[i].len() as i32)
-                ).then(|| UnweightedEdge::new(
+            })
+            .map(|&v| {
+                UnweightedEdge::new(
                     current_id as u32,
-                    ((v.0 + self.current_y) * (context[i].len() as i32) + (v.1 + self.current_x)) as u32,
-                    None
-                ))
+                    ((v.0 + self.current_y) * (context[i].len() as i32) + (v.1 + self.current_x))
+                        as u32,
+                    None,
+                )
             })
             .collect();
-        
+
         let nodes = vec![DataNode::new(current_id as u32, Some(context[i][j]))];
-        
+
         self.current_x += 1;
         if self.current_x >= (context[i].len() as i32) {
             self.current_x = 0;
             self.current_y += 1;
         }
-        
+
         Some((nodes, edges))
     }
 }
@@ -151,7 +153,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-        
+
     fn test_context() -> Grid2D<char> {
         vec![
             vec![' ', '#', ' '], // 0, 1, 2
@@ -159,7 +161,7 @@ mod tests {
             vec![' ', '#', '#'], // 6, 7, 8
         ]
     }
-    
+
     #[test]
     fn default_initializes_indice_at_zero() {
         let sampler = Grid2DSampler::<char>::default();
@@ -191,16 +193,22 @@ mod tests {
         let context = test_context();
 
         while sampler.next(&context).is_some() {}
-        
+
         assert!(sampler.next(&context).is_none());
     }
 
     #[test]
     fn maps_edges_correctly() {
         let expected = vec![
-            vec![1, 3],    vec![2, 4, 0],    vec![5, 1],
-            vec![0, 4, 6], vec![1, 5, 7, 3], vec![2, 8, 4],
-            vec![3, 7],    vec![4, 8, 6],    vec![5, 7]
+            vec![1, 3],
+            vec![2, 4, 0],
+            vec![5, 1],
+            vec![0, 4, 6],
+            vec![1, 5, 7, 3],
+            vec![2, 8, 4],
+            vec![3, 7],
+            vec![4, 8, 6],
+            vec![5, 7],
         ];
 
         let mut sampler = Grid2DSampler::<char>::default();
@@ -209,7 +217,7 @@ mod tests {
         for i in 0..expected.len() {
             let (_, edges) = sampler.next(&context).unwrap();
             assert_eq!(edges.len(), expected[i].len());
-            
+
             for j in 0..expected[i].len() {
                 assert_eq!(edges[j].from(), i as u32);
                 assert_eq!(edges[j].to(), expected[i][j]);
@@ -220,9 +228,15 @@ mod tests {
     #[test]
     fn maps_edges_correctly_with_connect_eight() {
         let expected = vec![
-            vec![1, 4, 3],       vec![2, 5, 4, 3, 0],          vec![5, 4, 1],
-            vec![0, 1, 4, 7, 6], vec![1, 2, 5, 8, 7, 6, 3, 0], vec![2, 8, 7, 4, 1],
-            vec![3, 4, 7],       vec![4, 5, 8, 6, 3],          vec![5, 7, 4]
+            vec![1, 4, 3],
+            vec![2, 5, 4, 3, 0],
+            vec![5, 4, 1],
+            vec![0, 1, 4, 7, 6],
+            vec![1, 2, 5, 8, 7, 6, 3, 0],
+            vec![2, 8, 7, 4, 1],
+            vec![3, 4, 7],
+            vec![4, 5, 8, 6, 3],
+            vec![5, 7, 4],
         ];
 
         let mut sampler = Grid2DSampler::<char>::with_connect_eight();
@@ -231,7 +245,7 @@ mod tests {
         for i in 0..expected.len() {
             let (_, edges) = sampler.next(&context).unwrap();
             assert_eq!(edges.len(), expected[i].len());
-            
+
             for j in 0..expected[i].len() {
                 assert_eq!(edges[j].from(), i as u32);
                 assert_eq!(edges[j].to(), expected[i][j]);

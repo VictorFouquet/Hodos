@@ -25,8 +25,12 @@ where
 {
     fn is_compliant(&self, entity: &E, context: &C) -> bool {
         match self {
-            Composite::And(p1, p2) => p1.is_compliant(entity, context) && p2.is_compliant(entity, context),
-            Composite::Or(p1, p2) => p1.is_compliant(entity, context) || p2.is_compliant(entity, context),
+            Composite::And(p1, p2) => {
+                p1.is_compliant(entity, context) && p2.is_compliant(entity, context)
+            }
+            Composite::Or(p1, p2) => {
+                p1.is_compliant(entity, context) || p2.is_compliant(entity, context)
+            }
         }
     }
 }

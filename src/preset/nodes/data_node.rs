@@ -26,16 +26,22 @@ pub struct DataNode<T> {
 impl<T: Clone> Node for DataNode<T> {
     type Data = T;
 
-    fn new(id: u32, data: Option<Self::Data>) -> Self { 
-        DataNode { 
+    fn new(id: u32, data: Option<Self::Data>) -> Self {
+        DataNode {
             id,
-            data: data.expect("Data node must be provided with data")
+            data: data.expect("Data node must be provided with data"),
         }
     }
 
-    fn id(&self) -> u32 { self.id }
-    fn data(&self) -> Option<&Self::Data> { Some(&self.data) }
-    fn set_data(&mut self, data: &Self::Data) { self.data = data.clone(); }
+    fn id(&self) -> u32 {
+        self.id
+    }
+    fn data(&self) -> Option<&Self::Data> {
+        Some(&self.data)
+    }
+    fn set_data(&mut self, data: &Self::Data) {
+        self.data = data.clone();
+    }
 }
 
 #[cfg(test)]
@@ -44,7 +50,8 @@ mod tests {
 
     #[derive(Debug, PartialEq, Clone, Copy)]
     struct TestData {
-        val1: u32, val2: bool
+        val1: u32,
+        val2: bool,
     }
 
     #[test]
@@ -55,12 +62,18 @@ mod tests {
 
     #[test]
     fn set_data_updates_node_data() {
-        let data1 = TestData { val1: 0, val2: false };
-        let data2 = TestData { val1: 1, val2: true };
-        
+        let data1 = TestData {
+            val1: 0,
+            val2: false,
+        };
+        let data2 = TestData {
+            val1: 1,
+            val2: true,
+        };
+
         let mut node = DataNode::new(0, Some(data1));
         assert_eq!(node.data(), Some(&data1));
-        
+
         node.set_data(&data2);
         assert_eq!(node.data(), Some(&data2));
     }

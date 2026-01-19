@@ -6,7 +6,9 @@ use crate::policy::Policy;
 /// This policy checks the current size of the graph's edge collection
 /// and rejects additions once the budget is reached.
 #[derive(Debug)]
-pub struct EdgeBudget { budget: usize }
+pub struct EdgeBudget {
+    budget: usize,
+}
 
 impl EdgeBudget {
     /// Creates a budget policy that limits the number of edges.
@@ -19,7 +21,9 @@ impl EdgeBudget {
     ///
     /// A new `EdgeBudget` configured to count edges
     pub fn new(budget: u32) -> EdgeBudget {
-        EdgeBudget { budget: budget as usize }
+        EdgeBudget {
+            budget: budget as usize,
+        }
     }
 }
 
