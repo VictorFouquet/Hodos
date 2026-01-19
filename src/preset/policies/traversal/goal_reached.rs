@@ -16,3 +16,22 @@ impl<T> Policy<u32, T> for GoalReached {
         *node_id == self.goal
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn returns_true_when_goal_reached() {
+        let policy = GoalReached::new(42);
+        assert!(policy.is_compliant(&42, &()));
+    }
+
+    #[test]
+    fn returns_false_when_goal_not_reached() {
+        let policy = GoalReached::new(42);
+        assert!(!policy.is_compliant(&0, &()));
+        assert!(!policy.is_compliant(&41, &()));
+        assert!(!policy.is_compliant(&43, &()));
+    }
+}

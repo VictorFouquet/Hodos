@@ -7,3 +7,16 @@ impl<T> Policy<u32, T> for NoTermination {
         false
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn always_returns_false() {
+        let policy = NoTermination;
+        assert!(!policy.is_compliant(&0, &()));
+        assert!(!policy.is_compliant(&42, &()));
+        assert!(!policy.is_compliant(&999, &()));
+    }
+}
