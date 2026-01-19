@@ -4,6 +4,12 @@ pub struct OpeningExhausted {
     pub max_opening: usize,
 }
 
+impl OpeningExhausted {
+    pub fn new(max_opening: usize) -> Self {
+        OpeningExhausted { max_opening }
+    }
+}
+
 impl<T> Policy<u32, T> for OpeningExhausted
 where
     T: ExactSizeIterator,

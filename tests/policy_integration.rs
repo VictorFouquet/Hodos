@@ -156,5 +156,26 @@ mod policy_integration {
                 assert!(!policy.is_compliant(&unique_below_range, &graph)); // Unique but below range
             }
         }
+
+        mod composite_for_visitor {
+            use super::*;
+            use hodos::preset::policies::traversal::GoalReached;
+            use hodos::preset::policies::traversal::OpeningExhausted;
+
+            #[test]
+            fn terminates_when_goal_reached_or_opening_exhausted() {
+                let mut visited = vec![0, 1];
+                let goal = 3;
+                let policy = Composite::Or(GoalReached::new(goal), OpeningExhausted::new(3));
+
+                assert!(!policy.is_compliant(&0, &visited.iter())); // Rejects if not goal and budget respected
+
+                visited.push(2);
+
+                assert!(policy.is_compliant(&0, &visited.iter())); // Complies for budget exhausted
+
+                assert!(policy.is_compliant(&goal, &visited.iter())); // Complies for goal reached
+            }
+        }
     }
 }
