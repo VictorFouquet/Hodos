@@ -11,8 +11,8 @@ impl GoalReached {
     }
 }
 
-impl<T> Policy<u32, T> for GoalReached {
-    fn is_compliant(&self, node_id: &u32, _ctx: &T) -> bool {
+impl<Ctx> Policy<u32, Ctx> for GoalReached {
+    fn is_compliant(&self, node_id: &u32, _ctx: &Ctx) -> bool {
         *node_id == self.goal
     }
 }
