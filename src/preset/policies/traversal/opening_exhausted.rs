@@ -21,8 +21,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::strategy::visitor;
-
     use super::*;
 
     #[derive(Debug, Default)]
