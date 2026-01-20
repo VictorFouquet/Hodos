@@ -1,8 +1,8 @@
 use crate::policy::Policy;
 use crate::strategy::Visitor;
-use std::collections::HashSet;
+use std::collections::HashMap;
 
-use super::CountVisited;
+use super::{CountVisited, TrackParent};
 
 /// Simple visitor that prevents revisiting the same node twice.
 ///
@@ -16,7 +16,7 @@ use super::CountVisited;
 #[derive(Debug, Default)]
 pub struct SimpleVisitor<P> {
     /// Set of node IDs that have already been visited.
-    visited: HashSet<u32>,
+    visited: HashMap<u32, Option<u32>>,
     terminate: P,
 }
 
@@ -26,7 +26,7 @@ where
 {
     pub fn new(terminate: P) -> Self {
         SimpleVisitor::<P> {
-            visited: HashSet::new(),
+            visited: HashMap::new(),
             terminate,
         }
     }
@@ -35,6 +35,15 @@ where
 impl<P> CountVisited for SimpleVisitor<P> {
     fn visited_count(&self) -> usize {
         self.visited.len()
+    }
+}
+
+impl<P> TrackParent for SimpleVisitor<P> {
+    fn get_parent(&self, node_id: u32) -> Option<u32> {
+        if self.visited.contains_key(&node_id) {
+            return self.visited[&node_id];
+        }
+        None
     }
 }
 
@@ -53,8 +62,12 @@ where
     /// # Returns
     ///
     /// `true` if the target node has not been visited yet, `false` otherwise.
-    fn should_explore(&mut self, _from: u32, to: u32, _context: &Ctx) -> bool {
-        !self.visited.contains(&to)
+    fn should_explore(&mut self, from: u32, to: u32, _context: &Ctx) -> bool {
+        if let std::collections::hash_map::Entry::Vacant(e) = self.visited.entry(to) {
+            e.insert(Some(from));
+            return true;
+        }
+        false
     }
 
     /// Marks a node as visited.
@@ -64,7 +77,7 @@ where
     /// * `node_id` - The ID of the node being visited
     /// * `_context` - Traversal context (unused)
     fn visit(&mut self, node_id: u32, _context: &Ctx) {
-        self.visited.insert(node_id);
+        self.visited.entry(node_id).or_insert(None);
     }
 
     fn should_stop(&self, node_id: u32, _context: &Ctx) -> bool {
@@ -101,16 +114,16 @@ mod tests {
         visitor.visit(2, &());
 
         assert_eq!(visitor.visited.len(), 3);
-        assert!(visitor.visited.contains(&0));
-        assert!(visitor.visited.contains(&1));
-        assert!(visitor.visited.contains(&2));
+        assert!(visitor.visited.contains_key(&0));
+        assert!(visitor.visited.contains_key(&1));
+        assert!(visitor.visited.contains_key(&2));
     }
 
     #[test]
     fn explores_unvisited() {
         let mut visitor = SimpleVisitor::new(Terminate::default());
 
-        assert!(!visitor.visited.contains(&1));
+        assert!(!visitor.visited.contains_key(&1));
         assert!(visitor.should_explore(0, 1, &()));
     }
 
@@ -120,7 +133,7 @@ mod tests {
 
         visitor.visit(1, &());
 
-        assert!(visitor.visited.contains(&1));
+        assert!(visitor.visited.contains_key(&1));
         assert!(!visitor.should_explore(0, 1, &()));
     }
 
