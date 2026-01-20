@@ -2,6 +2,8 @@ use crate::policy::Policy;
 use crate::strategy::Visitor;
 use std::collections::HashSet;
 
+use super::CountVisited;
+
 /// Simple visitor that prevents revisiting the same node twice.
 ///
 /// This visitor keeps track of visited node IDs and allows traversal
@@ -20,7 +22,7 @@ pub struct SimpleVisitor<P> {
 
 impl<P> SimpleVisitor<P>
 where
-    P: Policy<u32, HashSet<u32>>,
+    P: Policy<u32, Self>,
 {
     pub fn new(terminate: P) -> Self {
         SimpleVisitor::<P> {
@@ -30,9 +32,15 @@ where
     }
 }
 
+impl<P> CountVisited for SimpleVisitor<P> {
+    fn visited_count(&self) -> usize {
+        self.visited.len()
+    }
+}
+
 impl<Ctx, P> Visitor<Ctx> for SimpleVisitor<P>
 where
-    P: Policy<u32, HashSet<u32>>,
+    P: Policy<u32, Self>,
 {
     /// Determines whether traversal should continue toward a target node.
     ///
@@ -60,7 +68,7 @@ where
     }
 
     fn should_stop(&self, node_id: u32, _context: &Ctx) -> bool {
-        self.terminate.is_compliant(&node_id, &self.visited)
+        self.terminate.is_compliant(&node_id, self)
     }
 }
 
@@ -71,8 +79,8 @@ mod tests {
     #[derive(Debug, Default)]
     pub struct Terminate {}
 
-    impl Policy<u32, HashSet<u32>> for Terminate {
-        fn is_compliant(&self, _: &u32, __: &HashSet<u32>) -> bool {
+    impl Policy<u32, SimpleVisitor<Self>> for Terminate {
+        fn is_compliant(&self, _: &u32, __: &SimpleVisitor<Self>) -> bool {
             true
         }
     }
