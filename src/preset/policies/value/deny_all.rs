@@ -5,11 +5,7 @@ use crate::policy::Policy;
 #[derive(Default)]
 pub struct DenyAll {}
 
-impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyAll
-where
-    TNode: Node,
-    TEdge: Edge,
-{
+impl<Entity, Ctx> Policy<Entity, Ctx> for DenyAll {
     /// Denies any entity no matter its value.
     ///
     /// # Arguments
@@ -20,7 +16,7 @@ where
     /// # Returns
     ///
     /// Always `true`
-    fn is_compliant(&self, _entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, _entity: &Entity, _context: &Ctx) -> bool {
         false
     }
 }
