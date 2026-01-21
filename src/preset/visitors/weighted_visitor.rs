@@ -3,7 +3,7 @@ use crate::policy::Policy;
 use crate::strategy::Visitor;
 use std::collections::HashMap;
 
-use super::CountVisited;
+use super::{CountVisited, TrackParent};
 
 /// Visitor for weighted graph traversal (Dijkstra's algorithm).
 ///
@@ -28,6 +28,7 @@ use super::CountVisited;
 pub struct WeightedVisitor<P> {
     /// Maps node IDs to their shortest known cumulative distance from the start
     distances: HashMap<u32, f64>,
+    parents: HashMap<u32, Option<u32>>,
     terminate: P,
 }
 
@@ -38,6 +39,7 @@ where
     pub fn new(terminate: P) -> Self {
         WeightedVisitor::<P> {
             distances: HashMap::new(),
+            parents: HashMap::new(),
             terminate,
         }
     }
@@ -46,6 +48,15 @@ where
 impl<P> CountVisited for WeightedVisitor<P> {
     fn visited_count(&self) -> usize {
         self.distances.len()
+    }
+}
+
+impl<P> TrackParent for WeightedVisitor<P> {
+    fn get_parent(&self, node_id: u32) -> Option<u32> {
+        if self.parents.contains_key(&node_id) {
+            return self.parents[&node_id];
+        }
+        None
     }
 }
 
@@ -106,10 +117,12 @@ where
         match self.distances.get(&to) {
             None => {
                 self.distances.insert(to, new_dist);
+                self.parents.insert(to, Some(from));
                 true
             }
             Some(&current_dist) if new_dist < current_dist => {
                 self.distances.insert(to, new_dist);
+                self.parents.insert(to, Some(from));
                 true
             }
             _ => false,
@@ -127,6 +140,7 @@ where
     /// * `_context` - The graph being traversed (unused)
     fn visit(&mut self, node_id: u32, _context: &Graph<TNode, TEdge>) {
         self.distances.entry(node_id).or_insert(0.0);
+        self.parents.entry(node_id).or_insert(None);
     }
 
     fn should_stop(&self, node_id: u32, _context: &Graph<TNode, TEdge>) -> bool {
