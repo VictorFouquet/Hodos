@@ -189,9 +189,10 @@ mod graph_integration {
     mod dijkstra {
         use super::*;
         use hodos::frontier::MinHeap;
+        use hodos::policy::Composite;
         use hodos::preset::policies::structural::DenyDanglingEdge;
         use hodos::preset::policies::traversal::GoalReached;
-        use hodos::preset::policies::value::AllowAll;
+        use hodos::preset::policies::value::{AllowAll, AllowWeightAbove};
         use hodos::preset::samplers::WeightedMatrixSampler;
 
         fn run_dijkstra(
@@ -201,7 +202,7 @@ mod graph_integration {
         ) -> WeightedVisitor<GoalReached> {
             let mut visitor = WeightedVisitor::new(GoalReached::new(goal));
             GraphBuilder::new(
-                DenyDanglingEdge::default(),
+                Composite::And(DenyDanglingEdge::default(), AllowWeightAbove::new(0.0)),
                 AllowAll::default(),
                 WeightedMatrixSampler::new(),
             )
@@ -209,6 +210,13 @@ mod graph_integration {
             .traverse(start, &mut MinHeap::new(), &mut visitor);
 
             visitor
+        }
+
+        #[test]
+        fn start_is_goal() {
+            let context = vec![vec![None, Some(1.0)], vec![Some(1.0), None]];
+            let visitor = run_dijkstra(0, 0, context);
+            assert_eq!(visitor.get_parent(0), None); // no parent
         }
 
         #[test]
@@ -226,7 +234,7 @@ mod graph_integration {
             // Alternative:   0->4->3    (11.0)
             // Note that when checking node 3 neighbors, visitor will
             // see node 4 for the second time, but with a cumulated
-            // weight of 7, lighter than the direct edge to 4 from 1.
+            // weight of 7, lighter than the direct edge from 0 to 4.
             // Shortest path should be correct, and parent of 4 should be 3
 
             let context = vec![
