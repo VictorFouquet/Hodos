@@ -1,5 +1,6 @@
 use crate::policy::Policy;
 
+#[derive(Debug, Default)]
 pub struct NoTermination;
 
 impl<T> Policy<u32, T> for NoTermination {

@@ -26,6 +26,7 @@ impl Node for EmptyNode {
     fn new(id: u32, _data: Option<Self::Data>) -> Self {
         EmptyNode { id }
     }
+
     fn id(&self) -> u32 {
         self.id
     }
