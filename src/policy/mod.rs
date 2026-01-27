@@ -1,5 +1,5 @@
 pub mod composite;
-pub use composite::Composite;
+pub use composite::{Composite, Not};
 
 /// A policy for authorizing the addition of entities to the graph.
 ///
@@ -33,5 +33,14 @@ where
                 p1.is_compliant(entity, context) || p2.is_compliant(entity, context)
             }
         }
+    }
+}
+
+impl<P, E, C> Policy<E, C> for Not<P>
+where
+    P: Policy<E, C>,
+{
+    fn is_compliant(&self, entity: &E, context: &C) -> bool {
+        !self.inner().is_compliant(entity, context)
     }
 }
