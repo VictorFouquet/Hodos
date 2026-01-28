@@ -1,4 +1,4 @@
-mod graph_integration {
+mod end_to_end {
     use hodos::builder::GraphBuilder;
     use hodos::frontier::{Frontier, Queue};
     use hodos::preset::visitors::*;
