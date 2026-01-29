@@ -67,7 +67,7 @@ mod policy_integration {
 
                 let policy = Composite::Or(EdgeBudget::new(2), DenyParallelEdge::default());
 
-                let edge = UnweightedEdge::from_nodes(0, 1);
+                let edge = UnweightedEdge::new(0, 1);
 
                 assert!(policy.is_compliant(&edge, &graph)); // Unique
                 graph.add_edge(edge);

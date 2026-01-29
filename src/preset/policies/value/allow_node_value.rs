@@ -99,11 +99,13 @@ mod tests {
     #[derive(Default)]
     pub struct MockEdge;
 
-    impl Edge for MockEdge {
-        fn from_nodes(_from: u32, _to: u32) -> Self {
+    impl MockEdge {
+        fn new(_from: u32, _to: u32) -> Self {
             MockEdge
         }
     }
+
+    impl Edge for MockEdge {}
 
     #[test]
     fn test_allow_node_value_rejects_any_node_when_whitelist_is_empty() {

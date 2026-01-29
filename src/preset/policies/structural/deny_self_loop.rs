@@ -50,10 +50,13 @@ mod tests {
         from: u32,
     }
 
-    impl Edge for MockEdge {
-        fn from_nodes(from: u32, to: u32) -> Self {
+    impl MockEdge {
+        fn new(from: u32, to: u32) -> Self {
             MockEdge { from: from, to: to }
         }
+    }
+
+    impl Edge for MockEdge {
         fn to(&self) -> u32 {
             self.to
         }
@@ -66,7 +69,7 @@ mod tests {
     fn denies_self_looping_edges() {
         let policy = DenySelfLoop::default();
         let graph = Graph::<MockNode, MockEdge>::new();
-        let edge = MockEdge::from_nodes(0, 0);
+        let edge = MockEdge::new(0, 0);
 
         assert!(!policy.is_compliant(&edge, &graph));
     }

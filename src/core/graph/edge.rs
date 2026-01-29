@@ -5,14 +5,6 @@
 ///
 /// Implementations define how edges are created and whether they store weights.
 pub trait Edge {
-    /// Creates a new edge from source to destination with optional weight.
-    ///
-    /// # Arguments
-    ///
-    /// * `from` - Source node ID
-    /// * `to` - Destination node ID
-    fn from_nodes(from: u32, to: u32) -> Self;
-
     /// Returns the destination node ID.
     fn to(&self) -> u32 {
         0

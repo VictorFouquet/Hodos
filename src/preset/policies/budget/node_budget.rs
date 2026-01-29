@@ -58,11 +58,7 @@ mod tests {
         }
     }
 
-    impl Edge for MockEdge {
-        fn from_nodes(_from: u32, _to: u32) -> Self {
-            MockEdge {}
-        }
-    }
+    impl Edge for MockEdge {}
 
     fn create_node() -> MockNode {
         MockNode { id: 0 }

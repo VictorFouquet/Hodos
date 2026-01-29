@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::core::HasWeight;
 use crate::core::Sampler;
-use crate::core::edge::Edge;
 use crate::core::node::Node;
 use crate::preset::{DataNode, EmptyNode};
 use crate::preset::{UnweightedEdge, WeightedEdge};
@@ -68,7 +66,7 @@ impl Sampler<AdjacencyList> for SimpleAdjacencySampler {
 
         let edges: Vec<_> = context[i]
             .iter()
-            .map(|&adj| UnweightedEdge::from_nodes(self.current_id, adj))
+            .map(|&adj| UnweightedEdge::new(self.current_id, adj))
             .collect();
 
         let nodes = vec![EmptyNode::new(self.current_id, None)];
@@ -126,7 +124,7 @@ impl<T: Clone> Sampler<AdjacencyListWithData<T>> for AdjacencyWithDataSampler<T>
 
         let edges: Vec<_> = context.adjacency[i]
             .iter()
-            .map(|&adj| UnweightedEdge::from_nodes(self.current_id, adj))
+            .map(|&adj| UnweightedEdge::new(self.current_id, adj))
             .collect();
 
         let nodes = vec![DataNode::new(
@@ -227,6 +225,7 @@ mod tests {
 
     mod simple_adjacency {
         use super::*;
+        use crate::core::Edge;
 
         fn test_context() -> AdjacencyList {
             vec![vec![1], vec![0, 2], vec![1]]

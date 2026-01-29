@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 
 use crate::core::Sampler;
-use crate::core::edge::Edge;
 use crate::core::node::Node;
 use crate::preset::DataNode;
 use crate::preset::UnweightedEdge;
@@ -129,7 +128,7 @@ where
                     && v.1 + self.current_x < (context[i].len() as i32)
             })
             .map(|&v| {
-                UnweightedEdge::from_nodes(
+                UnweightedEdge::new(
                     current_id as u32,
                     ((v.0 + self.current_y) * (context[i].len() as i32) + (v.1 + self.current_x))
                         as u32,
@@ -152,6 +151,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Edge;
 
     fn test_context() -> Grid2D<char> {
         vec![

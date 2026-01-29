@@ -68,9 +68,6 @@ mod tests {
     pub struct MockWeightedEdge;
 
     impl Edge for MockWeightedEdge {
-        fn from_nodes(_from: u32, _to: u32) -> Self {
-            MockWeightedEdge
-        }
         fn to(&self) -> u32 {
             0
         }
@@ -80,10 +77,6 @@ mod tests {
     }
 
     impl HasWeight for MockWeightedEdge {
-        fn new(_from: u32, _to: u32, _weight: f64) -> Self {
-            MockWeightedEdge
-        }
-
         fn weight(&self) -> f64 {
             5.0
         }
@@ -91,7 +84,7 @@ mod tests {
     }
 
     fn make_edge() -> MockWeightedEdge {
-        MockWeightedEdge::new(0, 0, 1.0)
+        MockWeightedEdge::default()
     }
 
     #[test]

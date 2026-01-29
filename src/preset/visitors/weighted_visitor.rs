@@ -151,7 +151,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::core::HasWeight;
+    use crate::core::{HasWeight, frontier};
 
     use super::*;
 
@@ -184,14 +184,13 @@ mod tests {
         pub weight: f64,
     }
 
-    impl Edge for MockWeightedEdge {
-        fn from_nodes(from: u32, to: u32) -> Self {
-            MockWeightedEdge {
-                from,
-                to,
-                weight: 1.0,
-            }
+    impl MockWeightedEdge {
+        pub fn new(from: u32, to: u32, weight: f64) -> Self {
+            MockWeightedEdge { from, to, weight }
         }
+    }
+
+    impl Edge for MockWeightedEdge {
         fn to(&self) -> u32 {
             self.to
         }
@@ -201,9 +200,6 @@ mod tests {
     }
 
     impl HasWeight for MockWeightedEdge {
-        fn new(from: u32, to: u32, weight: f64) -> Self {
-            MockWeightedEdge { from, to, weight }
-        }
         fn weight(&self) -> f64 {
             self.weight
         }

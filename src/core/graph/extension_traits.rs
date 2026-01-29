@@ -4,8 +4,6 @@ pub trait HasData<T> {
 }
 
 pub trait HasWeight {
-    fn new(from: u32, to: u32, weight: f64) -> Self;
-
     fn weight(&self) -> f64 {
         0.0
     }

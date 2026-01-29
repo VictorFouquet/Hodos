@@ -24,14 +24,12 @@ pub struct WeightedEdge {
     weight: f64,
 }
 
-impl Edge for WeightedEdge {
-    fn from_nodes(from: u32, to: u32) -> Self {
-        WeightedEdge {
-            from,
-            to,
-            weight: 1.0,
-        }
+impl WeightedEdge {
+    pub fn new(from: u32, to: u32, weight: f64) -> Self {
+        WeightedEdge { from, to, weight }
     }
+}
+impl Edge for WeightedEdge {
     fn to(&self) -> u32 {
         self.to
     }
@@ -41,10 +39,6 @@ impl Edge for WeightedEdge {
 }
 
 impl HasWeight for WeightedEdge {
-    fn new(from: u32, to: u32, weight: f64) -> Self {
-        WeightedEdge { from, to, weight }
-    }
-
     fn weight(&self) -> f64 {
         self.weight
     }

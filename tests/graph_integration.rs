@@ -2,7 +2,7 @@ mod graph_integration {
     use hodos::{
         core::Frontier,
         core::Visitor,
-        core::{Edge, Graph, Node},
+        core::{Graph, Node},
         preset::Queue,
         preset::{EmptyNode, UnweightedEdge},
     };
@@ -14,7 +14,7 @@ mod graph_integration {
         for i in 0..3 {
             graph.add_node(EmptyNode::new(i, None));
             if i != 0 {
-                graph.add_edge(UnweightedEdge::from_nodes(0, i));
+                graph.add_edge(UnweightedEdge::new(0, i));
             }
         }
         let mut frontier = Queue::new();
@@ -44,7 +44,7 @@ mod graph_integration {
         for i in 0..3 {
             graph.add_node(EmptyNode::new(i, None));
             if i != 0 {
-                graph.add_edge(UnweightedEdge::from_nodes(0, i));
+                graph.add_edge(UnweightedEdge::new(0, i));
             }
         }
 
@@ -62,7 +62,7 @@ mod graph_integration {
         for i in 0..3 {
             graph.add_node(EmptyNode::new(i, None));
             if i != 0 {
-                graph.add_edge(UnweightedEdge::from_nodes(0, i));
+                graph.add_edge(UnweightedEdge::new(0, i));
             }
         }
 
@@ -82,7 +82,7 @@ mod graph_integration {
         for i in 0..3 {
             graph.add_node(EmptyNode::new(i, None));
             if i != 0 {
-                graph.add_edge(UnweightedEdge::from_nodes(0, i));
+                graph.add_edge(UnweightedEdge::new(0, i));
             }
         }
 
