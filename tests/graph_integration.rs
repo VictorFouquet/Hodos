@@ -1,10 +1,10 @@
 mod graph_integration {
     use hodos::{
         core::Frontier,
+        core::Visitor,
         graph::{Edge, Graph, Node},
         preset::Queue,
         preset::{EmptyNode, UnweightedEdge},
-        strategy::Visitor,
     };
 
     #[test]

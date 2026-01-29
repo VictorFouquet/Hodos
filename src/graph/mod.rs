@@ -7,7 +7,7 @@ pub use extension_traits::*;
 pub use node::Node;
 
 use crate::core::Frontier;
-use crate::strategy::Visitor;
+use crate::core::Visitor;
 use std::collections::HashMap;
 
 /// A graph data structure storing nodes and directed edges.

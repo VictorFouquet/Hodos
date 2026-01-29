@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
+use crate::core::Sampler;
 use crate::graph::edge::Edge;
 use crate::graph::node::Node;
 use crate::preset::{DataNode, EmptyNode};
 use crate::preset::{UnweightedEdge, WeightedEdge};
-use crate::strategy::Sampler;
 
 pub type AdjacencyList = Vec<Vec<u32>>;
 pub type WeightedAdjacencyList = Vec<Vec<(u32, f64)>>;

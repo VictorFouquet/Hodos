@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
+use crate::core::Sampler;
 use crate::graph::edge::Edge;
 use crate::graph::node::Node;
 use crate::preset::DataNode;
 use crate::preset::UnweightedEdge;
-use crate::strategy::Sampler;
 
 pub type Grid2D<T> = Vec<Vec<T>>;
 

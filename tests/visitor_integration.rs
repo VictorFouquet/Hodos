@@ -1,6 +1,6 @@
 mod visitor_integration {
+    use hodos::core::Visitor;
     use hodos::preset::visitors::*;
-    use hodos::strategy::Visitor;
 
     mod with_terminate_policy {
         use super::*;

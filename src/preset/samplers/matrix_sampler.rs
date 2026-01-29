@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
+use crate::core::Sampler;
 use crate::graph::edge::Edge;
 use crate::graph::node::Node;
 use crate::preset::EmptyNode;
 use crate::preset::{UnweightedEdge, WeightedEdge};
-use crate::strategy::Sampler;
 
 pub type BinaryMatrix = Vec<Vec<bool>>;
 pub type WeightedMatrix = Vec<Vec<Option<f64>>>;
