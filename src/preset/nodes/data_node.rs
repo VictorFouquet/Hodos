@@ -9,13 +9,13 @@ use crate::core::{HasData, Node};
 ///
 /// ```
 /// use hodos::preset::nodes::DataNode;
-/// use hodos::core::Node;
+/// use hodos::core::{HasData, Node};
 ///
 /// let mut node = DataNode::new(42, Some(true));
 /// assert_eq!(node.id(), 42);
-/// assert_eq!(node.data(), Some(&true));
-/// node.set_data(&false);
-/// assert_eq!(node.data(), Some(&false));
+/// assert_eq!(node.data(), &true);
+/// node.set_data(false);
+/// assert_eq!(node.data(), &false);
 /// ```
 #[derive(Debug, Default)]
 pub struct DataNode<T> {

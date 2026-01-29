@@ -13,7 +13,6 @@ use crate::core::Node;
 ///
 /// let mut node = EmptyNode::new(42);
 /// assert_eq!(node.id(), 42);
-/// assert!(node.data().is_none());
 /// ```
 #[derive(Debug, Default)]
 pub struct EmptyNode {
