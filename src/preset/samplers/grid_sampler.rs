@@ -129,11 +129,10 @@ where
                     && v.1 + self.current_x < (context[i].len() as i32)
             })
             .map(|&v| {
-                UnweightedEdge::new(
+                UnweightedEdge::from_nodes(
                     current_id as u32,
                     ((v.0 + self.current_y) * (context[i].len() as i32) + (v.1 + self.current_x))
                         as u32,
-                    None,
                 )
             })
             .collect();

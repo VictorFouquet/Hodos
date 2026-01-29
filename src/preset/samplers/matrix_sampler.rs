@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use crate::core::Sampler;
 use crate::core::edge::Edge;
 use crate::core::node::Node;
+use crate::core::{HasWeight, Sampler};
 use crate::preset::EmptyNode;
 use crate::preset::{UnweightedEdge, WeightedEdge};
 
@@ -64,7 +64,7 @@ impl Sampler<BinaryMatrix> for BinaryMatrixSampler {
             .iter()
             .enumerate()
             .filter(|(_, v)| **v)
-            .map(|(j, _)| UnweightedEdge::new(self.current_id, j as u32, None))
+            .map(|(j, _)| UnweightedEdge::from_nodes(self.current_id, j as u32))
             .collect();
 
         let nodes = vec![EmptyNode::new(self.current_id, None)];
@@ -90,7 +90,7 @@ impl Sampler<WeightedMatrix> for WeightedMatrixSampler {
             .iter()
             .enumerate()
             .filter_map(|(j, w)| {
-                w.map(|weight| WeightedEdge::new(self.current_id, j as u32, Some(weight)))
+                w.map(|weight| WeightedEdge::new(self.current_id, j as u32, weight))
             })
             .collect();
 

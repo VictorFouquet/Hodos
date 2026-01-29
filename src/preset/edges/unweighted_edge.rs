@@ -23,7 +23,7 @@ pub struct UnweightedEdge {
 }
 
 impl Edge for UnweightedEdge {
-    fn new(from: u32, to: u32, _weight: Option<f64>) -> Self {
+    fn from_nodes(from: u32, to: u32) -> Self {
         UnweightedEdge { from, to }
     }
     fn to(&self) -> u32 {

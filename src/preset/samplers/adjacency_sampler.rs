@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use crate::core::HasWeight;
 use crate::core::Sampler;
 use crate::core::edge::Edge;
 use crate::core::node::Node;
@@ -67,7 +68,7 @@ impl Sampler<AdjacencyList> for SimpleAdjacencySampler {
 
         let edges: Vec<_> = context[i]
             .iter()
-            .map(|&adj| UnweightedEdge::new(self.current_id, adj, None))
+            .map(|&adj| UnweightedEdge::from_nodes(self.current_id, adj))
             .collect();
 
         let nodes = vec![EmptyNode::new(self.current_id, None)];
@@ -94,7 +95,7 @@ impl Sampler<WeightedAdjacencyList> for WeightedAdjacencySampler {
 
         let edges: Vec<_> = context[i]
             .iter()
-            .map(|&adj| WeightedEdge::new(self.current_id, adj.0, Some(adj.1)))
+            .map(|&adj| WeightedEdge::new(self.current_id, adj.0, adj.1))
             .collect();
 
         let nodes = vec![EmptyNode::new(self.current_id, None)];
@@ -125,7 +126,7 @@ impl<T: Clone> Sampler<AdjacencyListWithData<T>> for AdjacencyWithDataSampler<T>
 
         let edges: Vec<_> = context.adjacency[i]
             .iter()
-            .map(|&adj| UnweightedEdge::new(self.current_id, adj, None))
+            .map(|&adj| UnweightedEdge::from_nodes(self.current_id, adj))
             .collect();
 
         let nodes = vec![DataNode::new(
@@ -159,7 +160,7 @@ impl<T: Clone> Sampler<WeightedAdjacencyListWithData<T>> for WeightedAdjacencyWi
 
         let edges: Vec<_> = context.adjacency[i]
             .iter()
-            .map(|&adj| WeightedEdge::new(self.current_id, adj.0, Some(adj.1)))
+            .map(|&adj| WeightedEdge::new(self.current_id, adj.0, adj.1))
             .collect();
 
         let nodes = vec![DataNode::new(
@@ -254,6 +255,7 @@ mod tests {
 
     mod weighted_adjacency {
         use super::*;
+        use crate::core::HasWeight;
 
         fn test_context() -> WeightedAdjacencyList {
             vec![vec![(1, 1.0)], vec![(0, 2.0), (2, 3.0)], vec![(1, 4.0)]]
@@ -327,6 +329,7 @@ mod tests {
 
     mod weighted_with_data {
         use super::*;
+        use crate::core::HasWeight;
 
         type TestSampler = AdjacencySampler<DataNode<NodeContent>, WeightedEdge>;
 

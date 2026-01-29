@@ -100,7 +100,7 @@ mod tests {
     pub struct MockEdge;
 
     impl Edge for MockEdge {
-        fn new(_from: u32, _to: u32, _weight: Option<f64>) -> Self {
+        fn from_nodes(_from: u32, _to: u32) -> Self {
             MockEdge
         }
     }

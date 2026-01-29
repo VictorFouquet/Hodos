@@ -1,5 +1,5 @@
-use crate::core::Policy;
 use crate::core::{Edge, Graph, Node};
+use crate::core::{HasWeight, Policy};
 
 /// Authorization policy that only allows edges with weight above a threshold.
 ///
@@ -22,9 +22,9 @@ impl AllowWeightAbove {
 
 impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for AllowWeightAbove
 where
-    Entity: Edge,
+    Entity: Edge + HasWeight,
     TNode: Node,
-    TEdge: Edge,
+    TEdge: Edge + HasWeight,
 {
     /// Allows an edge if its weight is strictly greater than the threshold.
     ///
@@ -43,6 +43,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::core::HasWeight;
+
     use super::*;
 
     #[derive(Default)]
@@ -66,7 +68,7 @@ mod tests {
     pub struct MockWeightedEdge;
 
     impl Edge for MockWeightedEdge {
-        fn new(_from: u32, _to: u32, _weight: Option<f64>) -> Self {
+        fn from_nodes(_from: u32, _to: u32) -> Self {
             MockWeightedEdge
         }
         fn to(&self) -> u32 {
@@ -75,13 +77,20 @@ mod tests {
         fn from(&self) -> u32 {
             0
         }
+    }
+
+    impl HasWeight for MockWeightedEdge {
+        fn new(_from: u32, _to: u32, _weight: f64) -> Self {
+            MockWeightedEdge
+        }
         fn weight(&self) -> f64 {
             5.0
         }
+        fn set_weight(&mut self, _weight: f64) {}
     }
 
     fn make_edge() -> MockWeightedEdge {
-        MockWeightedEdge::new(0, 0, None)
+        MockWeightedEdge::new(0, 0, 5.0)
     }
 
     #[test]

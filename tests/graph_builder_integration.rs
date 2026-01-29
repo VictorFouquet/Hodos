@@ -4,6 +4,7 @@ mod graph_builder_integration {
 
     mod from_matrix {
         use super::*;
+        use hodos::core::HasWeight;
         use hodos::preset::policies::value::{AllowAll, AllowWeightAbove};
         use hodos::preset::samplers::{BinaryMatrixSampler, WeightedMatrixSampler};
 
@@ -156,7 +157,7 @@ mod graph_builder_integration {
 
     mod from_adjacency_list {
         use super::*;
-        use hodos::core::Composite;
+        use hodos::core::{Composite, HasWeight};
         use hodos::preset::policies::value::{
             AllowAll, AllowWeightAbove, AllowWeightBelow, DenyNodeValue,
         };

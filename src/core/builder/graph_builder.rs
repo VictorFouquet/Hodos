@@ -171,7 +171,7 @@ mod tests {
     }
 
     impl Edge for MockEdge {
-        fn new(from: u32, to: u32, _weight: Option<f64>) -> Self {
+        fn from_nodes(from: u32, to: u32) -> Self {
             MockEdge { from: from, to: to }
         }
         fn to(&self) -> u32 {
@@ -197,7 +197,7 @@ mod tests {
             }
             let res = Some((
                 vec![MockNode::new(self.count, None)],
-                vec![MockEdge::new(self.count, self.count, None)],
+                vec![MockEdge::from_nodes(self.count, self.count)],
             ));
             self.count += 1;
             res

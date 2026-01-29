@@ -43,7 +43,7 @@ mod tests {
     }
 
     impl Edge for MockEdge {
-        fn new(from: u32, to: u32, _weight: Option<f64>) -> Self {
+        fn from_nodes(from: u32, to: u32) -> Self {
             MockEdge { from, to }
         }
         fn from(&self) -> u32 {
@@ -66,7 +66,7 @@ mod tests {
     fn compliant_when_both_endpoints_exist() {
         let graph = create_graph_with_nodes(vec![0, 1]);
         let policy = DenyDanglingEdge::default();
-        let edge = MockEdge::new(0, 1, None);
+        let edge = MockEdge::from_nodes(0, 1);
 
         assert!(policy.is_compliant(&edge, &graph));
     }
@@ -75,7 +75,7 @@ mod tests {
     fn non_compliant_when_from_node_missing() {
         let graph = create_graph_with_nodes(vec![1]);
         let policy = DenyDanglingEdge::default();
-        let edge = MockEdge::new(0, 1, None);
+        let edge = MockEdge::from_nodes(0, 1);
 
         assert!(!policy.is_compliant(&edge, &graph));
     }
@@ -84,7 +84,7 @@ mod tests {
     fn non_compliant_when_to_node_missing() {
         let graph = create_graph_with_nodes(vec![0]);
         let policy = DenyDanglingEdge::default();
-        let edge = MockEdge::new(0, 1, None);
+        let edge = MockEdge::from_nodes(0, 1);
 
         assert!(!policy.is_compliant(&edge, &graph));
     }
@@ -93,7 +93,7 @@ mod tests {
     fn non_compliant_when_both_nodes_missing() {
         let graph = Graph::<MockNode, MockEdge>::new();
         let policy = DenyDanglingEdge::default();
-        let edge = MockEdge::new(0, 1, None);
+        let edge = MockEdge::from_nodes(0, 1);
 
         assert!(!policy.is_compliant(&edge, &graph));
     }

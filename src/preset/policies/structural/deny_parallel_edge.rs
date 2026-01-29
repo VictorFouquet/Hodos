@@ -56,7 +56,7 @@ mod tests {
     }
 
     impl Edge for MockEdge {
-        fn new(from: u32, to: u32, _weight: Option<f64>) -> Self {
+        fn from_nodes(from: u32, to: u32) -> Self {
             MockEdge { from: from, to: to }
         }
         fn to(&self) -> u32 {
@@ -71,7 +71,7 @@ mod tests {
     fn denies_parallel_edges() {
         let policy = DenyParallelEdge::default();
         let mut graph = Graph::<MockNode, MockEdge>::new();
-        let edge = MockEdge::new(0, 1, None);
+        let edge = MockEdge::from_nodes(0, 1);
 
         assert!(policy.is_compliant(&edge, &graph));
 
@@ -86,8 +86,8 @@ mod tests {
 
         let mut graph = Graph::<MockNode, MockEdge>::new();
 
-        let forward = MockEdge::new(0, 1, None);
-        let reverse = MockEdge::new(1, 0, None);
+        let forward = MockEdge::from_nodes(0, 1);
+        let reverse = MockEdge::from_nodes(1, 0);
 
         assert!(policy.is_compliant(&forward, &graph));
 

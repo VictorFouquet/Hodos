@@ -54,7 +54,7 @@ mod policy_integration {
 
         mod composite_for_edges {
             use super::*;
-            use hodos::core::Edge;
+            use hodos::core::{Edge, HasWeight};
             use hodos::preset::UnweightedEdge;
             use hodos::preset::WeightedEdge;
             use hodos::preset::policies::structural::DenyParallelEdge;
@@ -67,7 +67,7 @@ mod policy_integration {
 
                 let policy = Composite::Or(EdgeBudget::new(2), DenyParallelEdge::default());
 
-                let edge = UnweightedEdge::new(0, 1, None);
+                let edge = UnweightedEdge::from_nodes(0, 1);
 
                 assert!(policy.is_compliant(&edge, &graph)); // Unique
                 graph.add_edge(edge);
@@ -87,15 +87,15 @@ mod policy_integration {
 
                 let mut graph = Graph::<EmptyNode, WeightedEdge>::new();
 
-                let too_heavy = WeightedEdge::new(3, 4, Some(10.0));
+                let too_heavy = WeightedEdge::new(3, 4, 10.0);
 
-                let unique_light_under_budget_1 = WeightedEdge::new(0, 1, Some(3.0));
+                let unique_light_under_budget_1 = WeightedEdge::new(0, 1, 3.0);
 
-                let duplicate = WeightedEdge::new(0, 1, Some(1.0));
+                let duplicate = WeightedEdge::new(0, 1, 1.0);
 
-                let unique_light_under_budget_2 = WeightedEdge::new(1, 2, Some(4.0));
+                let unique_light_under_budget_2 = WeightedEdge::new(1, 2, 4.0);
 
-                let budget_exhausted = WeightedEdge::new(2, 3, Some(2.0));
+                let budget_exhausted = WeightedEdge::new(2, 3, 2.0);
 
                 assert!(!policy.is_compliant(&too_heavy, &graph)); // ✗ too heavy
 
@@ -116,10 +116,10 @@ mod policy_integration {
 
                 let policy = Composite::Or(AllowWeightBelow::new(3.0), EdgeBudget::new(2));
 
-                let heavy_under_budget_1 = WeightedEdge::new(0, 1, Some(10.0));
-                let heavy_under_budget_2 = WeightedEdge::new(1, 2, Some(20.0));
-                let heavy_exhausted_budget = WeightedEdge::new(2, 3, Some(15.0));
-                let light_exhausted_budget = WeightedEdge::new(2, 3, Some(1.0));
+                let heavy_under_budget_1 = WeightedEdge::new(0, 1, 10.0);
+                let heavy_under_budget_2 = WeightedEdge::new(1, 2, 20.0);
+                let heavy_exhausted_budget = WeightedEdge::new(2, 3, 15.0);
+                let light_exhausted_budget = WeightedEdge::new(2, 3, 1.0);
 
                 assert!(policy.is_compliant(&heavy_under_budget_1, &graph)); // Heavy but under budget
                 graph.add_edge(heavy_under_budget_1);
@@ -139,11 +139,11 @@ mod policy_integration {
                     Composite::And(AllowWeightAbove::new(5.0), AllowWeightBelow::new(10.0))
                         .and(DenyParallelEdge::default());
 
-                let in_range_unique_1 = WeightedEdge::new(0, 1, Some(6.0));
-                let in_range_unique_2 = WeightedEdge::new(1, 2, Some(9.0));
-                let in_range_duplicate = WeightedEdge::new(1, 2, Some(7.0));
-                let unique_above_range = WeightedEdge::new(2, 3, Some(20.0));
-                let unique_below_range = WeightedEdge::new(3, 4, Some(1.0));
+                let in_range_unique_1 = WeightedEdge::new(0, 1, 6.0);
+                let in_range_unique_2 = WeightedEdge::new(1, 2, 9.0);
+                let in_range_duplicate = WeightedEdge::new(1, 2, 7.0);
+                let unique_above_range = WeightedEdge::new(2, 3, 20.0);
+                let unique_below_range = WeightedEdge::new(3, 4, 1.0);
 
                 assert!(policy.is_compliant(&in_range_unique_1, &graph)); // In range and unique
                 graph.add_edge(in_range_unique_1);
