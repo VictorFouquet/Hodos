@@ -1,5 +1,5 @@
 mod graph_builder_integration {
-    use hodos::builder::GraphBuilder;
+    use hodos::core::GraphBuilder;
     use hodos::graph::{Edge, Node};
 
     mod from_matrix {
