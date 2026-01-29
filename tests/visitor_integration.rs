@@ -53,7 +53,7 @@ mod visitor_integration {
 
         mod weighted_visitor {
             use super::*;
-            use hodos::graph::*;
+            use hodos::core::*;
             use hodos::preset::{EmptyNode, WeightedEdge};
 
             fn get_graph() -> Graph<EmptyNode, WeightedEdge> {

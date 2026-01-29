@@ -1,4 +1,4 @@
-use crate::graph::Edge;
+use crate::core::Edge;
 
 /// An unweighted edge connecting two nodes.
 ///
@@ -9,7 +9,7 @@ use crate::graph::Edge;
 ///
 /// ```
 /// use hodos::preset::edges::UnweightedEdge;
-/// use hodos::graph::Edge;
+/// use hodos::core::Edge;
 ///
 /// let edge = UnweightedEdge::new(0, 1, None);
 /// assert_eq!(edge.from(), 0);

@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
 use crate::core::Sampler;
-use crate::graph::edge::Edge;
-use crate::graph::node::Node;
+use crate::core::edge::Edge;
+use crate::core::node::Node;
 use crate::preset::{DataNode, EmptyNode};
 use crate::preset::{UnweightedEdge, WeightedEdge};
 

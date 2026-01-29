@@ -2,7 +2,7 @@ mod graph_integration {
     use hodos::{
         core::Frontier,
         core::Visitor,
-        graph::{Edge, Graph, Node},
+        core::{Edge, Graph, Node},
         preset::Queue,
         preset::{EmptyNode, UnweightedEdge},
     };

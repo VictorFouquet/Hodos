@@ -1,5 +1,5 @@
 use crate::core::Policy;
-use crate::graph::*;
+use crate::core::*;
 
 /// Authorization policy that limits the total count of nodes.
 ///
@@ -40,7 +40,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::Node;
+    use crate::core::Node;
 
     pub struct MockNode {
         id: u32,

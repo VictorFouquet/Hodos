@@ -1,6 +1,6 @@
 mod policy_integration {
     use hodos::core::Composite;
-    use hodos::graph::{Graph, Node};
+    use hodos::core::{Graph, Node};
     use hodos::preset::policies::budget::{EdgeBudget, NodeBudget};
     use hodos::preset::{DataNode, EmptyNode, UnweightedEdge};
 
@@ -54,7 +54,7 @@ mod policy_integration {
 
         mod composite_for_edges {
             use super::*;
-            use hodos::graph::Edge;
+            use hodos::core::Edge;
             use hodos::preset::UnweightedEdge;
             use hodos::preset::WeightedEdge;
             use hodos::preset::policies::structural::DenyParallelEdge;

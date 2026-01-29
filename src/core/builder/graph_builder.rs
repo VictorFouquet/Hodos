@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
+use crate::core::Graph;
 use crate::core::Policy;
 use crate::core::Sampler;
-use crate::graph::Graph;
 
 /// A builder for constructing graphs using configurable policies and sampling strategies.
 ///
@@ -94,9 +94,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Edge;
+    use crate::core::Node;
     use crate::core::Sampler;
-    use crate::graph::Edge;
-    use crate::graph::Node;
 
     #[test]
     fn builder_should_stop_when_sampler_returns_none() {

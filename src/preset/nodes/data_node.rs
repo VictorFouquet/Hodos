@@ -1,4 +1,4 @@
-use crate::graph::Node;
+use crate::core::Node;
 
 /// A graph node that can contain data associated data.
 ///
@@ -9,7 +9,7 @@ use crate::graph::Node;
 ///
 /// ```
 /// use hodos::preset::nodes::DataNode;
-/// use hodos::graph::Node;
+/// use hodos::core::Node;
 ///
 /// let mut node = DataNode::new(42, Some(true));
 /// assert_eq!(node.id(), 42);

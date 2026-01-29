@@ -1,4 +1,4 @@
-use crate::graph::{Edge, Node};
+use crate::core::{Edge, Node};
 
 type Sample<N, E> = (Vec<N>, Vec<E>);
 

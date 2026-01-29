@@ -1,4 +1,4 @@
-use crate::graph::Node;
+use crate::core::Node;
 
 /// A minimal graph node with no associated data.
 ///
@@ -9,7 +9,7 @@ use crate::graph::Node;
 ///
 /// ```
 /// use hodos::preset::nodes::EmptyNode;
-/// use hodos::graph::Node;
+/// use hodos::core::Node;
 ///
 /// let mut node = EmptyNode::new(42, None);
 /// assert_eq!(node.id(), 42);

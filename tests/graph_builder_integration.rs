@@ -1,6 +1,6 @@
 mod graph_builder_integration {
     use hodos::core::GraphBuilder;
-    use hodos::graph::{Edge, Node};
+    use hodos::core::{Edge, Node};
 
     mod from_matrix {
         use super::*;

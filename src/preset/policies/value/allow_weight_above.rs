@@ -1,5 +1,5 @@
 use crate::core::Policy;
-use crate::graph::{Edge, Graph, Node};
+use crate::core::{Edge, Graph, Node};
 
 /// Authorization policy that only allows edges with weight above a threshold.
 ///
