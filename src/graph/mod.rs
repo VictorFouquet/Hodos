@@ -1,7 +1,9 @@
 pub mod edge;
+pub mod extension_traits;
 pub mod node;
 
 pub use edge::Edge;
+pub use extension_traits::*;
 pub use node::Node;
 
 use crate::frontier::Frontier;
