@@ -28,10 +28,6 @@ mod tests {
     }
 
     impl Node for MockNode {
-        type Data = ();
-        fn new(id: u32, _data: Option<Self::Data>) -> Self {
-            MockNode { id }
-        }
         fn id(&self) -> u32 {
             self.id
         }
@@ -60,7 +56,7 @@ mod tests {
     fn create_graph_with_nodes(node_ids: Vec<u32>) -> Graph<MockNode, MockEdge> {
         let mut graph = Graph::new();
         for id in node_ids {
-            graph.add_node(MockNode::new(id, None));
+            graph.add_node(MockNode { id });
         }
         graph
     }

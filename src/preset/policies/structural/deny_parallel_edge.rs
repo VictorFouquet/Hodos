@@ -39,11 +39,6 @@ mod tests {
     pub struct MockNode {}
 
     impl Node for MockNode {
-        type Data = ();
-
-        fn new(_id: u32, _data: Option<Self::Data>) -> Self {
-            MockNode {}
-        }
         fn id(&self) -> u32 {
             0
         }

@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 
 use crate::core::Sampler;
-use crate::core::node::Node;
 use crate::preset::{DataNode, EmptyNode};
 use crate::preset::{UnweightedEdge, WeightedEdge};
 
@@ -69,7 +68,7 @@ impl Sampler<AdjacencyList> for SimpleAdjacencySampler {
             .map(|&adj| UnweightedEdge::new(self.current_id, adj))
             .collect();
 
-        let nodes = vec![EmptyNode::new(self.current_id, None)];
+        let nodes = vec![EmptyNode::new(self.current_id)];
 
         self.current_id += 1;
 
@@ -96,7 +95,7 @@ impl Sampler<WeightedAdjacencyList> for WeightedAdjacencySampler {
             .map(|&adj| WeightedEdge::new(self.current_id, adj.0, adj.1))
             .collect();
 
-        let nodes = vec![EmptyNode::new(self.current_id, None)];
+        let nodes = vec![EmptyNode::new(self.current_id)];
 
         self.current_id += 1;
 
@@ -175,10 +174,11 @@ impl<T: Clone> Sampler<WeightedAdjacencyListWithData<T>> for WeightedAdjacencyWi
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Node;
 
     // ==================== Test Data ====================
 
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Copy, Clone, Debug, PartialEq)]
     struct NodeContent {
         v: u8,
     }
@@ -284,6 +284,7 @@ mod tests {
 
     mod with_data {
         use super::*;
+        use crate::core::{HasData, Node};
 
         type TestSampler = AdjacencySampler<DataNode<NodeContent>, UnweightedEdge>;
 
@@ -317,10 +318,10 @@ mod tests {
             let context = test_context();
 
             let (nodes, _) = sampler.next(&context).unwrap();
-            assert_eq!(nodes[0].data().unwrap().v, 10);
+            assert_eq!(nodes[0].data().v, 10);
 
             let (nodes, _) = sampler.next(&context).unwrap();
-            assert_eq!(nodes[0].data().unwrap().v, 20);
+            assert_eq!(nodes[0].data().v, 20);
         }
     }
 
@@ -328,7 +329,7 @@ mod tests {
 
     mod weighted_with_data {
         use super::*;
-        use crate::core::HasWeight;
+        use crate::core::{HasData, HasWeight};
 
         type TestSampler = AdjacencySampler<DataNode<NodeContent>, WeightedEdge>;
 
@@ -364,7 +365,7 @@ mod tests {
             let context = test_context();
 
             let (nodes, edges) = sampler.next(&context).unwrap();
-            assert_eq!(nodes[0].data().unwrap().v, 10);
+            assert_eq!(nodes[0].data().v, 10);
             assert_eq!(edges[0].weight(), 1.0);
         }
     }

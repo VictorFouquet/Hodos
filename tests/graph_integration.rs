@@ -1,8 +1,8 @@
 mod graph_integration {
     use hodos::{
         core::Frontier,
+        core::Graph,
         core::Visitor,
-        core::{Graph, Node},
         preset::Queue,
         preset::{EmptyNode, UnweightedEdge},
     };
@@ -12,7 +12,7 @@ mod graph_integration {
         // Graph is [(0->1), (0->2)]
         let mut graph: Graph<EmptyNode, UnweightedEdge> = Graph::default();
         for i in 0..3 {
-            graph.add_node(EmptyNode::new(i, None));
+            graph.add_node(EmptyNode::new(i));
             if i != 0 {
                 graph.add_edge(UnweightedEdge::new(0, i));
             }
@@ -28,7 +28,7 @@ mod graph_integration {
     fn traversal_ends_when_frontier_is_empty() {
         // Graph has a single node and no edge
         let mut graph: Graph<EmptyNode, UnweightedEdge> = Graph::default();
-        graph.add_node(EmptyNode::new(0, None));
+        graph.add_node(EmptyNode::new(0));
 
         let mut frontier = Queue::new();
 
@@ -42,7 +42,7 @@ mod graph_integration {
         // Graph has a single node and no edge
         let mut graph: Graph<EmptyNode, UnweightedEdge> = Graph::default();
         for i in 0..3 {
-            graph.add_node(EmptyNode::new(i, None));
+            graph.add_node(EmptyNode::new(i));
             if i != 0 {
                 graph.add_edge(UnweightedEdge::new(0, i));
             }
@@ -60,7 +60,7 @@ mod graph_integration {
         // Graph is [(0->1), (0->2)]
         let mut graph: Graph<EmptyNode, UnweightedEdge> = Graph::default();
         for i in 0..3 {
-            graph.add_node(EmptyNode::new(i, None));
+            graph.add_node(EmptyNode::new(i));
             if i != 0 {
                 graph.add_edge(UnweightedEdge::new(0, i));
             }
@@ -80,7 +80,7 @@ mod graph_integration {
         // Graph is [(0->1), (0->2)]
         let mut graph: Graph<EmptyNode, UnweightedEdge> = Graph::default();
         for i in 0..3 {
-            graph.add_node(EmptyNode::new(i, None));
+            graph.add_node(EmptyNode::new(i));
             if i != 0 {
                 graph.add_edge(UnweightedEdge::new(0, i));
             }

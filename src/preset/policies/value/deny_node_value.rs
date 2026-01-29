@@ -1,5 +1,5 @@
-use crate::core::Policy;
 use crate::core::{Edge, Graph, Node};
+use crate::core::{HasData, Policy};
 use std::{collections::HashSet, hash::Hash};
 
 /// Authorization policy that denies nodes with specific data values.
@@ -47,9 +47,9 @@ where
 
 impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyNodeValue<Entity::Data>
 where
-    TNode: Node,
+    TNode: Node + HasData,
     TEdge: Edge,
-    Entity: Node,
+    Entity: Node + HasData,
     Entity::Data: Eq + Hash,
 {
     /// Denies a node if its data matches a blacklisted value.
@@ -64,10 +64,7 @@ where
     /// `false` if the node's data is in the blacklist, `true` otherwise.
     /// Nodes without data always return `true`.
     fn is_compliant(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
-        match entity.data() {
-            Some(v) => !self.denied_values.contains(v),
-            None => true,
-        }
+        !self.denied_values.contains(entity.data())
     }
 }
 
@@ -80,19 +77,23 @@ mod tests {
         data: bool,
     }
 
-    impl Node for MockValueNode {
+    impl MockValueNode {
+        pub fn new(_id: u32, data: bool) -> Self {
+            MockValueNode { data }
+        }
+    }
+
+    impl HasData for MockValueNode {
         type Data = bool;
 
-        fn new(_id: u32, data: Option<Self::Data>) -> Self {
-            MockValueNode {
-                data: data.unwrap_or(true),
-            }
+        fn data(&self) -> &Self::Data {
+            &self.data
         }
+    }
+
+    impl Node for MockValueNode {
         fn id(&self) -> u32 {
             0
-        }
-        fn data(&self) -> Option<&Self::Data> {
-            Some(&self.data)
         }
     }
 
@@ -107,8 +108,8 @@ mod tests {
         let graph = Graph::<MockValueNode, MockEdge>::new();
         assert_eq!(policy.denied_values.len(), 0);
 
-        assert!(policy.is_compliant(&MockValueNode::new(0, Some(true)), &graph));
-        assert!(policy.is_compliant(&MockValueNode::new(0, Some(false)), &graph));
+        assert!(policy.is_compliant(&MockValueNode::new(0, true), &graph));
+        assert!(policy.is_compliant(&MockValueNode::new(0, false), &graph));
     }
 
     #[test]
@@ -120,7 +121,7 @@ mod tests {
         policy.add_denied_value(true);
         assert_eq!(policy.denied_values.len(), 1);
 
-        assert!(policy.is_compliant(&MockValueNode::new(0, Some(false)), &graph));
+        assert!(policy.is_compliant(&MockValueNode::new(0, false), &graph));
     }
 
     #[test]
@@ -132,6 +133,6 @@ mod tests {
         policy.add_denied_value(true);
         assert_eq!(policy.denied_values.len(), 1);
 
-        assert!(!policy.is_compliant(&MockValueNode::new(0, Some(true)), &graph));
+        assert!(!policy.is_compliant(&MockValueNode::new(0, true), &graph));
     }
 }

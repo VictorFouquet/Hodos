@@ -1,5 +1,5 @@
-use crate::core::Policy;
 use crate::core::{Edge, Graph, Node};
+use crate::core::{HasData, Policy};
 use std::{collections::HashSet, hash::Hash};
 
 /// Authorization policy that only allows nodes with specific data values.
@@ -47,9 +47,9 @@ where
 
 impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for AllowNodeValue<Entity::Data>
 where
-    TNode: Node,
+    TNode: Node + HasData,
     TEdge: Edge,
-    Entity: Node,
+    Entity: Node + HasData,
     Entity::Data: Eq + Hash,
 {
     /// Allows a node if its data matches a whitelisted value.
@@ -64,31 +64,29 @@ where
     /// `true` if the node's data is in the whitelist, `false` otherwise.
     /// Nodes without data always return `false`.
     fn is_compliant(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
-        match entity.data() {
-            Some(v) => self.allowed_values.contains(v),
-            None => false,
-        }
+        self.allowed_values.contains(entity.data())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::HasData;
 
     #[derive(Default)]
     pub struct MockValueNode;
 
     impl Node for MockValueNode {
-        type Data = bool;
-
-        fn new(_id: u32, _data: Option<Self::Data>) -> Self {
-            MockValueNode
-        }
         fn id(&self) -> u32 {
             0
         }
-        fn data(&self) -> Option<&Self::Data> {
-            Some(&true)
+    }
+
+    impl HasData for MockValueNode {
+        type Data = bool;
+
+        fn data(&self) -> &Self::Data {
+            &true
         }
     }
 
@@ -107,7 +105,7 @@ mod tests {
         assert_eq!(policy.allowed_values.len(), 0);
 
         let node = make_node();
-        assert_eq!(node.data(), Some(&true));
+        assert_eq!(node.data(), &true);
 
         assert!(!policy.is_compliant(&node, &graph));
     }
@@ -122,7 +120,7 @@ mod tests {
         assert_eq!(policy.allowed_values.len(), 1);
 
         let node = make_node();
-        assert_eq!(node.data(), Some(&true));
+        assert_eq!(node.data(), &true);
 
         assert!(policy.is_compliant(&node, &graph));
     }
@@ -137,7 +135,7 @@ mod tests {
         assert_eq!(policy.allowed_values.len(), 1);
 
         let node = make_node();
-        assert_eq!(node.data(), Some(&true));
+        assert_eq!(node.data(), &true);
 
         assert!(!policy.is_compliant(&node, &graph));
     }

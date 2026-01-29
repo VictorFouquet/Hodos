@@ -1,4 +1,4 @@
-use crate::core::Node;
+use crate::core::{HasData, Node};
 
 /// A graph node that can contain data associated data.
 ///
@@ -23,24 +23,30 @@ pub struct DataNode<T> {
     data: T,
 }
 
-impl<T: Clone> Node for DataNode<T> {
-    type Data = T;
-
-    fn new(id: u32, data: Option<Self::Data>) -> Self {
+impl<T> DataNode<T> {
+    pub fn new(id: u32, data: Option<T>) -> Self {
         DataNode {
             id,
             data: data.expect("Data node must be provided with data"),
         }
     }
+}
 
+impl<T: Copy + Clone> HasData for DataNode<T> {
+    type Data = T;
+
+    fn data(&self) -> &Self::Data {
+        &self.data
+    }
+
+    fn set_data(&mut self, data: Self::Data) {
+        self.data = data;
+    }
+}
+
+impl<T: Clone> Node for DataNode<T> {
     fn id(&self) -> u32 {
         self.id
-    }
-    fn data(&self) -> Option<&Self::Data> {
-        Some(&self.data)
-    }
-    fn set_data(&mut self, data: &Self::Data) {
-        self.data = data.clone();
     }
 }
 
@@ -72,9 +78,9 @@ mod tests {
         };
 
         let mut node = DataNode::new(0, Some(data1));
-        assert_eq!(node.data(), Some(&data1));
+        assert_eq!(node.data(), &data1);
 
-        node.set_data(&data2);
-        assert_eq!(node.data(), Some(&data2));
+        node.set_data(data2);
+        assert_eq!(node.data(), &data2);
     }
 }

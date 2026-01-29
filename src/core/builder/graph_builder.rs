@@ -155,11 +155,6 @@ mod tests {
     }
 
     impl Node for MockNode {
-        type Data = ();
-
-        fn new(id: u32, _data: Option<Self::Data>) -> Self {
-            MockNode { id }
-        }
         fn id(&self) -> u32 {
             self.id
         }
@@ -199,7 +194,7 @@ mod tests {
                 return None;
             }
             let res = Some((
-                vec![MockNode::new(self.count, None)],
+                vec![MockNode { id: self.count }],
                 vec![MockEdge::new(self.count, self.count)],
             ));
             self.count += 1;

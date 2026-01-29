@@ -43,7 +43,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::core::HasWeight;
+    use crate::core::{HasData, HasWeight};
 
     use super::*;
 
@@ -51,16 +51,16 @@ mod tests {
     pub struct MockValueNode;
 
     impl Node for MockValueNode {
-        type Data = bool;
-
-        fn new(_id: u32, _data: Option<Self::Data>) -> Self {
-            MockValueNode
-        }
         fn id(&self) -> u32 {
             0
         }
-        fn data(&self) -> Option<&Self::Data> {
-            Some(&true)
+    }
+
+    impl HasData for MockValueNode {
+        type Data = bool;
+
+        fn data(&self) -> &Self::Data {
+            &true
         }
     }
 

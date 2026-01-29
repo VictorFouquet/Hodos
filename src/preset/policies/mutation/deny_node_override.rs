@@ -40,11 +40,6 @@ mod tests {
     }
 
     impl Node for MockNode {
-        type Data = ();
-
-        fn new(id: u32, _data: Option<Self::Data>) -> Self {
-            MockNode { id }
-        }
         fn id(&self) -> u32 {
             self.id
         }
@@ -60,17 +55,17 @@ mod tests {
         let policy = DenyNodeOverride::default();
 
         let mut graph = Graph::<MockNode, MockEdge>::new();
-        let mut node = MockNode::new(0, None);
+        let mut node = MockNode { id: 0 };
 
         assert!(policy.is_compliant(&node, &graph));
 
         graph.add_node(node.clone());
-        node = MockNode::new(1, None);
+        node = MockNode { id: 1 };
 
         assert!(policy.is_compliant(&node, &graph));
 
         graph.add_node(node.clone());
-        node = MockNode::new(2, None);
+        node = MockNode { id: 2 };
 
         assert!(policy.is_compliant(&node, &graph));
     }
@@ -79,7 +74,7 @@ mod tests {
     fn denies_override_by_id() {
         let policy = DenyNodeOverride::default();
         let mut graph = Graph::<MockNode, MockEdge>::new();
-        let node = MockNode::new(0, None);
+        let node = MockNode { id: 0 };
 
         assert!(policy.is_compliant(&node, &graph));
 

@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 
 use crate::core::Sampler;
-use crate::core::node::Node;
 use crate::preset::DataNode;
 use crate::preset::UnweightedEdge;
 
@@ -151,7 +150,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::Edge;
+    use crate::core::{Edge, HasData, Node};
 
     fn test_context() -> Grid2D<char> {
         vec![
@@ -263,7 +262,7 @@ mod tests {
             for cell in row {
                 let (nodes, _) = sampler.next(&context).unwrap();
                 assert_eq!(nodes.len(), 1);
-                assert_eq!(nodes[0].data(), Some(&cell));
+                assert_eq!(nodes[0].data(), &cell);
             }
         }
     }
