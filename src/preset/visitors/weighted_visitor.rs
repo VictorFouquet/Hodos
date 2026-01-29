@@ -151,7 +151,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{HasWeight, frontier};
+    use crate::core::HasWeight;
 
     use super::*;
 

@@ -11,7 +11,7 @@ use crate::core::Edge;
 /// use hodos::preset::edges::UnweightedEdge;
 /// use hodos::core::Edge;
 ///
-/// let edge = UnweightedEdge::from_nodes(0, 1);
+/// let edge = UnweightedEdge::new(0, 1);
 /// assert_eq!(edge.from(), 0);
 /// assert_eq!(edge.to(), 1);
 /// ```

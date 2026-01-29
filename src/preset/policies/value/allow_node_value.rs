@@ -98,13 +98,6 @@ mod tests {
 
     #[derive(Default)]
     pub struct MockEdge;
-
-    impl MockEdge {
-        fn new(_from: u32, _to: u32) -> Self {
-            MockEdge
-        }
-    }
-
     impl Edge for MockEdge {}
 
     #[test]

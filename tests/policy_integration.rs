@@ -54,7 +54,6 @@ mod policy_integration {
 
         mod composite_for_edges {
             use super::*;
-            use hodos::core::{Edge, HasWeight};
             use hodos::preset::UnweightedEdge;
             use hodos::preset::WeightedEdge;
             use hodos::preset::policies::structural::DenyParallelEdge;
