@@ -1,4 +1,4 @@
-use crate::policy::Policy;
+use crate::core::Policy;
 
 /// Authorization policy that allows any entity no matter its value.
 #[derive(Default)]

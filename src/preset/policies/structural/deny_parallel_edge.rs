@@ -1,5 +1,5 @@
 use crate::graph::{Edge, Graph, Node};
-use crate::policy::Policy;
+use crate::core::Policy;
 
 /// Authorization policy that ensures each edge is added only once.
 ///

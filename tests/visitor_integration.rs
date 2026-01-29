@@ -4,7 +4,7 @@ mod visitor_integration {
 
     mod with_terminate_policy {
         use super::*;
-        use hodos::policy::Composite;
+        use hodos::core::Composite;
         use hodos::preset::policies::traversal::GoalReached;
         use hodos::preset::policies::traversal::OpeningExhausted;
 

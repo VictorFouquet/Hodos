@@ -156,7 +156,7 @@ mod graph_builder_integration {
 
     mod from_adjacency_list {
         use super::*;
-        use hodos::policy::Composite;
+        use hodos::core::Composite;
         use hodos::preset::policies::value::{
             AllowAll, AllowWeightAbove, AllowWeightBelow, DenyNodeValue,
         };

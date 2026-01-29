@@ -1,12 +1,12 @@
 mod policy_integration {
+    use hodos::core::Composite;
     use hodos::graph::{Graph, Node};
-    use hodos::policy::Composite;
     use hodos::preset::policies::budget::{EdgeBudget, NodeBudget};
     use hodos::preset::{DataNode, EmptyNode, UnweightedEdge};
 
     mod allow {
         use super::*;
-        use hodos::policy::Policy;
+        use hodos::core::Policy;
 
         mod composite_for_nodes {
             use super::*;

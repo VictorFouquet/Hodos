@@ -1,4 +1,4 @@
-use crate::policy::Policy;
+use crate::core::Policy;
 
 #[derive(Debug, Default)]
 pub struct NoTermination;

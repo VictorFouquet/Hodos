@@ -1,5 +1,5 @@
+use crate::core::Policy;
 use crate::graph::{Edge, Graph, Node};
-use crate::policy::Policy;
 use std::{collections::HashSet, hash::Hash};
 
 /// Authorization policy that denies nodes with specific data values.

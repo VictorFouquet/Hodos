@@ -1,4 +1,4 @@
-use crate::{policy::Policy, preset::visitors::CountVisited};
+use crate::{core::Policy, preset::visitors::CountVisited};
 
 pub struct OpeningExhausted {
     pub max_opening: usize,
