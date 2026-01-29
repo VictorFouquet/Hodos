@@ -1,4 +1,4 @@
-use super::Frontier;
+use crate::core::Frontier;
 use std::collections::VecDeque;
 
 /// A FIFO (First-In-First-Out) frontier implementation for graph traversal.

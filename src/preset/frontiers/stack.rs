@@ -1,4 +1,4 @@
-use super::Frontier;
+use crate::core::Frontier;
 
 /// A LIFO (Last-In-First-Out) frontier implementation for graph traversal.
 pub struct Stack {

@@ -1,6 +1,7 @@
 mod end_to_end {
     use hodos::builder::GraphBuilder;
-    use hodos::frontier::{Frontier, Queue};
+    use hodos::core::Frontier;
+    use hodos::preset::Queue;
     use hodos::preset::visitors::*;
 
     mod bfs {
@@ -95,7 +96,7 @@ mod end_to_end {
 
     mod dfs {
         use super::*;
-        use hodos::frontier::Stack;
+        use hodos::preset::Stack;
         use hodos::preset::policies::structural::DenyDanglingEdge;
         use hodos::preset::policies::traversal::GoalReached;
         use hodos::preset::policies::value::AllowAll;
@@ -188,8 +189,8 @@ mod end_to_end {
 
     mod dijkstra {
         use super::*;
-        use hodos::frontier::MinHeap;
         use hodos::policy::Composite;
+        use hodos::preset::MinHeap;
         use hodos::preset::policies::structural::DenyDanglingEdge;
         use hodos::preset::policies::traversal::GoalReached;
         use hodos::preset::policies::value::{AllowAll, AllowWeightAbove};

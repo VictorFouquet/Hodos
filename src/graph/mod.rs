@@ -6,7 +6,7 @@ pub use edge::Edge;
 pub use extension_traits::*;
 pub use node::Node;
 
-use crate::frontier::Frontier;
+use crate::core::Frontier;
 use crate::strategy::Visitor;
 use std::collections::HashMap;
 

@@ -1,7 +1,8 @@
 mod graph_integration {
     use hodos::{
-        frontier::{Frontier, Queue},
+        core::Frontier,
         graph::{Edge, Graph, Node},
+        preset::Queue,
         preset::{EmptyNode, UnweightedEdge},
         strategy::Visitor,
     };
