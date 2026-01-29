@@ -1,6 +1,6 @@
+use crate::core::Policy;
 use crate::core::Visitor;
 use crate::graph::{Edge, Graph, Node};
-use crate::core::Policy;
 use std::collections::HashMap;
 
 use super::{CountVisited, TrackParent};

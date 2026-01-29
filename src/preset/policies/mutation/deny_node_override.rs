@@ -1,5 +1,5 @@
-use crate::graph::{Edge, Graph, Node};
 use crate::core::Policy;
+use crate::graph::{Edge, Graph, Node};
 
 /// Authorization policy that ensures a node doesn't override
 /// a previously added node with same id.

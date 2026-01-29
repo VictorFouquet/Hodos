@@ -1,5 +1,5 @@
-use crate::graph::*;
 use crate::core::Policy;
+use crate::graph::*;
 
 /// Rejects edges whose endpoints don't exist in the graph.
 ///

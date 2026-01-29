@@ -1,5 +1,5 @@
-use crate::graph::{Edge, Graph, Node};
 use crate::core::Policy;
+use crate::graph::{Edge, Graph, Node};
 
 /// Authorization policy that forbids self looping edges.
 #[derive(Debug, Default)]

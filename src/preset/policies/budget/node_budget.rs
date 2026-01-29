@@ -1,5 +1,5 @@
-use crate::graph::*;
 use crate::core::Policy;
+use crate::graph::*;
 
 /// Authorization policy that limits the total count of nodes.
 ///

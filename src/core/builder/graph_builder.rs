@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
+use crate::core::Policy;
 use crate::core::Sampler;
 use crate::graph::Graph;
-use crate::core::Policy;
 
 /// A builder for constructing graphs using configurable policies and sampling strategies.
 ///

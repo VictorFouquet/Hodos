@@ -1,5 +1,5 @@
-use crate::core::Visitor;
 use crate::core::Policy;
+use crate::core::Visitor;
 use std::collections::HashMap;
 
 use super::{CountVisited, TrackParent};
