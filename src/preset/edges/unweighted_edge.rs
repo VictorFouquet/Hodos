@@ -11,10 +11,9 @@ use crate::core::Edge;
 /// use hodos::preset::edges::UnweightedEdge;
 /// use hodos::core::Edge;
 ///
-/// let edge = UnweightedEdge::new(0, 1, None);
+/// let edge = UnweightedEdge::from_nodes(0, 1);
 /// assert_eq!(edge.from(), 0);
 /// assert_eq!(edge.to(), 1);
-/// assert_eq!(edge.weight(), 1.0);  // Default unit weight
 /// ```
 #[derive(Copy, Clone, Debug, Default)]
 pub struct UnweightedEdge {

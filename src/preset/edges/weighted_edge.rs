@@ -10,8 +10,9 @@ use crate::core::{Edge, HasWeight};
 /// ```
 /// use hodos::preset::edges::WeightedEdge;
 /// use hodos::core::Edge;
+/// use hodos::core::HasWeight;
 ///
-/// let edge = WeightedEdge::new(0, 1, Some(5.0));
+/// let edge = WeightedEdge::new(0, 1, 5.0);
 /// assert_eq!(edge.from(), 0);
 /// assert_eq!(edge.to(), 1);
 /// assert_eq!(edge.weight(), 5.0);
