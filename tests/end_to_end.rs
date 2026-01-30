@@ -189,11 +189,12 @@ mod end_to_end {
 
     mod dijkstra {
         use super::*;
-        use hodos::core::Composite;
+        use hodos::core::{Composite, HasWeight};
         use hodos::preset::MinHeap;
+        use hodos::preset::WeightedEdge;
         use hodos::preset::policies::structural::DenyDanglingEdge;
         use hodos::preset::policies::traversal::GoalReached;
-        use hodos::preset::policies::value::{AllowAll, AllowWeightAbove};
+        use hodos::preset::policies::value::{AllowAll, AllowWhen};
         use hodos::preset::samplers::WeightedMatrixSampler;
 
         fn run_dijkstra(
@@ -203,7 +204,10 @@ mod end_to_end {
         ) -> WeightedVisitor<GoalReached> {
             let mut visitor = WeightedVisitor::new(GoalReached::new(goal));
             GraphBuilder::new(
-                Composite::And(DenyDanglingEdge::default(), AllowWeightAbove::new(0.0)),
+                Composite::And(
+                    DenyDanglingEdge::default(),
+                    AllowWhen::new(|e: &WeightedEdge| e.weight() > 0.0),
+                ),
                 AllowAll::default(),
                 WeightedMatrixSampler::new(),
             )
