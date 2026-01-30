@@ -2,6 +2,37 @@ use crate::core::Policy;
 use std::collections::HashSet;
 use std::hash::Hash;
 
+/// Denies entities based on extracted field values matching a blacklist.
+///
+/// Uses a hash set for efficient lookup of denied values extracted from entities
+/// via a provided function.
+///
+/// # Type Parameters
+///
+/// * `F` - The type of field extracted value to filter on (must be `Eq + Hash`)
+/// * `E` - The extractor function type
+///
+/// # Examples
+///
+/// ```
+/// use hodos::core::HasData;
+/// use hodos::preset::policies::value::DenyBy;
+/// use hodos::preset::nodes::DataNode;
+///
+/// #[derive(Clone, Copy)]
+/// struct GridCell {
+///     x: u32,
+///     y: u32,
+///     terrain: char,
+/// }
+///
+/// // Deny nodes with terrain '#' or 'X'
+/// let policy = DenyBy::new(
+///     vec!['#', 'X'],
+///     |node: &DataNode<GridCell>| node.data().terrain
+/// );
+/// ```
+#[derive(Debug)]
 pub struct DenyBy<F, E> {
     denied_values: HashSet<F>,
     extractor: E,
@@ -11,6 +42,12 @@ impl<F, E> DenyBy<F, E>
 where
     F: Eq + Hash,
 {
+    /// Creates a policy that denies entities with extracted values in the blacklist.
+    ///
+    /// # Arguments
+    ///
+    /// * `values` - Values to deny
+    /// * `extractor` - Function extracting the value to check from an entity
     pub fn new(values: Vec<F>, extractor: E) -> Self {
         DenyBy {
             denied_values: HashSet::from_iter(values),
@@ -18,6 +55,11 @@ where
         }
     }
 
+    /// Adds a value to the blacklist.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The value to deny
     pub fn add_denied_value(&mut self, value: F) {
         self.denied_values.insert(value);
     }
@@ -28,6 +70,7 @@ where
     F: Eq + Hash,
     E: Fn(&Entity) -> F,
 {
+    /// Denies an entity if its extracted value is in the blacklist.
     fn is_compliant(&self, entity: &Entity, _context: &Ctx) -> bool {
         !self.denied_values.contains(&(self.extractor)(entity))
     }
