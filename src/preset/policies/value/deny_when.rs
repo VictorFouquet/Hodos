@@ -38,7 +38,7 @@ where
 {
     /// Denies an entity if the predicate returns true.
     fn is_compliant(&self, entity: &Entity, _context: &Ctx) -> bool {
-        !(self.predicate)(&entity)
+        !(self.predicate)(entity)
     }
 }
 
