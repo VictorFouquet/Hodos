@@ -5,7 +5,8 @@ mod graph_builder_integration {
     mod from_matrix {
         use super::*;
         use hodos::core::HasWeight;
-        use hodos::preset::policies::value::{AllowAll, AllowWeightAbove};
+        use hodos::preset::WeightedEdge;
+        use hodos::preset::policies::value::{AllowAll, AllowWhen};
         use hodos::preset::samplers::{BinaryMatrixSampler, WeightedMatrixSampler};
 
         #[test]
@@ -50,7 +51,7 @@ mod graph_builder_integration {
             ];
             let sampler = WeightedMatrixSampler::default();
             let node_policy = AllowAll::default();
-            let edge_policy = AllowWeightAbove::new(0.0);
+            let edge_policy = AllowWhen::new(|e: &WeightedEdge| e.weight() > 0.0);
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
             let graph = graph_builder.build(&matrix);
@@ -158,9 +159,8 @@ mod graph_builder_integration {
     mod from_adjacency_list {
         use super::*;
         use hodos::core::{Composite, HasWeight};
-        use hodos::preset::policies::value::{
-            AllowAll, AllowWeightAbove, AllowWeightBelow, DenyValue,
-        };
+        use hodos::preset::edges::WeightedEdge;
+        use hodos::preset::policies::value::{AllowAll, AllowWhen, DenyValue};
         use hodos::preset::samplers::{
             WeightedAdjacencyListWithData, WeightedAdjacencyWithDataSampler,
         };
@@ -204,8 +204,10 @@ mod graph_builder_integration {
             let grid = test_context();
             let sampler = WeightedAdjacencyWithDataSampler::<char>::default();
             let node_policy = DenyValue::new(vec!['#']);
-            let edge_policy =
-                Composite::And(AllowWeightAbove::new(4.0), AllowWeightBelow::new(11.0));
+            let edge_policy = Composite::And(
+                AllowWhen::new(|e: &WeightedEdge| e.weight() > 4.0),
+                AllowWhen::new(|e: &WeightedEdge| e.weight() < 11.0),
+            );
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
             let graph = graph_builder.build(&grid);

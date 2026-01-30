@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[test]
-    fn denies_with_callback() {
+    fn denies_with_predicate() {
         let node = &MockValueNode::new(0, Point { x: 5, y: 5 });
 
         assert!(!DenyWhen::new(|n: &MockValueNode| n.data().x > 4).is_compliant(&node, &()));
