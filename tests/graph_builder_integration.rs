@@ -75,7 +75,7 @@ mod graph_builder_integration {
     mod from_grid_2d {
         use super::*;
         use hodos::preset::policies::structural::DenyDanglingEdge;
-        use hodos::preset::policies::value::DenyNodeValue;
+        use hodos::preset::policies::value::DenyValue;
         use hodos::preset::samplers::{Grid2D, Grid2DSampler};
 
         fn test_context() -> Grid2D<char> {
@@ -90,7 +90,7 @@ mod graph_builder_integration {
         fn builds_graph_nodes_from_grid_2d_and_deny_node_value_policy() {
             let grid = test_context();
             let sampler = Grid2DSampler::<char>::default();
-            let node_policy = DenyNodeValue::with_denied_values(vec!['#']);
+            let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = DenyDanglingEdge::default();
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
@@ -107,7 +107,7 @@ mod graph_builder_integration {
         fn filters_obstacles_from_grid_2d_and_deny_node_value_policy() {
             let grid = test_context();
             let sampler = Grid2DSampler::<char>::default();
-            let node_policy = DenyNodeValue::with_denied_values(vec!['#']);
+            let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = DenyDanglingEdge::default();
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
@@ -123,7 +123,7 @@ mod graph_builder_integration {
         fn filters_edges_from_grid_2d_and_deny_dangling_edge_policy() {
             let grid = test_context();
             let sampler = Grid2DSampler::<char>::default();
-            let node_policy = DenyNodeValue::with_denied_values(vec!['#']);
+            let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = DenyDanglingEdge::default();
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
@@ -159,7 +159,7 @@ mod graph_builder_integration {
         use super::*;
         use hodos::core::{Composite, HasWeight};
         use hodos::preset::policies::value::{
-            AllowAll, AllowWeightAbove, AllowWeightBelow, DenyNodeValue,
+            AllowAll, AllowWeightAbove, AllowWeightBelow, DenyValue,
         };
         use hodos::preset::samplers::{
             WeightedAdjacencyListWithData, WeightedAdjacencyWithDataSampler,
@@ -186,7 +186,7 @@ mod graph_builder_integration {
         fn builds_graph_nodes_from_weighted_adj_with_data_and_deny_node_value_policy() {
             let grid = test_context();
             let sampler = WeightedAdjacencyWithDataSampler::<char>::default();
-            let node_policy = DenyNodeValue::with_denied_values(vec!['#']);
+            let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = AllowAll::default();
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
@@ -203,7 +203,7 @@ mod graph_builder_integration {
         fn builds_graph_edges_from_weighted_adj_with_data_and_allow_in_range_weight_policy() {
             let grid = test_context();
             let sampler = WeightedAdjacencyWithDataSampler::<char>::default();
-            let node_policy = DenyNodeValue::with_denied_values(vec!['#']);
+            let node_policy = DenyValue::new(vec!['#']);
             let edge_policy =
                 Composite::And(AllowWeightAbove::new(4.0), AllowWeightBelow::new(11.0));
 

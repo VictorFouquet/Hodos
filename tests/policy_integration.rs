@@ -11,14 +11,11 @@ mod policy_integration {
         mod composite_for_nodes {
             use super::*;
             use hodos::preset::policies::mutation::DenyNodeOverride;
-            use hodos::preset::policies::value::AllowNodeValue;
+            use hodos::preset::policies::value::AllowValue;
 
             #[test]
             fn rejects_nodes_when_budget_exhausted_despite_allowed_value() {
-                let policy = Composite::And(
-                    AllowNodeValue::with_allowed_values(vec![true]),
-                    NodeBudget::new(1),
-                );
+                let policy = Composite::And(AllowValue::new(vec![true]), NodeBudget::new(1));
                 let mut graph = Graph::<DataNode<bool>, UnweightedEdge>::new();
 
                 let node1 = DataNode::new(0, true);
@@ -32,10 +29,7 @@ mod policy_integration {
 
             #[test]
             fn accepts_unique_nodes_or_whitelisted_values() {
-                let policy = Composite::Or(
-                    DenyNodeOverride::default(),
-                    AllowNodeValue::with_allowed_values(vec![999]),
-                );
+                let policy = Composite::Or(DenyNodeOverride::default(), AllowValue::new(vec![999]));
                 let mut graph = Graph::<DataNode<u32>, UnweightedEdge>::new();
 
                 let unique = DataNode::new(0, 1);
