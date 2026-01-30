@@ -135,7 +135,7 @@ where
             })
             .collect();
 
-        let nodes = vec![DataNode::new(current_id as u32, Some(context[i][j]))];
+        let nodes = vec![DataNode::new(current_id as u32, context[i][j])];
 
         self.current_x += 1;
         if self.current_x >= (context[i].len() as i32) {

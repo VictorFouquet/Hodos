@@ -1,6 +1,6 @@
 use crate::core::{HasData, Node};
 
-/// A graph node that can contain data associated data.
+/// A graph node that can contain associated data.
 ///
 /// This is a basic implementation suitable for any graph where nodes
 /// need an identifier and additional metadata.
@@ -11,11 +11,16 @@ use crate::core::{HasData, Node};
 /// use hodos::preset::nodes::DataNode;
 /// use hodos::core::{HasData, Node};
 ///
-/// let mut node = DataNode::new(42, Some(true));
+/// #[derive(Clone, Copy)]
+/// struct Point {
+///     pub x: u32,
+///     pub y: u32,
+/// };
+///
+/// let mut node = DataNode::new(42, Point { x: 1, y: 2 });
 /// assert_eq!(node.id(), 42);
-/// assert_eq!(node.data(), &true);
-/// node.set_data(false);
-/// assert_eq!(node.data(), &false);
+/// assert_eq!(node.data().x, 1);
+/// assert_eq!(node.data().y, 2);
 /// ```
 #[derive(Debug, Default)]
 pub struct DataNode<T> {
@@ -24,11 +29,8 @@ pub struct DataNode<T> {
 }
 
 impl<T> DataNode<T> {
-    pub fn new(id: u32, data: Option<T>) -> Self {
-        DataNode {
-            id,
-            data: data.expect("Data node must be provided with data"),
-        }
+    pub fn new(id: u32, data: T) -> Self {
+        DataNode { id, data }
     }
 }
 
@@ -61,12 +63,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Data node must be provided with data")]
-    fn new_panics_without_data() {
-        DataNode::<u32>::new(0, None);
-    }
-
-    #[test]
     fn set_data_updates_node_data() {
         let data1 = TestData {
             val1: 0,
@@ -77,7 +73,7 @@ mod tests {
             val2: true,
         };
 
-        let mut node = DataNode::new(0, Some(data1));
+        let mut node = DataNode::new(0, data1);
         assert_eq!(node.data(), &data1);
 
         node.set_data(data2);

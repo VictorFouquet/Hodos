@@ -21,8 +21,8 @@ mod policy_integration {
                 );
                 let mut graph = Graph::<DataNode<bool>, UnweightedEdge>::new();
 
-                let node1 = DataNode::new(0, Some(true));
-                let node2 = DataNode::new(1, Some(true));
+                let node1 = DataNode::new(0, true);
+                let node2 = DataNode::new(1, true);
 
                 assert!(policy.is_compliant(&node1, &graph)); // allowed + under budget
                 graph.add_node(node1);
@@ -38,9 +38,9 @@ mod policy_integration {
                 );
                 let mut graph = Graph::<DataNode<u32>, UnweightedEdge>::new();
 
-                let unique = DataNode::new(0, Some(1));
-                let whitelisted_dup = DataNode::new(0, Some(999));
-                let forbidden_dup = DataNode::new(0, Some(1));
+                let unique = DataNode::new(0, 1);
+                let whitelisted_dup = DataNode::new(0, 999);
+                let forbidden_dup = DataNode::new(0, 1);
 
                 assert!(policy.is_compliant(&unique, &graph)); // unique
                 graph.add_node(unique);

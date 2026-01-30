@@ -126,10 +126,7 @@ impl<T: Clone> Sampler<AdjacencyListWithData<T>> for AdjacencyWithDataSampler<T>
             .map(|&adj| UnweightedEdge::new(self.current_id, adj))
             .collect();
 
-        let nodes = vec![DataNode::new(
-            self.current_id,
-            Some(context.data[i].clone()),
-        )];
+        let nodes = vec![DataNode::new(self.current_id, context.data[i].clone())];
 
         self.current_id += 1;
 
@@ -160,10 +157,7 @@ impl<T: Clone> Sampler<WeightedAdjacencyListWithData<T>> for WeightedAdjacencyWi
             .map(|&adj| WeightedEdge::new(self.current_id, adj.0, adj.1))
             .collect();
 
-        let nodes = vec![DataNode::new(
-            self.current_id,
-            Some(context.data[i].clone()),
-        )];
+        let nodes = vec![DataNode::new(self.current_id, context.data[i].clone())];
 
         self.current_id += 1;
 
