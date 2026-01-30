@@ -2,40 +2,39 @@ use crate::core::{Edge, Graph, Node};
 use crate::core::{HasData, Policy};
 use std::{collections::HashSet, hash::Hash};
 
-/// Authorization policy that only allows nodes with specific data values.
+/// Authorization policy that only allows entities with specific data values.
 ///
-/// Maintains a whitelist of allowed values and rejects nodes whose data
-/// doesn't match any value in the set. Nodes without data (returning `None`)
-/// are always rejected.
+/// Maintains a whitelist of allowed values and rejects entities whose data
+/// doesn't match any value in the set.
 ///
 /// # Type Parameters
 ///
-/// * `T` - The type of node data to filter on (must be `Eq + Hash`)
+/// * `T` - The type of entity data to filter on (must be `Eq + Hash`)
 #[derive(Default)]
-pub struct AllowNodeValue<T> {
+pub struct AllowValue<T> {
     allowed_values: HashSet<T>,
 }
 
-impl<T> AllowNodeValue<T>
+impl<T> AllowValue<T>
 where
     T: Eq + Hash,
 {
     /// Creates a node value policy from a whitelist.
     ///
-    /// Nodes with data matching these values will be allowed.
+    /// Entities with data matching these values will be allowed.
     ///
     /// # Arguments
     ///
     /// * `values` - The data values to allow
-    pub fn with_allowed_values(values: Vec<T>) -> Self {
-        AllowNodeValue {
+    pub fn new(values: Vec<T>) -> Self {
+        AllowValue {
             allowed_values: HashSet::from_iter(values),
         }
     }
 
     /// Adds a value to the whitelist.
     ///
-    /// Nodes with data matching this value will be allowed.
+    /// Entities with data matching this value will be allowed.
     ///
     /// # Arguments
     ///
@@ -45,24 +44,23 @@ where
     }
 }
 
-impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for AllowNodeValue<Entity::Data>
+impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for AllowValue<Entity::Data>
 where
     TNode: Node + HasData,
     TEdge: Edge,
     Entity: Node + HasData,
     Entity::Data: Eq + Hash,
 {
-    /// Allows a node if its data matches a whitelisted value.
+    /// Allows an entity if its data matches a whitelisted value.
     ///
     /// # Arguments
     ///
-    /// * `entity` - The node to allow
+    /// * `entity` - The entity to allow
     /// * `_context` - Context (unused)
     ///
     /// # Returns
     ///
-    /// `true` if the node's data is in the whitelist, `false` otherwise.
-    /// Nodes without data always return `false`.
+    /// `true` if the entity's data is in the whitelist, `false` otherwise.
     fn is_compliant(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
         self.allowed_values.contains(entity.data())
     }
@@ -72,6 +70,48 @@ where
 mod tests {
     use super::*;
     use crate::core::HasData;
+
+    #[test]
+    fn allows_none_when_whitelist_is_empty() {
+        let policy = AllowValue::<bool>::default();
+        let graph = Graph::<MockValueNode, MockEdge>::new();
+        assert_eq!(policy.allowed_values.len(), 0);
+
+        let node = make_node();
+        assert_eq!(node.data(), &true);
+
+        assert!(!policy.is_compliant(&node, &graph));
+    }
+
+    #[test]
+    fn allows_values_in_whitelist() {
+        let mut policy = AllowValue::<bool>::default();
+
+        let graph = Graph::<MockValueNode, MockEdge>::new();
+
+        policy.add_allowed_value(true);
+        assert_eq!(policy.allowed_values.len(), 1);
+
+        let node = make_node();
+        assert_eq!(node.data(), &true);
+
+        assert!(policy.is_compliant(&node, &graph));
+    }
+
+    #[test]
+    fn denies_when_value_not_in_whitelist() {
+        let mut policy = AllowValue::<bool>::default();
+
+        let graph = Graph::<MockValueNode, MockEdge>::new();
+
+        policy.add_allowed_value(false);
+        assert_eq!(policy.allowed_values.len(), 1);
+
+        let node = make_node();
+        assert_eq!(node.data(), &true);
+
+        assert!(!policy.is_compliant(&node, &graph));
+    }
 
     #[derive(Default)]
     pub struct MockValueNode;
@@ -97,46 +137,4 @@ mod tests {
     #[derive(Default)]
     pub struct MockEdge;
     impl Edge for MockEdge {}
-
-    #[test]
-    fn test_allow_node_value_rejects_any_node_when_whitelist_is_empty() {
-        let policy = AllowNodeValue::<bool>::default();
-        let graph = Graph::<MockValueNode, MockEdge>::new();
-        assert_eq!(policy.allowed_values.len(), 0);
-
-        let node = make_node();
-        assert_eq!(node.data(), &true);
-
-        assert!(!policy.is_compliant(&node, &graph));
-    }
-
-    #[test]
-    fn test_allow_node_value_accepts_nodes_when_their_value_is_in_whitelist() {
-        let mut policy = AllowNodeValue::<bool>::default();
-
-        let graph = Graph::<MockValueNode, MockEdge>::new();
-
-        policy.add_allowed_value(true);
-        assert_eq!(policy.allowed_values.len(), 1);
-
-        let node = make_node();
-        assert_eq!(node.data(), &true);
-
-        assert!(policy.is_compliant(&node, &graph));
-    }
-
-    #[test]
-    fn test_allow_node_value_rejects_nodes_when_their_value_is_not_in_whitelist() {
-        let mut policy = AllowNodeValue::<bool>::default();
-
-        let graph = Graph::<MockValueNode, MockEdge>::new();
-
-        policy.add_allowed_value(false);
-        assert_eq!(policy.allowed_values.len(), 1);
-
-        let node = make_node();
-        assert_eq!(node.data(), &true);
-
-        assert!(!policy.is_compliant(&node, &graph));
-    }
 }
