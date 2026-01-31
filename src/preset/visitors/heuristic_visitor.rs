@@ -10,19 +10,6 @@ use crate::core::Policy;
 use crate::core::Visitor;
 
 use crate::preset::visitors::TrackParent;
-use std::marker::PhantomData;
-
-pub trait HasPosition {
-    fn x(&self) -> f64 {
-        0.0
-    }
-    fn y(&self) -> f64 {
-        0.0
-    }
-    fn z(&self) -> f64 {
-        0.0
-    }
-}
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct VisitState {
@@ -31,31 +18,26 @@ pub struct VisitState {
 }
 
 #[derive(Debug)]
-pub struct HeuristicVisitor<P, T> {
+pub struct HeuristicVisitor<P> {
     terminate: P,
     visited: HashMap<u32, VisitState>,
     target_x: f64,
     target_y: f64,
-    _marker: PhantomData<T>,
 }
 
-impl<P, T> TrackParent for HeuristicVisitor<P, T> {
+impl<P> TrackParent for HeuristicVisitor<P> {
     fn get_parent(&self, node_id: u32) -> Option<u32> {
         self.visited.get(&node_id).and_then(|v| v.parent_id)
     }
 }
 
-impl<P, T> HeuristicVisitor<P, T>
-where
-    T: HasPosition + Clone + Copy,
-{
+impl<P> HeuristicVisitor<P> {
     pub fn new(terminate: P, target_x: f64, target_y: f64) -> Self {
         HeuristicVisitor {
             terminate,
             target_x,
             target_y,
             visited: HashMap::default(),
-            _marker: PhantomData,
         }
     }
 
@@ -65,7 +47,7 @@ where
 
     pub fn compute_g_cost<N, E>(&self, from: u32, to: u32, context: &Graph<N, E>) -> f64
     where
-        N: Node + HasData<Data = T>,
+        N: Node + HasData,
         E: Edge + HasWeight,
     {
         // Get cummulated cost to reach current
@@ -82,8 +64,9 @@ where
         c + w
     }
 
-    pub fn compute_h_cost<N, E>(&self, id: u32, context: &Graph<N, E>) -> f64
+    pub fn compute_h_cost<N, E, T>(&self, id: u32, context: &Graph<N, E>) -> f64
     where
+        T: HasPosition + Clone + Copy,
         N: Node + HasData<Data = T>,
         E: Edge + HasWeight,
     {
@@ -104,7 +87,7 @@ where
     }
 }
 
-impl<N, E, T, P> Visitor<Graph<N, E>> for HeuristicVisitor<P, T>
+impl<N, E, T, P> Visitor<Graph<N, E>> for HeuristicVisitor<P>
 where
     N: Node + HasData<Data = T>,
     E: Edge + HasWeight,
@@ -149,7 +132,7 @@ where
 mod tests {
     use super::*;
 
-    type TestVisitor = HeuristicVisitor<Terminate, Point>;
+    type TestVisitor = HeuristicVisitor<Terminate>;
     type TestGraph = Graph<MockNode, MockEdge>;
 
     #[test]
