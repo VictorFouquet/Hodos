@@ -146,37 +146,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::preset::DataNode;
-    use crate::preset::WeightedEdge;
 
-    #[derive(Debug, Default, Clone, Copy)]
-    pub struct Point {
-        x: f64,
-        y: f64,
-    }
-    impl HasPosition for Point {
-        fn x(&self) -> f64 {
-            self.x
-        }
-
-        fn y(&self) -> f64 {
-            self.y
-        }
-    }
-
-    type Ctx<T> = Graph<DataNode<T>, WeightedEdge>;
-
-    #[derive(Debug, Default)]
-    pub struct Terminate {
-        target: Point,
-    }
     type TestVisitor = HeuristicVisitor<Terminate, Point>;
-
-    impl Policy<DataNode<Point>, Ctx<Point>> for Terminate {
-        fn is_compliant(&self, node: &DataNode<Point>, _: &Ctx<Point>) -> bool {
-            node.data().x() == self.target.x && node.data().y() == self.target.y
-        }
-    }
+    type TestGraph = Graph<MockNode, MockEdge>;
 
     #[test]
     fn defaults_with_empty_visited_state() {
@@ -215,11 +187,11 @@ mod tests {
     #[test]
     fn computes_h_cost_with_euclidean_distance_to_target() {
         let visitor = TestVisitor::new(Terminate::default(), 1.0, 1.0);
-        let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+        let mut graph = TestGraph::new();
 
-        graph.add_node(DataNode::new(0, Point { x: 0.0, y: 0.0 }));
-        graph.add_node(DataNode::new(1, Point { x: 1.0, y: 0.0 }));
-        graph.add_node(DataNode::new(2, Point { x: 0.0, y: 1.0 }));
+        graph.add_node(MockNode::new(0, Point { x: 0.0, y: 0.0 }));
+        graph.add_node(MockNode::new(1, Point { x: 1.0, y: 0.0 }));
+        graph.add_node(MockNode::new(2, Point { x: 0.0, y: 1.0 }));
 
         assert_eq!(round2(visitor.compute_h_cost(0, &graph)), 1.41);
         assert_eq!(round2(visitor.compute_h_cost(1, &graph)), 1.0);
@@ -229,7 +201,7 @@ mod tests {
     #[test]
     fn visit_initializes_start_node_to_zero() {
         let mut visitor = TestVisitor::new(Terminate::default(), 0.0, 0.0);
-        let graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+        let graph = TestGraph::new();
         assert_eq!(visitor.visited.len(), 0);
 
         visitor.visit(0, &graph);
@@ -241,7 +213,7 @@ mod tests {
     #[test]
     fn explores_unvisited_node() {
         let mut visitor = TestVisitor::new(Terminate::default(), 0.0, 0.0);
-        let graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+        let graph = TestGraph::new();
 
         assert!(!visitor.visited.contains_key(&1));
         assert!(visitor.should_explore(0, 1, &graph));
@@ -250,9 +222,9 @@ mod tests {
     #[test]
     fn explores_when_lower_cost_found() {
         let mut visitor = TestVisitor::new(Terminate::default(), 0.0, 0.0);
-        let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+        let mut graph = TestGraph::new();
 
-        graph.add_edge(WeightedEdge::new(0, 2, 1.14));
+        graph.add_edge(MockEdge::new(0, 2, 1.14));
 
         // Reached with manhattan path previously
         visitor.insert_visited(Some(1), 2, 2.0);
@@ -264,9 +236,9 @@ mod tests {
     #[test]
     fn does_not_explore_when_higher_or_equal_cost_found() {
         let mut visitor = TestVisitor::new(Terminate::default(), 0.0, 0.0);
-        let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+        let mut graph = TestGraph::new();
 
-        graph.add_edge(WeightedEdge::new(1, 2, 1.0));
+        graph.add_edge(MockEdge::new(1, 2, 1.0));
 
         visitor.insert_visited(Some(0), 1, 1.0);
         visitor.insert_visited(Some(0), 2, 1.14);
@@ -281,9 +253,9 @@ mod tests {
     #[test]
     fn updates_cummulated_cost_when_lower_cost_found() {
         let mut visitor = TestVisitor::new(Terminate::default(), 0.0, 0.0);
-        let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+        let mut graph = TestGraph::new();
 
-        graph.add_edge(WeightedEdge::new(0, 2, 1.14));
+        graph.add_edge(MockEdge::new(0, 2, 1.14));
 
         visitor.insert_visited(Some(1), 2, 2.0);
 
@@ -295,12 +267,12 @@ mod tests {
     #[test]
     fn exploration_cost_sums_distance_and_weight() {
         let mut visitor = TestVisitor::new(Terminate::default(), 1.0, 1.0);
-        let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+        let mut graph = TestGraph::new();
 
-        graph.add_node(DataNode::new(0, Point { x: 0.0, y: 0.0 }));
-        graph.add_node(DataNode::new(1, Point { x: 1.0, y: 1.0 }));
+        graph.add_node(MockNode::new(0, Point { x: 0.0, y: 0.0 }));
+        graph.add_node(MockNode::new(1, Point { x: 1.0, y: 1.0 }));
 
-        graph.add_edge(WeightedEdge::new(0, 1, 3.0));
+        graph.add_edge(MockEdge::new(0, 1, 3.0));
 
         visitor.insert_visited(None, 0, 5.0);
 
@@ -310,12 +282,12 @@ mod tests {
     #[test]
     fn adds_heuristic_to_cummulated_cost_for_exploration() {
         let mut visitor = TestVisitor::new(Terminate::default(), 0.0, 2.0);
-        let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+        let mut graph = TestGraph::new();
 
-        graph.add_node(DataNode::new(0, Point { x: 0.0, y: 0.0 }));
-        graph.add_node(DataNode::new(1, Point { x: 0.0, y: 1.0 }));
+        graph.add_node(MockNode::new(0, Point { x: 0.0, y: 0.0 }));
+        graph.add_node(MockNode::new(1, Point { x: 0.0, y: 1.0 }));
 
-        graph.add_edge(WeightedEdge::new(0, 1, 1.0));
+        graph.add_edge(MockEdge::new(0, 1, 1.0));
 
         visitor.insert_visited(None, 0, 5.0);
 
@@ -325,10 +297,10 @@ mod tests {
     #[test]
     fn propagates_cumulative_distances_through_path() {
         let mut visitor = TestVisitor::new(Terminate::default(), 0.0, 0.0);
-        let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+        let mut graph = TestGraph::new();
 
-        graph.add_edge(WeightedEdge::new(0, 1, 2.0));
-        graph.add_edge(WeightedEdge::new(1, 2, 3.0));
+        graph.add_edge(MockEdge::new(0, 1, 2.0));
+        graph.add_edge(MockEdge::new(1, 2, 3.0));
 
         visitor.visit(0, &graph);
 
@@ -348,9 +320,9 @@ mod tests {
             0.0,
             0.0,
         );
-        let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
-        graph.add_node(DataNode::new(0, Point { x: 0.0, y: 0.0 }));
-        graph.add_node(DataNode::new(1, Point { x: 1.0, y: 1.0 }));
+        let mut graph = TestGraph::new();
+        graph.add_node(MockNode::new(0, Point { x: 0.0, y: 0.0 }));
+        graph.add_node(MockNode::new(1, Point { x: 1.0, y: 1.0 }));
 
         assert!(!visitor.should_stop(0, &graph));
         assert!(visitor.should_stop(1, &graph));
@@ -358,5 +330,86 @@ mod tests {
 
     fn round2(x: f64) -> f64 {
         (x * 100.0).round() / 100.0
+    }
+
+    #[derive(Debug, Default, Clone, Copy)]
+    pub struct Point {
+        x: f64,
+        y: f64,
+    }
+    impl HasPosition for Point {
+        fn x(&self) -> f64 {
+            self.x
+        }
+
+        fn y(&self) -> f64 {
+            self.y
+        }
+    }
+
+    #[derive(Debug, Default)]
+    struct MockNode {
+        id: u32,
+        data: Point,
+    }
+
+    impl MockNode {
+        pub fn new(id: u32, data: Point) -> Self {
+            MockNode { id, data }
+        }
+    }
+
+    impl Node for MockNode {
+        fn id(&self) -> u32 {
+            self.id
+        }
+    }
+
+    impl HasData for MockNode {
+        type Data = Point;
+
+        fn data(&self) -> &Self::Data {
+            &self.data
+        }
+    }
+
+    #[derive(Debug, Default)]
+    struct MockEdge {
+        from: u32,
+        to: u32,
+        weight: f64,
+    }
+
+    impl MockEdge {
+        pub fn new(from: u32, to: u32, weight: f64) -> Self {
+            MockEdge { from, to, weight }
+        }
+    }
+
+    impl Edge for MockEdge {
+        fn from(&self) -> u32 {
+            self.from
+        }
+
+        fn to(&self) -> u32 {
+            self.to
+        }
+    }
+
+    impl HasWeight for MockEdge {
+        fn weight(&self) -> f64 {
+            self.weight
+        }
+    }
+
+    #[derive(Debug, Default)]
+    pub struct Terminate {
+        target: Point,
+    }
+
+    impl Policy<MockNode, TestGraph> for Terminate {
+        fn is_compliant(&self, node: &MockNode, _: &TestGraph) -> bool {
+            node.data().x() == self.target.x && node.data().y() == self.target.y
+        }
     }
 }
