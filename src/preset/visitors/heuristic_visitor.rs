@@ -1,13 +1,15 @@
+use std::collections::HashMap;
+
 use crate::core::Edge;
 use crate::core::Graph;
 use crate::core::HasData;
+use crate::core::HasPosition;
 use crate::core::HasWeight;
 use crate::core::Node;
 use crate::core::Policy;
 use crate::core::Visitor;
 
 use crate::preset::visitors::TrackParent;
-use std::collections::HashMap;
 use std::marker::PhantomData;
 
 pub trait HasPosition {
