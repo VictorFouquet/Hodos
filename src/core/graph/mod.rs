@@ -52,6 +52,17 @@ where
         self.nodes.insert(node.id(), node);
     }
 
+    /// Gets a node by id.
+    ///
+    /// If node with given id does not exist, None is returned.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The id of the node to get
+    pub fn get_node(&self, id: u32) -> Option<&TNode> {
+        self.nodes.get(&id)
+    }
+
     /// Gets all nodes of the graph.
     pub fn get_nodes(&self) -> Vec<&TNode> {
         self.nodes.values().collect()
@@ -70,6 +81,17 @@ where
         let from = edge.from();
 
         self.edges.entry(from).or_default().push(edge);
+    }
+
+    /// Gets a node's outgoing edges.
+    ///
+    /// If node has no outgoing edge, an empty vec is returned.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The id of the node to get edges from
+    pub fn get_edges_from(&self, id: u32) -> &[TEdge] {
+        self.edges.get(&id).map(Vec::as_slice).unwrap_or(&[])
     }
 
     /// Gets all nodes of the graph.
