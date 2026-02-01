@@ -1,15 +1,8 @@
+use crate::core::{
+    Edge, Graph, HasData, HasPosition, HasWeight, Node, Policy, TrackParent, Visitor,
+};
+
 use std::collections::HashMap;
-
-use crate::core::Edge;
-use crate::core::Graph;
-use crate::core::HasData;
-use crate::core::HasPosition;
-use crate::core::HasWeight;
-use crate::core::Node;
-use crate::core::Policy;
-use crate::core::Visitor;
-
-use crate::preset::visitors::TrackParent;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct VisitState {
