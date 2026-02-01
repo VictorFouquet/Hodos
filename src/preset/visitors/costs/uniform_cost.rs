@@ -46,7 +46,7 @@ mod tests {
     };
 
     #[test]
-    fn cost_returns_zero() {
+    fn cost_returns_one() {
         let graph = Graph::<MockNode, MockEdge>::new();
         let estimator = UniformCost;
         assert_eq!(estimator.cost(0, 0, &graph), 1.0);
