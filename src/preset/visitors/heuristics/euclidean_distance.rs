@@ -1,5 +1,35 @@
 use crate::core::{Edge, Graph, HasData, HasPosition, HeuristicEstimator, Node};
 
+/// A heuristic estimator based on Euclidean distance.
+///
+/// This heuristic estimates the remaining cost to a target as the
+/// Euclidean distance between the current node position and a fixed
+/// target position.
+///
+/// The heuristic value is computed as:
+///
+/// `sqrt((x - target_x)² + (y - target_y)²)`
+///
+/// # Use in traversal
+///
+/// When used with a cost-based frontier, this heuristic contributes
+/// to the node priority by influencing the estimated total cost
+/// `f(n) = g(n) + h(n)`.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// let visitor = HeuristicVisitor::new(
+///     GoalReached::new(target),
+///     WeightedCost,
+///     EuclideanDistance::new(goal_x, goal_y),
+/// );
+/// ```
+///
+/// # Requirements
+///
+/// This implementation requires node data to expose positional
+/// information via [`HasPosition`].
 #[derive(Debug)]
 pub struct EuclideanDistance {
     target_x: f64,
