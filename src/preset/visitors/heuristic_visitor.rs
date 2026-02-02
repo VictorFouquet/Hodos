@@ -5,12 +5,46 @@ use crate::core::{
 
 use std::collections::HashMap;
 
+/// State information for a visited node during heuristic search.
+///
+/// Tracks the parent node (for path reconstruction) and the cumulative cost
+/// to reach this node.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct VisitState {
     pub parent_id: Option<u32>,
     pub cost: f64,
 }
 
+/// A visitor for heuristic-based graph traversal (A*, Dijkstra, etc.).
+///
+/// Combines actual path cost (g) and estimated remaining cost (h) to guide
+/// exploration. Different algorithms emerge by composing different estimators:
+///
+/// - **A***: WeightedCost + EuclideanDistance
+/// - **Dijkstra**: WeightedCost + ZeroHeuristic
+/// - **BFS**: UniformCost + ZeroHeuristic
+/// - **Greedy Best-First**: ZeroCost + EuclideanDistance
+///
+/// # Type Parameters
+///
+/// * `P` - Termination policy
+/// * `G` - Cost estimator for computing g(n)
+/// * `H` - Heuristic estimator for computing h(n)
+///
+/// # Examples
+///
+/// ``` rust,ignore
+/// use hodos::preset::visitors::HeuristicVisitor;
+/// use hodos::preset::policies::GoalReached;
+/// use hodos::preset::estimators::{WeightedCost, EuclideanDistance};
+///
+/// // A* pathfinding
+/// let visitor = HeuristicVisitor::new(
+///     GoalReached::new(target),
+///     WeightedCost,
+///     EuclideanDistance::new(10.0, 10.0)
+/// );
+/// ```
 #[derive(Debug)]
 pub struct HeuristicVisitor<P, G, H> {
     terminate: P,
@@ -26,6 +60,13 @@ impl<P, G, H> TrackParent for HeuristicVisitor<P, G, H> {
 }
 
 impl<P, G, H> HeuristicVisitor<P, G, H> {
+    /// Creates a new heuristic visitor.
+    ///
+    /// # Arguments
+    ///
+    /// * `terminate` - Policy determining when to stop traversal
+    /// * `g_estimator` - Estimator for actual path cost
+    /// * `h_estimator` - Estimator for heuristic cost to goal
     pub fn new(terminate: P, g_estimator: G, h_estimator: H) -> Self {
         HeuristicVisitor {
             terminate,
@@ -35,10 +76,27 @@ impl<P, G, H> HeuristicVisitor<P, G, H> {
         }
     }
 
+    /// Records a node as visited with its parent and cumulative cost.
+    ///
+    /// # Arguments
+    ///
+    /// * `parent_id` - ID of the parent node, or None for the start node
+    /// * `node_id` - ID of the node being visited
+    /// * `cost` - Cumulative cost to reach this node
     pub fn insert_visited(&mut self, parent_id: Option<u32>, node_id: u32, cost: f64) {
         self.visited.insert(node_id, VisitState { parent_id, cost });
     }
 
+    /// Computes the actual cost g(n) to reach a node via an edge.
+    ///
+    /// Returns the cumulative cost to the source node plus the cost of
+    /// the edge from source to destination.
+    ///
+    /// # Arguments
+    ///
+    /// * `from` - Source node ID
+    /// * `to` - Destination node ID
+    /// * `context` - Graph context
     pub fn compute_g_cost<N, E>(&self, from: u32, to: u32, context: &Graph<N, E>) -> f64
     where
         N: Node + HasData,
@@ -51,6 +109,12 @@ impl<P, G, H> HeuristicVisitor<P, G, H> {
         self.g_estimator.cost(from, to, context) + c
     }
 
+    /// Computes the heuristic cost h(n) from a node to the goal.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Node ID
+    /// * `context` - Graph context
     pub fn compute_h_cost<N, E, T>(&self, id: u32, context: &Graph<N, E>) -> f64
     where
         T: HasPosition + Clone + Copy,
