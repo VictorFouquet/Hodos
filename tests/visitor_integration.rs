@@ -194,40 +194,14 @@ mod visitor_integration {
                 let mut visitor = HeuristicVisitor::new(
                     DenyAll::default(),
                     WeightedCost,
-                    EuclideanDistance::new(2.0, 2.0), // h(n) = distance to (2,0)
+                    EuclideanDistance::new(2.0, 2.0),
                 );
                 visitor.insert_visited(None, 0, 0.0);
 
                 let f_cost = visitor.exploration_cost(0, 1, &graph);
 
-                // f(1) = g(1) + h(1) = 3.0 + 1.0 = 4.0
-                assert_eq!(2.82, round2(f_cost), "Should combine g and h costs");
+                assert_eq!(2.82, round2(f_cost));
             }
-            // #[test]
-            // fn traverses_graph_differently_according_to_cost_estimation() {
-            //     let mut visitor = WeightedVisitor::new(OpeningExhausted::new(2));
-
-            //     assert!(!visitor.should_stop(0, &get_graph()));
-            //     visitor.visit(0, &get_graph());
-
-            //     assert!(!visitor.should_stop(1, &get_graph()));
-            //     visitor.visit(1, &get_graph());
-
-            //     assert!(visitor.should_stop(2, &get_graph()));
-            // }
-
-            // #[test]
-            // fn traverses_graph_differently_according_to_heuristic_estimation() {
-            //     let mut visitor = WeightedVisitor::new(OpeningExhausted::new(2));
-
-            //     assert!(!visitor.should_stop(0, &get_graph()));
-            //     visitor.visit(0, &get_graph());
-
-            //     assert!(!visitor.should_stop(1, &get_graph()));
-            //     visitor.visit(1, &get_graph());
-
-            //     assert!(visitor.should_stop(2, &get_graph()));
-            // }
         }
     }
 }
