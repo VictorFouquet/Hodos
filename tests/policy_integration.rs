@@ -58,7 +58,7 @@ mod policy_integration {
             fn accepts_edges_under_budget_regardless_of_uniqueness() {
                 let mut graph = Graph::<EmptyNode, UnweightedEdge>::new();
 
-                let policy = Composite::Or(EdgeBudget::new(2), DenyParallelEdge::default());
+                let policy = Composite::Or(EdgeBudget::new(2), DenyParallelEdge);
 
                 let edge = UnweightedEdge::new(0, 1);
 
@@ -75,7 +75,7 @@ mod policy_integration {
             fn enforces_uniqueness_weight_and_budget_constraints() {
                 let policy = Composite::And(
                     Composite::And(
-                        DenyParallelEdge::default(),
+                        DenyParallelEdge,
                         AllowWhen::new(|e: &WeightedEdge| e.weight() < 5.0),
                     ),
                     EdgeBudget::new(2),
@@ -138,7 +138,7 @@ mod policy_integration {
                     AllowWhen::new(|e: &WeightedEdge| e.weight() > 5.0),
                     AllowWhen::new(|e: &WeightedEdge| e.weight() < 10.0),
                 )
-                .and(DenyParallelEdge::default());
+                .and(DenyParallelEdge);
 
                 let in_range_unique_1 = WeightedEdge::new(0, 1, 6.0);
                 let in_range_unique_2 = WeightedEdge::new(1, 2, 9.0);

@@ -4,8 +4,8 @@ use crate::core::{Edge, Graph, Node};
 /// Authorization policy that ensures each edge is added only once.
 ///
 /// Treats edges as directed - (0→1) is different from (1→0).
-#[derive(Debug, Default)]
-pub struct DenyParallelEdge {}
+#[derive(Debug)]
+pub struct DenyParallelEdge;
 
 impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyParallelEdge
 where
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn denies_parallel_edges() {
-        let policy = DenyParallelEdge::default();
+        let policy = DenyParallelEdge;
         let mut graph = Graph::<MockNode, MockEdge>::new();
         let edge = MockEdge::new(0, 1);
 
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn allows_reversed_edges() {
-        let policy = DenyParallelEdge::default();
+        let policy = DenyParallelEdge;
 
         let mut graph = Graph::<MockNode, MockEdge>::new();
 

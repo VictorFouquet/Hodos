@@ -5,8 +5,8 @@ use crate::core::*;
 ///
 /// An edge is considered "dangling" if either its source (`from`) or
 /// destination (`to`) node is not present in the graph.
-#[derive(Debug, Default)]
-pub struct DenyDanglingEdge {}
+#[derive(Debug)]
+pub struct DenyDanglingEdge;
 
 impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyDanglingEdge
 where
@@ -64,7 +64,7 @@ mod tests {
     #[test]
     fn compliant_when_both_endpoints_exist() {
         let graph = create_graph_with_nodes(vec![0, 1]);
-        let policy = DenyDanglingEdge::default();
+        let policy = DenyDanglingEdge;
         let edge = MockEdge::new(0, 1);
 
         assert!(policy.is_compliant(&edge, &graph));
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn non_compliant_when_from_node_missing() {
         let graph = create_graph_with_nodes(vec![1]);
-        let policy = DenyDanglingEdge::default();
+        let policy = DenyDanglingEdge;
         let edge = MockEdge::new(0, 1);
 
         assert!(!policy.is_compliant(&edge, &graph));
@@ -82,7 +82,7 @@ mod tests {
     #[test]
     fn non_compliant_when_to_node_missing() {
         let graph = create_graph_with_nodes(vec![0]);
-        let policy = DenyDanglingEdge::default();
+        let policy = DenyDanglingEdge;
         let edge = MockEdge::new(0, 1);
 
         assert!(!policy.is_compliant(&edge, &graph));
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn non_compliant_when_both_nodes_missing() {
         let graph = Graph::<MockNode, MockEdge>::new();
-        let policy = DenyDanglingEdge::default();
+        let policy = DenyDanglingEdge;
         let edge = MockEdge::new(0, 1);
 
         assert!(!policy.is_compliant(&edge, &graph));

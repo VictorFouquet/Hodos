@@ -14,13 +14,9 @@ mod end_to_end {
 
         fn run_bfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached> {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
-            GraphBuilder::new(
-                DenyDanglingEdge::default(),
-                AllowAll,
-                SimpleAdjacencySampler::new(),
-            )
-            .build(&context)
-            .traverse(0, &mut Queue::new(), &mut visitor);
+            GraphBuilder::new(DenyDanglingEdge, AllowAll, SimpleAdjacencySampler::new())
+                .build(&context)
+                .traverse(0, &mut Queue::new(), &mut visitor);
 
             visitor
         }
@@ -105,13 +101,9 @@ mod end_to_end {
 
         fn run_dfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached> {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
-            GraphBuilder::new(
-                DenyDanglingEdge::default(),
-                AllowAll,
-                SimpleAdjacencySampler::new(),
-            )
-            .build(&context)
-            .traverse(0, &mut Stack::new(), &mut visitor);
+            GraphBuilder::new(DenyDanglingEdge, AllowAll, SimpleAdjacencySampler::new())
+                .build(&context)
+                .traverse(0, &mut Stack::new(), &mut visitor);
 
             visitor
         }
@@ -206,7 +198,7 @@ mod end_to_end {
             let mut visitor = WeightedVisitor::new(GoalReached::new(goal));
             GraphBuilder::new(
                 Composite::And(
-                    DenyDanglingEdge::default(),
+                    DenyDanglingEdge,
                     AllowWhen::new(|e: &WeightedEdge| e.weight() > 0.0),
                 ),
                 AllowAll,

@@ -92,7 +92,7 @@ mod graph_builder_integration {
             let grid = test_context();
             let sampler = Grid2DSampler::<char>::default();
             let node_policy = DenyValue::new(vec!['#']);
-            let edge_policy = DenyDanglingEdge::default();
+            let edge_policy = DenyDanglingEdge;
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
             let graph = graph_builder.build(&grid);
@@ -109,7 +109,7 @@ mod graph_builder_integration {
             let grid = test_context();
             let sampler = Grid2DSampler::<char>::default();
             let node_policy = DenyValue::new(vec!['#']);
-            let edge_policy = DenyDanglingEdge::default();
+            let edge_policy = DenyDanglingEdge;
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
             let graph = graph_builder.build(&grid);
@@ -125,7 +125,7 @@ mod graph_builder_integration {
             let grid = test_context();
             let sampler = Grid2DSampler::<char>::default();
             let node_policy = DenyValue::new(vec!['#']);
-            let edge_policy = DenyDanglingEdge::default();
+            let edge_policy = DenyDanglingEdge;
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
             let graph = graph_builder.build(&grid);

@@ -2,8 +2,8 @@ use crate::core::Policy;
 use crate::core::{Edge, Graph, Node};
 
 /// Authorization policy that forbids self looping edges.
-#[derive(Debug, Default)]
-pub struct DenySelfLoop {}
+#[derive(Debug)]
+pub struct DenySelfLoop;
 
 impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenySelfLoop
 where
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn denies_self_looping_edges() {
-        let policy = DenySelfLoop::default();
+        let policy = DenySelfLoop;
         let graph = Graph::<MockNode, MockEdge>::new();
         let edge = MockEdge::new(0, 0);
 
