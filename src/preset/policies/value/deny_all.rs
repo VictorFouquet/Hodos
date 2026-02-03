@@ -1,8 +1,8 @@
 use crate::core::Policy;
 
 /// Authorization policy that denies any entity no matter its value.
-#[derive(Default)]
-pub struct DenyAll {}
+#[derive(Debug)]
+pub struct DenyAll;
 
 impl<Entity, Ctx> Policy<Entity, Ctx> for DenyAll {
     /// Denies any entity no matter its value.

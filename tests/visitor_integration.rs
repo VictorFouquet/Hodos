@@ -141,11 +141,9 @@ mod visitor_integration {
 
                 graph.add_edge(WeightedEdge::new(0, 1, 1.41));
 
-                let mut u_visitor =
-                    HeuristicVisitor::new(DenyAll::default(), UniformCost, ZeroHeuristic);
+                let mut u_visitor = HeuristicVisitor::new(DenyAll, UniformCost, ZeroHeuristic);
 
-                let mut w_visitor =
-                    HeuristicVisitor::new(DenyAll::default(), WeightedCost, ZeroHeuristic);
+                let mut w_visitor = HeuristicVisitor::new(DenyAll, WeightedCost, ZeroHeuristic);
 
                 u_visitor.insert_visited(None, 0, 0.0);
                 w_visitor.insert_visited(None, 0, 0.0);
@@ -163,17 +161,11 @@ mod visitor_integration {
 
                 graph.add_edge(WeightedEdge::new(0, 1, 1.41));
 
-                let mut e_visitor = HeuristicVisitor::new(
-                    DenyAll::default(),
-                    ZeroCost,
-                    EuclideanDistance::new(2.0, 2.0),
-                );
+                let mut e_visitor =
+                    HeuristicVisitor::new(DenyAll, ZeroCost, EuclideanDistance::new(2.0, 2.0));
 
-                let mut m_visitor = HeuristicVisitor::new(
-                    DenyAll::default(),
-                    ZeroCost,
-                    ManhattanDistance::new(2.0, 2.0),
-                );
+                let mut m_visitor =
+                    HeuristicVisitor::new(DenyAll, ZeroCost, ManhattanDistance::new(2.0, 2.0));
 
                 e_visitor.insert_visited(None, 0, 0.0);
                 m_visitor.insert_visited(None, 0, 0.0);
@@ -191,11 +183,8 @@ mod visitor_integration {
 
                 graph.add_edge(WeightedEdge::new(0, 1, 1.41));
 
-                let mut visitor = HeuristicVisitor::new(
-                    DenyAll::default(),
-                    WeightedCost,
-                    EuclideanDistance::new(2.0, 2.0),
-                );
+                let mut visitor =
+                    HeuristicVisitor::new(DenyAll, WeightedCost, EuclideanDistance::new(2.0, 2.0));
                 visitor.insert_visited(None, 0, 0.0);
 
                 let f_cost = visitor.exploration_cost(0, 1, &graph);

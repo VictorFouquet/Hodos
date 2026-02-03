@@ -1,8 +1,8 @@
 use crate::core::Policy;
 
 /// Authorization policy that allows any entity no matter its value.
-#[derive(Default)]
-pub struct AllowAll {}
+#[derive(Debug)]
+pub struct AllowAll;
 
 impl<Entity, Ctx> Policy<Entity, Ctx> for AllowAll {
     /// Allows any entity no matter its value.

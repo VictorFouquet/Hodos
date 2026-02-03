@@ -16,7 +16,7 @@ mod end_to_end {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
             GraphBuilder::new(
                 DenyDanglingEdge::default(),
-                AllowAll::default(),
+                AllowAll,
                 SimpleAdjacencySampler::new(),
             )
             .build(&context)
@@ -107,7 +107,7 @@ mod end_to_end {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
             GraphBuilder::new(
                 DenyDanglingEdge::default(),
-                AllowAll::default(),
+                AllowAll,
                 SimpleAdjacencySampler::new(),
             )
             .build(&context)
@@ -209,7 +209,7 @@ mod end_to_end {
                     DenyDanglingEdge::default(),
                     AllowWhen::new(|e: &WeightedEdge| e.weight() > 0.0),
                 ),
-                AllowAll::default(),
+                AllowAll,
                 WeightedMatrixSampler::new(),
             )
             .build(&context)

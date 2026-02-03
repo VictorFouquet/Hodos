@@ -17,8 +17,8 @@ mod graph_builder_integration {
                 vec![false, true, false],
             ];
             let sampler = BinaryMatrixSampler::default();
-            let node_policy = AllowAll::default();
-            let edge_policy = AllowAll::default();
+            let node_policy = AllowAll;
+            let edge_policy = AllowAll;
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
             let graph = graph_builder.build(&matrix);
@@ -50,7 +50,7 @@ mod graph_builder_integration {
                 vec![Some(0.0), Some(10.0), Some(-1.0)],
             ];
             let sampler = WeightedMatrixSampler::default();
-            let node_policy = AllowAll::default();
+            let node_policy = AllowAll;
             let edge_policy = AllowWhen::new(|e: &WeightedEdge| e.weight() > 0.0);
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
@@ -187,7 +187,7 @@ mod graph_builder_integration {
             let grid = test_context();
             let sampler = WeightedAdjacencyWithDataSampler::<char>::default();
             let node_policy = DenyValue::new(vec!['#']);
-            let edge_policy = AllowAll::default();
+            let edge_policy = AllowAll;
 
             let mut graph_builder = GraphBuilder::new(edge_policy, node_policy, sampler);
             let graph = graph_builder.build(&grid);
