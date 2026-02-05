@@ -37,9 +37,9 @@ pub struct WeightedCost;
 impl<N, E> CostEstimator<N, E> for WeightedCost
 where
     N: Node,
-    E: Edge + HasWeight,
+    E: Edge<N::Key> + HasWeight,
 {
-    fn cost(&self, from: u32, to: u32, graph: &Graph<N, E>) -> f64 {
+    fn cost(&self, from: N::Key, to: N::Key, graph: &Graph<N, E>) -> f64 {
         graph
             .get_edges_from(from)
             .iter()
@@ -52,13 +52,13 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{CostEstimator, Edge, Graph, HasWeight, Node},
+        core::{CostEstimator, Edge, Graph, HasWeight, Node, node::NodeKey},
         preset::visitors::WeightedCost,
     };
 
     #[test]
     fn cost_returns_edge_weight() {
-        let mut graph = Graph::<MockNode, MockEdge>::new();
+        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
         let estimator = WeightedCost;
 
         graph.add_edge(MockEdge::new(0, 1, 1.0));
@@ -68,36 +68,38 @@ mod tests {
         assert_eq!(estimator.cost(1, 2, &graph), 5.0);
     }
 
-    struct MockEdge {
-        from: u32,
-        to: u32,
+    struct MockEdge<K: NodeKey> {
+        from: K,
+        to: K,
         weight: f64,
     }
 
-    impl MockEdge {
-        pub fn new(from: u32, to: u32, weight: f64) -> Self {
+    impl<K: NodeKey> MockEdge<K> {
+        pub fn new(from: K, to: K, weight: f64) -> Self {
             MockEdge { from, to, weight }
         }
     }
 
-    impl Edge for MockEdge {
-        fn from(&self) -> u32 {
+    impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn from(&self) -> K {
             self.from
         }
 
-        fn to(&self) -> u32 {
+        fn to(&self) -> K {
             self.to
         }
     }
 
-    impl HasWeight for MockEdge {
+    impl<K: NodeKey> HasWeight for MockEdge<K> {
         fn weight(&self) -> f64 {
             self.weight
         }
     }
     struct MockNode;
     impl Node for MockNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+
+        fn id(&self) -> Self::Key {
             0
         }
     }

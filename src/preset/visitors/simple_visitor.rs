@@ -1,4 +1,4 @@
-use crate::core::{CountVisited, Policy, TrackParent, Visitor};
+use crate::core::{CountVisited, Node, Policy, TrackParent, Visitor};
 use std::collections::HashMap;
 
 /// Simple visitor that prevents revisiting the same node twice.
@@ -11,32 +11,39 @@ use std::collections::HashMap;
 /// - Preventing infinite loops in cyclic graphs
 /// - Basic exploration control without domain-specific logic
 #[derive(Debug, Default)]
-pub struct SimpleVisitor<P> {
+pub struct SimpleVisitor<P, N: Node> {
     /// Set of node IDs that have already been visited.
-    visited: HashMap<u32, Option<u32>>,
+    visited: HashMap<N::Key, Option<N::Key>>,
     terminate: P,
 }
 
-impl<P> SimpleVisitor<P>
+impl<P, N> SimpleVisitor<P, N>
 where
-    P: Policy<u32, Self>,
+    N: Node,
+    P: Policy<N::Key, Self>,
 {
     pub fn new(terminate: P) -> Self {
-        SimpleVisitor::<P> {
+        SimpleVisitor::<P, N> {
             visited: HashMap::new(),
             terminate,
         }
     }
 }
 
-impl<P> CountVisited for SimpleVisitor<P> {
+impl<P, N> CountVisited for SimpleVisitor<P, N>
+where
+    N: Node,
+{
     fn visited_count(&self) -> usize {
         self.visited.len()
     }
 }
 
-impl<P> TrackParent for SimpleVisitor<P> {
-    fn get_parent(&self, node_id: u32) -> Option<u32> {
+impl<P, N> TrackParent<N::Key> for SimpleVisitor<P, N>
+where
+    N: Node,
+{
+    fn get_parent(&self, node_id: N::Key) -> Option<N::Key> {
         if self.visited.contains_key(&node_id) {
             return self.visited[&node_id];
         }
@@ -44,9 +51,10 @@ impl<P> TrackParent for SimpleVisitor<P> {
     }
 }
 
-impl<Ctx, P> Visitor<Ctx> for SimpleVisitor<P>
+impl<Ctx, P, N> Visitor<Ctx, N> for SimpleVisitor<P, N>
 where
-    P: Policy<u32, Self>,
+    N: Node,
+    P: Policy<N::Key, Self>,
 {
     /// Determines whether traversal should continue toward a target node.
     ///
@@ -59,7 +67,7 @@ where
     /// # Returns
     ///
     /// `true` if the target node has not been visited yet, `false` otherwise.
-    fn should_explore(&mut self, from: u32, to: u32, _context: &Ctx) -> bool {
+    fn should_explore(&mut self, from: N::Key, to: N::Key, _context: &Ctx) -> bool {
         if let std::collections::hash_map::Entry::Vacant(e) = self.visited.entry(to) {
             e.insert(Some(from));
             return true;
@@ -73,11 +81,11 @@ where
     ///
     /// * `node_id` - The ID of the node being visited
     /// * `_context` - Traversal context (unused)
-    fn visit(&mut self, node_id: u32, _context: &Ctx) {
+    fn visit(&mut self, node_id: N::Key, _context: &Ctx) {
         self.visited.entry(node_id).or_insert(None);
     }
 
-    fn should_stop(&self, node_id: u32, _context: &Ctx) -> bool {
+    fn should_stop(&self, node_id: N::Key, _context: &Ctx) -> bool {
         self.terminate.is_compliant(&node_id, self)
     }
 }
@@ -89,21 +97,29 @@ mod tests {
     #[derive(Debug, Default)]
     pub struct Terminate {}
 
-    impl Policy<u32, SimpleVisitor<Self>> for Terminate {
-        fn is_compliant(&self, _: &u32, __: &SimpleVisitor<Self>) -> bool {
+    impl<N: Node> Policy<N::Key, SimpleVisitor<Self, N>> for Terminate {
+        fn is_compliant(&self, _: &N::Key, __: &SimpleVisitor<Self, N>) -> bool {
             true
+        }
+    }
+
+    pub struct MockNode;
+    impl Node for MockNode {
+        type Key = u32;
+        fn id(&self) -> Self::Key {
+            0
         }
     }
 
     #[test]
     fn defaults_with_empty_visited_hashset() {
-        let visitor = SimpleVisitor::new(Terminate::default());
+        let visitor = SimpleVisitor::<_, MockNode>::new(Terminate::default());
         assert_eq!(visitor.visited.len(), 0);
     }
 
     #[test]
     fn adds_id_to_visited() {
-        let mut visitor = SimpleVisitor::new(Terminate::default());
+        let mut visitor = SimpleVisitor::<_, MockNode>::new(Terminate::default());
         assert_eq!(visitor.visited.len(), 0);
 
         visitor.visit(0, &());
@@ -118,7 +134,7 @@ mod tests {
 
     #[test]
     fn explores_unvisited() {
-        let mut visitor = SimpleVisitor::new(Terminate::default());
+        let mut visitor = SimpleVisitor::<_, MockNode>::new(Terminate::default());
 
         assert!(!visitor.visited.contains_key(&1));
         assert!(visitor.should_explore(0, 1, &()));
@@ -126,7 +142,7 @@ mod tests {
 
     #[test]
     fn does_not_visit_twice() {
-        let mut visitor = SimpleVisitor::new(Terminate::default());
+        let mut visitor = SimpleVisitor::<_, MockNode>::new(Terminate::default());
 
         visitor.visit(1, &());
 
@@ -136,7 +152,7 @@ mod tests {
 
     #[test]
     fn stops_when_policy_returns_true() {
-        let visitor = SimpleVisitor::new(Terminate::default());
+        let visitor = SimpleVisitor::<_, MockNode>::new(Terminate::default());
 
         assert!(visitor.should_stop(0, &()));
     }

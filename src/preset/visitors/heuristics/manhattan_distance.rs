@@ -56,10 +56,10 @@ impl ManhattanDistance {
 impl<N, E, T> HeuristicEstimator<N, E> for ManhattanDistance
 where
     N: Node + HasData<Data = T>,
-    E: Edge,
+    E: Edge<N::Key>,
     T: HasPosition,
 {
-    fn heuristic(&self, node_id: u32, graph: &Graph<N, E>) -> f64 {
+    fn heuristic(&self, node_id: N::Key, graph: &Graph<N, E>) -> f64 {
         let node = graph.get_node(node_id).unwrap();
         let data = node.data();
         (data.x() - self.target_x).abs() + (data.y() - self.target_y).abs()
@@ -69,13 +69,13 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, Graph, HasData, HasPosition, HeuristicEstimator, Node},
+        core::{Edge, Graph, HasData, HasPosition, HeuristicEstimator, Node, node::NodeKey},
         preset::visitors::ManhattanDistance,
     };
 
     #[test]
     fn computes_manhattan_distance() {
-        let mut graph = Graph::<MockNode, MockEdge>::new();
+        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
         let estimator = ManhattanDistance::new(2.0, 2.0);
 
         graph.add_node(MockNode {
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn manhattan_distance_handles_negative_coordinates() {
-        let mut graph = Graph::<MockNode, MockEdge>::new();
+        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
         let estimator = ManhattanDistance::new(0.0, 0.0);
 
         graph.add_node(MockNode {
@@ -139,8 +139,19 @@ mod tests {
         assert_eq!(estimator.heuristic(4, &graph), 4.0);
     }
 
-    struct MockEdge;
-    impl Edge for MockEdge {}
+    struct MockEdge<K: NodeKey> {
+        from: K,
+        to: K,
+    }
+
+    impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn from(&self) -> K {
+            self.from
+        }
+        fn to(&self) -> K {
+            self.to
+        }
+    }
 
     struct MockNode {
         id: u32,
@@ -148,7 +159,9 @@ mod tests {
     }
 
     impl Node for MockNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+
+        fn id(&self) -> Self::Key {
             self.id
         }
     }
