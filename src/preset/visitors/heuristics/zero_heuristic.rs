@@ -28,33 +28,46 @@ pub struct ZeroHeuristic;
 impl<N, E> HeuristicEstimator<N, E> for ZeroHeuristic
 where
     N: Node,
-    E: Edge,
+    E: Edge<N::Key>,
 {
-    fn heuristic(&self, _: u32, _: &Graph<N, E>) -> f64 {
+    fn heuristic(&self, _: N::Key, _: &Graph<N, E>) -> f64 {
         0.0
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{Edge, Graph, HeuristicEstimator, Node};
+    use crate::core::{Edge, Graph, HeuristicEstimator, Node, node::NodeKey};
 
     use super::ZeroHeuristic;
 
     #[test]
     fn heuristic_returns_zero() {
-        let graph = Graph::<MockNode, MockEdge>::new();
+        let graph = Graph::<MockNode, MockEdge<u32>>::new();
         let estimator = ZeroHeuristic;
         assert_eq!(estimator.heuristic(0, &graph), 0.0);
         assert_eq!(estimator.heuristic(10, &graph), 0.0);
     }
 
-    struct MockEdge;
-    impl Edge for MockEdge {}
+    struct MockEdge<K: NodeKey> {
+        from: K,
+        to: K,
+    }
+
+    impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn from(&self) -> K {
+            self.from
+        }
+        fn to(&self) -> K {
+            self.to
+        }
+    }
 
     struct MockNode;
     impl Node for MockNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+
+        fn id(&self) -> Self::Key {
             0
         }
     }

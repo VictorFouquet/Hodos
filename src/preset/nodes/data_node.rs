@@ -47,7 +47,9 @@ impl<T: Copy + Clone> HasData for DataNode<T> {
 }
 
 impl<T: Clone> Node for DataNode<T> {
-    fn id(&self) -> u32 {
+    type Key = u32;
+
+    fn id(&self) -> Self::Key {
         self.id
     }
 }

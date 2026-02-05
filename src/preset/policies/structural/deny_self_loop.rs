@@ -5,11 +5,10 @@ use crate::core::{Edge, Graph, Node};
 #[derive(Debug)]
 pub struct DenySelfLoop;
 
-impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenySelfLoop
+impl<N, E> Policy<E, Graph<N, E>> for DenySelfLoop
 where
-    Entity: Edge,
-    TNode: Node,
-    TEdge: Edge,
+    N: Node,
+    E: Edge<N::Key>,
 {
     /// Allows an edge if its from node is different than the to node.
     ///
@@ -21,41 +20,45 @@ where
     /// # Returns
     ///
     /// `true` from is different than to, `false` otherwise
-    fn is_compliant(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &E, _context: &Graph<N, E>) -> bool {
         entity.from() != entity.to()
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::core::node::NodeKey;
+
     use super::*;
 
     #[derive(Clone)]
     pub struct MockNode {}
 
     impl Node for MockNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+
+        fn id(&self) -> Self::Key {
             0
         }
     }
 
     #[derive(Clone)]
-    pub struct MockEdge {
-        to: u32,
-        from: u32,
+    pub struct MockEdge<K: NodeKey> {
+        to: K,
+        from: K,
     }
 
-    impl MockEdge {
-        fn new(from: u32, to: u32) -> Self {
+    impl<K: NodeKey> MockEdge<K> {
+        fn new(from: K, to: K) -> Self {
             MockEdge { from: from, to: to }
         }
     }
 
-    impl Edge for MockEdge {
-        fn to(&self) -> u32 {
+    impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn to(&self) -> K {
             self.to
         }
-        fn from(&self) -> u32 {
+        fn from(&self) -> K {
             self.from
         }
     }
@@ -63,7 +66,7 @@ mod tests {
     #[test]
     fn denies_self_looping_edges() {
         let policy = DenySelfLoop;
-        let graph = Graph::<MockNode, MockEdge>::new();
+        let graph = Graph::<MockNode, _>::new();
         let edge = MockEdge::new(0, 0);
 
         assert!(!policy.is_compliant(&edge, &graph));

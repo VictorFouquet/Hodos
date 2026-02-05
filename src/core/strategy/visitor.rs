@@ -1,8 +1,10 @@
+use crate::core::Node;
+
 /// A strategy for processing nodes during graph traversal.
 ///
 /// Visitors define custom behavior that executes when a node is encountered.
 /// They can inspect, modify, or collect information from nodes.
-pub trait Visitor<Ctx> {
+pub trait Visitor<Ctx, N: Node> {
     /// Gives the initial search cost when starting the traversal.
     ///
     /// Should usually return zero but some business rule may want to override it.
@@ -11,7 +13,7 @@ pub trait Visitor<Ctx> {
     ///
     /// * `node_id` - The start node index
     /// * `context` - Contextual information available during traversal
-    fn init_cost(&self, _node_id: u32, _context: &Ctx) -> f64 {
+    fn init_cost(&self, _node_id: N::Key, _context: &Ctx) -> f64 {
         0.0
     }
 
@@ -24,7 +26,7 @@ pub trait Visitor<Ctx> {
     /// * `from`    - The connection's source node id
     /// * `to`      - The connection's target node id
     /// * `context` - Contextual information available during traversal
-    fn exploration_cost(&self, _from: u32, _to: u32, _context: &Ctx) -> f64 {
+    fn exploration_cost(&self, _from: N::Key, _to: N::Key, _context: &Ctx) -> f64 {
         1.0
     }
 
@@ -37,7 +39,7 @@ pub trait Visitor<Ctx> {
     /// * `from`    - The connection's source node id
     /// * `to`      - The connection's target node id
     /// * `context` - Contextual information available during traversal
-    fn should_explore(&mut self, from: u32, to: u32, context: &Ctx) -> bool;
+    fn should_explore(&mut self, from: N::Key, to: N::Key, context: &Ctx) -> bool;
 
     /// Visits a node during traversal.
     ///
@@ -47,7 +49,7 @@ pub trait Visitor<Ctx> {
     ///
     /// * `node_id` - The id of the node being visited
     /// * `context` - Contextual information available during traversal
-    fn visit(&mut self, node_id: u32, context: &Ctx);
+    fn visit(&mut self, node_id: N::Key, context: &Ctx);
 
     /// Determines if exploration should be stopped.
     ///
@@ -61,7 +63,7 @@ pub trait Visitor<Ctx> {
     /// # Returns
     ///
     /// `true` if the exploration should stop, `false` otherwise
-    fn should_stop(&self, _node_id: u32, _context: &Ctx) -> bool {
+    fn should_stop(&self, _node_id: N::Key, _context: &Ctx) -> bool {
         false
     }
 }

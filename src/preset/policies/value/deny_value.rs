@@ -43,12 +43,11 @@ where
     }
 }
 
-impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyValue<Entity::Data>
+impl<N, E> Policy<N, Graph<N, E>> for DenyValue<N::Data>
 where
-    TNode: Node + HasData,
-    TEdge: Edge,
-    Entity: Node + HasData,
-    Entity::Data: Eq + Hash,
+    N: Node + HasData,
+    E: Edge<N::Key>,
+    N::Data: Eq + Hash,
 {
     /// Denies a node if its data matches a blacklisted value.
     ///
@@ -60,19 +59,21 @@ where
     /// # Returns
     ///
     /// `false` if the node's data is in the blacklist, `true` otherwise.
-    fn is_compliant(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &N, _context: &Graph<N, E>) -> bool {
         !self.denied_values.contains(entity.data())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::core::node::NodeKey;
+
     use super::*;
 
     #[test]
     fn accepts_all_when_blacklist_is_empty() {
         let policy = DenyValue::<bool>::default();
-        let graph = Graph::<MockValueNode, MockEdge>::new();
+        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
         assert_eq!(policy.denied_values.len(), 0);
 
         assert!(policy.is_compliant(&MockValueNode::new(0, true), &graph));
@@ -83,7 +84,7 @@ mod tests {
     fn accepts_values_not_in_blacklist() {
         let mut policy = DenyValue::<bool>::default();
 
-        let graph = Graph::<MockValueNode, MockEdge>::new();
+        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
 
         policy.add_denied_value(true);
         assert_eq!(policy.denied_values.len(), 1);
@@ -95,7 +96,7 @@ mod tests {
     fn rejects_values_in_blacklist() {
         let mut policy = DenyValue::<bool>::default();
 
-        let graph = Graph::<MockValueNode, MockEdge>::new();
+        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
 
         policy.add_denied_value(true);
         assert_eq!(policy.denied_values.len(), 1);
@@ -123,13 +124,24 @@ mod tests {
     }
 
     impl Node for MockValueNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+
+        fn id(&self) -> Self::Key {
             0
         }
     }
 
-    #[derive(Default)]
-    pub struct MockEdge;
+    pub struct MockEdge<K: NodeKey> {
+        from: K,
+        to: K,
+    }
 
-    impl Edge for MockEdge {}
+    impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn from(&self) -> K {
+            self.from
+        }
+        fn to(&self) -> K {
+            self.to
+        }
+    }
 }

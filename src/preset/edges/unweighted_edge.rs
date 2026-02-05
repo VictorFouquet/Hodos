@@ -1,4 +1,4 @@
-use crate::core::Edge;
+use crate::core::{Edge, node::NodeKey};
 
 /// An unweighted edge connecting two nodes.
 ///
@@ -16,22 +16,22 @@ use crate::core::Edge;
 /// assert_eq!(edge.to(), 1);
 /// ```
 #[derive(Copy, Clone, Debug, Default)]
-pub struct UnweightedEdge {
-    to: u32,
-    from: u32,
+pub struct UnweightedEdge<K: NodeKey> {
+    to: K,
+    from: K,
 }
 
-impl UnweightedEdge {
-    pub fn new(from: u32, to: u32) -> Self {
+impl<K: NodeKey> UnweightedEdge<K> {
+    pub fn new(from: K, to: K) -> Self {
         UnweightedEdge { from, to }
     }
 }
 
-impl Edge for UnweightedEdge {
-    fn to(&self) -> u32 {
+impl<K: NodeKey> Edge<K> for UnweightedEdge<K> {
+    fn to(&self) -> K {
         self.to
     }
-    fn from(&self) -> u32 {
+    fn from(&self) -> K {
         self.from
     }
 }

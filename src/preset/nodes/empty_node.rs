@@ -26,7 +26,9 @@ impl EmptyNode {
 }
 
 impl Node for EmptyNode {
-    fn id(&self) -> u32 {
+    type Key = u32;
+
+    fn id(&self) -> Self::Key {
         self.id
     }
 }

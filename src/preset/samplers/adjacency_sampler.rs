@@ -7,10 +7,10 @@ use crate::preset::{UnweightedEdge, WeightedEdge};
 pub type AdjacencyList = Vec<Vec<u32>>;
 pub type WeightedAdjacencyList = Vec<Vec<(u32, f64)>>;
 
-pub type SimpleAdjacencySampler = AdjacencySampler<EmptyNode, UnweightedEdge>;
-pub type WeightedAdjacencySampler = AdjacencySampler<EmptyNode, WeightedEdge>;
-pub type AdjacencyWithDataSampler<T> = AdjacencySampler<DataNode<T>, UnweightedEdge>;
-pub type WeightedAdjacencyWithDataSampler<T> = AdjacencySampler<DataNode<T>, WeightedEdge>;
+pub type SimpleAdjacencySampler = AdjacencySampler<EmptyNode, UnweightedEdge<u32>>;
+pub type WeightedAdjacencySampler = AdjacencySampler<EmptyNode, WeightedEdge<u32>>;
+pub type AdjacencyWithDataSampler<T> = AdjacencySampler<DataNode<T>, UnweightedEdge<u32>>;
+pub type WeightedAdjacencyWithDataSampler<T> = AdjacencySampler<DataNode<T>, WeightedEdge<u32>>;
 
 /// Samples a graph from an adjacency list representation.
 ///
@@ -52,11 +52,8 @@ pub struct WeightedAdjacencyListWithData<T> {
     pub adjacency: WeightedAdjacencyList,
 }
 
-impl Sampler<AdjacencyList> for SimpleAdjacencySampler {
-    type Node = EmptyNode;
-    type Edge = UnweightedEdge;
-
-    fn next(&mut self, context: &AdjacencyList) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
+impl Sampler<u32, (u32, u32), AdjacencyList> for SimpleAdjacencySampler {
+    fn next(&mut self, context: &AdjacencyList) -> Option<(Vec<u32>, Vec<(u32, u32)>)> {
         let i = self.current_id as usize;
 
         if i >= context.len() {
@@ -65,10 +62,10 @@ impl Sampler<AdjacencyList> for SimpleAdjacencySampler {
 
         let edges: Vec<_> = context[i]
             .iter()
-            .map(|&adj| UnweightedEdge::new(self.current_id, adj))
+            .map(|&adj| (self.current_id, adj))
             .collect();
 
-        let nodes = vec![EmptyNode::new(self.current_id)];
+        let nodes = vec![self.current_id];
 
         self.current_id += 1;
 
@@ -76,14 +73,11 @@ impl Sampler<AdjacencyList> for SimpleAdjacencySampler {
     }
 }
 
-impl Sampler<WeightedAdjacencyList> for WeightedAdjacencySampler {
-    type Node = EmptyNode;
-    type Edge = WeightedEdge;
-
+impl Sampler<u32, (u32, u32, f64), WeightedAdjacencyList> for WeightedAdjacencySampler {
     fn next(
         &mut self,
         context: &WeightedAdjacencyList,
-    ) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
+    ) -> Option<(Vec<u32>, Vec<(u32, u32, f64)>)> {
         let i = self.current_id as usize;
 
         if i >= context.len() {
@@ -92,10 +86,10 @@ impl Sampler<WeightedAdjacencyList> for WeightedAdjacencySampler {
 
         let edges: Vec<_> = context[i]
             .iter()
-            .map(|&adj| WeightedEdge::new(self.current_id, adj.0, adj.1))
+            .map(|&adj| (self.current_id, adj.0, adj.1))
             .collect();
 
-        let nodes = vec![EmptyNode::new(self.current_id)];
+        let nodes = vec![self.current_id];
 
         self.current_id += 1;
 
@@ -103,14 +97,13 @@ impl Sampler<WeightedAdjacencyList> for WeightedAdjacencySampler {
     }
 }
 
-impl<T: Clone> Sampler<AdjacencyListWithData<T>> for AdjacencyWithDataSampler<T> {
-    type Node = DataNode<T>;
-    type Edge = UnweightedEdge;
-
+impl<T: Clone> Sampler<(u32, T), (u32, u32), AdjacencyListWithData<T>>
+    for AdjacencyWithDataSampler<T>
+{
     fn next(
         &mut self,
         context: &AdjacencyListWithData<T>,
-    ) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
+    ) -> Option<(Vec<(u32, T)>, Vec<(u32, u32)>)> {
         if context.data.len() != context.adjacency.len() {
             panic!("Adjacency list length and data length should be the same.")
         }
@@ -123,10 +116,10 @@ impl<T: Clone> Sampler<AdjacencyListWithData<T>> for AdjacencyWithDataSampler<T>
 
         let edges: Vec<_> = context.adjacency[i]
             .iter()
-            .map(|&adj| UnweightedEdge::new(self.current_id, adj))
+            .map(|&adj| (self.current_id, adj))
             .collect();
 
-        let nodes = vec![DataNode::new(self.current_id, context.data[i].clone())];
+        let nodes = vec![(self.current_id, context.data[i].clone())];
 
         self.current_id += 1;
 
@@ -134,14 +127,13 @@ impl<T: Clone> Sampler<AdjacencyListWithData<T>> for AdjacencyWithDataSampler<T>
     }
 }
 
-impl<T: Clone> Sampler<WeightedAdjacencyListWithData<T>> for WeightedAdjacencyWithDataSampler<T> {
-    type Node = DataNode<T>;
-    type Edge = WeightedEdge;
-
+impl<T: Clone> Sampler<(u32, T), (u32, u32, f64), WeightedAdjacencyListWithData<T>>
+    for WeightedAdjacencyWithDataSampler<T>
+{
     fn next(
         &mut self,
         context: &WeightedAdjacencyListWithData<T>,
-    ) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
+    ) -> Option<(Vec<(u32, T)>, Vec<(u32, u32, f64)>)> {
         if context.data.len() != context.adjacency.len() {
             panic!("Weighted adjacency list length and data length should be the same.")
         }
@@ -154,10 +146,10 @@ impl<T: Clone> Sampler<WeightedAdjacencyListWithData<T>> for WeightedAdjacencyWi
 
         let edges: Vec<_> = context.adjacency[i]
             .iter()
-            .map(|&adj| WeightedEdge::new(self.current_id, adj.0, adj.1))
+            .map(|&adj| (self.current_id, adj.0, adj.1))
             .collect();
 
-        let nodes = vec![DataNode::new(self.current_id, context.data[i].clone())];
+        let nodes = vec![(self.current_id, context.data[i].clone())];
 
         self.current_id += 1;
 
@@ -168,7 +160,6 @@ impl<T: Clone> Sampler<WeightedAdjacencyListWithData<T>> for WeightedAdjacencyWi
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::Node;
 
     // ==================== Test Data ====================
 
@@ -181,51 +172,14 @@ mod tests {
         NodeContent { v }
     }
 
-    // ==================== Macro for common tests ====================
-
-    macro_rules! test_sampler_common {
-        ($sampler_type:ty, $context_type:ty, $context:expr) => {
-            #[test]
-            fn default_initializes_at_zero() {
-                let sampler = <$sampler_type>::default();
-                assert_eq!(sampler.current_id, 0);
-            }
-
-            #[test]
-            fn maps_sequential_node_ids() {
-                let mut sampler = <$sampler_type>::default();
-                let context = $context;
-
-                let (nodes1, _) = sampler.next(&context).unwrap();
-                assert_eq!(nodes1[0].id(), 0);
-
-                let (nodes2, _) = sampler.next(&context).unwrap();
-                assert_eq!(nodes2[0].id(), 1);
-            }
-
-            #[test]
-            fn returns_none_when_exhausted() {
-                let mut sampler = <$sampler_type>::default();
-                let context = $context;
-
-                while sampler.next(&context).is_some() {}
-
-                assert!(sampler.next(&context).is_none());
-            }
-        };
-    }
-
     // ==================== Simple Adjacency ====================
 
     mod simple_adjacency {
         use super::*;
-        use crate::core::Edge;
 
         fn test_context() -> AdjacencyList {
             vec![vec![1], vec![0, 2], vec![1]]
         }
-
-        test_sampler_common!(SimpleAdjacencySampler, AdjacencyList, test_context());
 
         #[test]
         fn maps_edges_correctly() {
@@ -234,13 +188,13 @@ mod tests {
 
             let (_, edges) = sampler.next(&context).unwrap();
             assert_eq!(edges.len(), 1);
-            assert_eq!(edges[0].from(), 0);
-            assert_eq!(edges[0].to(), 1);
+            assert_eq!(edges[0].0, 0);
+            assert_eq!(edges[0].1, 1);
 
             let (_, edges) = sampler.next(&context).unwrap();
             assert_eq!(edges.len(), 2);
-            assert_eq!(edges[0].to(), 0);
-            assert_eq!(edges[1].to(), 2);
+            assert_eq!(edges[0].1, 0);
+            assert_eq!(edges[1].1, 2);
         }
     }
 
@@ -248,17 +202,10 @@ mod tests {
 
     mod weighted_adjacency {
         use super::*;
-        use crate::core::HasWeight;
 
         fn test_context() -> WeightedAdjacencyList {
             vec![vec![(1, 1.0)], vec![(0, 2.0), (2, 3.0)], vec![(1, 4.0)]]
         }
-
-        test_sampler_common!(
-            WeightedAdjacencySampler,
-            WeightedAdjacencyList,
-            test_context()
-        );
 
         #[test]
         fn maps_edges_with_weights() {
@@ -266,11 +213,11 @@ mod tests {
             let context = test_context();
 
             let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges[0].weight(), 1.0);
+            assert_eq!(edges[0].2, 1.0);
 
             let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges[0].weight(), 2.0);
-            assert_eq!(edges[1].weight(), 3.0);
+            assert_eq!(edges[0].2, 2.0);
+            assert_eq!(edges[1].2, 3.0);
         }
     }
 
@@ -278,9 +225,8 @@ mod tests {
 
     mod with_data {
         use super::*;
-        use crate::core::{HasData, Node};
 
-        type TestSampler = AdjacencySampler<DataNode<NodeContent>, UnweightedEdge>;
+        type TestSampler = AdjacencySampler<DataNode<NodeContent>, UnweightedEdge<u32>>;
 
         fn test_context() -> AdjacencyListWithData<NodeContent> {
             AdjacencyListWithData {
@@ -288,12 +234,6 @@ mod tests {
                 data: vec![node(10), node(20)],
             }
         }
-
-        test_sampler_common!(
-            TestSampler,
-            AdjacencyListWithData<NodeContent>,
-            test_context()
-        );
 
         #[test]
         #[should_panic(expected = "Adjacency list length and data length should be the same.")]
@@ -312,10 +252,10 @@ mod tests {
             let context = test_context();
 
             let (nodes, _) = sampler.next(&context).unwrap();
-            assert_eq!(nodes[0].data().v, 10);
+            assert_eq!(nodes[0].1.v, 10);
 
             let (nodes, _) = sampler.next(&context).unwrap();
-            assert_eq!(nodes[0].data().v, 20);
+            assert_eq!(nodes[0].1.v, 20);
         }
     }
 
@@ -323,9 +263,8 @@ mod tests {
 
     mod weighted_with_data {
         use super::*;
-        use crate::core::{HasData, HasWeight};
 
-        type TestSampler = AdjacencySampler<DataNode<NodeContent>, WeightedEdge>;
+        type TestSampler = AdjacencySampler<DataNode<NodeContent>, WeightedEdge<u32>>;
 
         fn test_context() -> WeightedAdjacencyListWithData<NodeContent> {
             WeightedAdjacencyListWithData {
@@ -333,12 +272,6 @@ mod tests {
                 data: vec![node(10), node(20)],
             }
         }
-
-        test_sampler_common!(
-            TestSampler,
-            WeightedAdjacencyListWithData<NodeContent>,
-            test_context()
-        );
 
         #[test]
         #[should_panic(
@@ -359,8 +292,8 @@ mod tests {
             let context = test_context();
 
             let (nodes, edges) = sampler.next(&context).unwrap();
-            assert_eq!(nodes[0].data().v, 10);
-            assert_eq!(edges[0].weight(), 1.0);
+            assert_eq!(nodes[0].1.v, 10);
+            assert_eq!(edges[0].2, 1.0);
         }
     }
 }

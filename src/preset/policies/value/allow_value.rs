@@ -44,12 +44,11 @@ where
     }
 }
 
-impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for AllowValue<Entity::Data>
+impl<N, E> Policy<N, Graph<N, E>> for AllowValue<N::Data>
 where
-    TNode: Node + HasData,
-    TEdge: Edge,
-    Entity: Node + HasData,
-    Entity::Data: Eq + Hash,
+    N: Node + HasData,
+    E: Edge<N::Key>,
+    N::Data: Eq + Hash,
 {
     /// Allows an entity if its data matches a whitelisted value.
     ///
@@ -61,7 +60,7 @@ where
     /// # Returns
     ///
     /// `true` if the entity's data is in the whitelist, `false` otherwise.
-    fn is_compliant(&self, entity: &Entity, _context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &N, _context: &Graph<N, E>) -> bool {
         self.allowed_values.contains(entity.data())
     }
 }
@@ -69,12 +68,12 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::HasData;
+    use crate::core::{HasData, node::NodeKey};
 
     #[test]
     fn allows_none_when_whitelist_is_empty() {
         let policy = AllowValue::<bool>::default();
-        let graph = Graph::<MockValueNode, MockEdge>::new();
+        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
         assert_eq!(policy.allowed_values.len(), 0);
 
         let node = make_node();
@@ -87,7 +86,7 @@ mod tests {
     fn allows_values_in_whitelist() {
         let mut policy = AllowValue::<bool>::default();
 
-        let graph = Graph::<MockValueNode, MockEdge>::new();
+        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
 
         policy.add_allowed_value(true);
         assert_eq!(policy.allowed_values.len(), 1);
@@ -102,7 +101,7 @@ mod tests {
     fn denies_when_value_not_in_whitelist() {
         let mut policy = AllowValue::<bool>::default();
 
-        let graph = Graph::<MockValueNode, MockEdge>::new();
+        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
 
         policy.add_allowed_value(false);
         assert_eq!(policy.allowed_values.len(), 1);
@@ -117,7 +116,9 @@ mod tests {
     pub struct MockValueNode;
 
     impl Node for MockValueNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+
+        fn id(&self) -> Self::Key {
             0
         }
     }
@@ -135,6 +136,16 @@ mod tests {
     }
 
     #[derive(Default)]
-    pub struct MockEdge;
-    impl Edge for MockEdge {}
+    pub struct MockEdge<K: NodeKey> {
+        from: K,
+        to: K,
+    }
+    impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn from(&self) -> K {
+            self.from
+        }
+        fn to(&self) -> K {
+            self.to
+        }
+    }
 }

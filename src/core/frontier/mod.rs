@@ -2,7 +2,7 @@
 ///
 /// Frontiers determine the order in which nodes are visited. Different implementations
 /// can be used to match predefined search algorith (BFS, DFS, Dijkstra...)
-pub trait Frontier {
+pub trait Frontier<K> {
     /// Creates a new empty frontier.
     fn new() -> Self
     where
@@ -14,14 +14,14 @@ pub trait Frontier {
     ///
     /// * `id`   - Id of the node to add
     /// * `cost` - Optional cost to handle priority
-    fn push(&mut self, id: u32, cost: Option<f64>);
+    fn push(&mut self, id: K, cost: Option<f64>);
 
     /// Removes and returns the next node ID to visit.
     ///
     /// # Returns
     ///
     /// `Some(node_id)` if nodes remain, `None` if frontier is empty
-    fn pop(&mut self) -> Option<u32>;
+    fn pop(&mut self) -> Option<K>;
 
     /// Checks if the frontier is empty.
     ///

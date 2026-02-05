@@ -1,23 +1,23 @@
-use crate::core::Frontier;
+use crate::core::{Frontier, node::NodeKey};
 use std::{cmp::Ordering, collections::BinaryHeap};
 
 // A MaxHeap (highest-value first out) frontier implementation for graph traversal.
-pub struct MaxHeap {
-    pub data: BinaryHeap<MaxHeapItem>,
+pub struct MaxHeap<K: NodeKey> {
+    pub data: BinaryHeap<MaxHeapItem<K>>,
 }
 
-impl Frontier for MaxHeap {
+impl<K: NodeKey> Frontier<K> for MaxHeap<K> {
     fn new() -> Self {
         MaxHeap {
-            data: BinaryHeap::<MaxHeapItem>::new(),
+            data: BinaryHeap::<MaxHeapItem<K>>::new(),
         }
     }
 
-    fn push(&mut self, id: u32, _cost: Option<f64>) {
+    fn push(&mut self, id: K, _cost: Option<f64>) {
         self.data.push(MaxHeapItem(_cost.unwrap_or(0.0), id));
     }
 
-    fn pop(&mut self) -> Option<u32> {
+    fn pop(&mut self) -> Option<K> {
         Some(self.data.pop().unwrap().1)
     }
 
@@ -27,23 +27,23 @@ impl Frontier for MaxHeap {
 }
 
 #[derive(Debug)]
-pub struct MaxHeapItem(f64, u32);
+pub struct MaxHeapItem<K: NodeKey>(f64, K);
 
-impl PartialEq for MaxHeapItem {
+impl<K: NodeKey> PartialEq for MaxHeapItem<K> {
     fn eq(&self, other: &Self) -> bool {
         self.0.to_bits() == other.0.to_bits()
     }
 }
 
-impl Eq for MaxHeapItem {}
+impl<K: NodeKey> Eq for MaxHeapItem<K> {}
 
-impl PartialOrd for MaxHeapItem {
+impl<K: NodeKey> PartialOrd for MaxHeapItem<K> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for MaxHeapItem {
+impl<K: NodeKey> Ord for MaxHeapItem<K> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.0.total_cmp(&other.0)
     }
@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn test_min_heap_new_should_be_empty() {
-        let min_heap = MaxHeap::new();
+        let min_heap = MaxHeap::<u32>::new();
         assert!(min_heap.is_empty());
     }
 

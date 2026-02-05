@@ -1,3 +1,4 @@
+use core::f64;
 use std::marker::PhantomData;
 
 use crate::core::Sampler;
@@ -6,8 +7,8 @@ use crate::preset::{UnweightedEdge, WeightedEdge};
 
 pub type BinaryMatrix = Vec<Vec<bool>>;
 pub type WeightedMatrix = Vec<Vec<Option<f64>>>;
-pub type BinaryMatrixSampler = MatrixSampler<EmptyNode, UnweightedEdge>;
-pub type WeightedMatrixSampler = MatrixSampler<EmptyNode, WeightedEdge>;
+pub type BinaryMatrixSampler = MatrixSampler<EmptyNode, UnweightedEdge<u32>>;
+pub type WeightedMatrixSampler = MatrixSampler<EmptyNode, WeightedEdge<u32>>;
 
 /// Samples a graph from a matrix representation.
 ///
@@ -47,11 +48,8 @@ impl<N, E> Default for MatrixSampler<N, E> {
     }
 }
 
-impl Sampler<BinaryMatrix> for BinaryMatrixSampler {
-    type Node = EmptyNode;
-    type Edge = UnweightedEdge;
-
-    fn next(&mut self, context: &BinaryMatrix) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
+impl Sampler<u32, (u32, u32), BinaryMatrix> for BinaryMatrixSampler {
+    fn next(&mut self, context: &BinaryMatrix) -> Option<(Vec<u32>, Vec<(u32, u32)>)> {
         let i = self.current_id as usize;
 
         if i >= context.len() {
@@ -62,10 +60,10 @@ impl Sampler<BinaryMatrix> for BinaryMatrixSampler {
             .iter()
             .enumerate()
             .filter(|(_, v)| **v)
-            .map(|(j, _)| UnweightedEdge::new(self.current_id, j as u32))
+            .map(|(j, _)| (self.current_id, j as u32))
             .collect();
 
-        let nodes = vec![EmptyNode::new(self.current_id)];
+        let nodes = vec![self.current_id];
 
         self.current_id += 1;
 
@@ -73,11 +71,8 @@ impl Sampler<BinaryMatrix> for BinaryMatrixSampler {
     }
 }
 
-impl Sampler<WeightedMatrix> for WeightedMatrixSampler {
-    type Node = EmptyNode;
-    type Edge = WeightedEdge;
-
-    fn next(&mut self, context: &WeightedMatrix) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
+impl Sampler<u32, (u32, u32, f64), WeightedMatrix> for WeightedMatrixSampler {
+    fn next(&mut self, context: &WeightedMatrix) -> Option<(Vec<u32>, Vec<(u32, u32, f64)>)> {
         let i = self.current_id as usize;
 
         if i >= context.len() {
@@ -87,12 +82,10 @@ impl Sampler<WeightedMatrix> for WeightedMatrixSampler {
         let edges: Vec<_> = context[i]
             .iter()
             .enumerate()
-            .filter_map(|(j, w)| {
-                w.map(|weight| WeightedEdge::new(self.current_id, j as u32, weight))
-            })
+            .filter_map(|(j, w)| w.map(|weight| (self.current_id, j as u32, weight)))
             .collect();
 
-        let nodes = vec![EmptyNode::new(self.current_id)];
+        let nodes = vec![self.current_id];
 
         self.current_id += 1;
 
@@ -103,7 +96,6 @@ impl Sampler<WeightedMatrix> for WeightedMatrixSampler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::Node;
 
     // ==================== Macro for common tests ====================
 
@@ -121,10 +113,10 @@ mod tests {
                 let context = $context;
 
                 let (nodes1, _) = sampler.next(&context).unwrap();
-                assert_eq!(nodes1[0].id(), 0);
+                assert_eq!(nodes1[0], 0);
 
                 let (nodes2, _) = sampler.next(&context).unwrap();
-                assert_eq!(nodes2[0].id(), 1);
+                assert_eq!(nodes2[0], 1);
             }
 
             #[test]
@@ -143,7 +135,6 @@ mod tests {
 
     mod binary_matrix {
         use super::*;
-        use crate::core::Edge;
 
         fn test_context() -> BinaryMatrix {
             vec![
@@ -162,21 +153,21 @@ mod tests {
 
             let (_, edges) = sampler.next(&context).unwrap();
             assert_eq!(edges.len(), 1);
-            assert_eq!(edges[0].from(), 0);
-            assert_eq!(edges[0].to(), 1);
+            assert_eq!(edges[0].0, 0);
+            assert_eq!(edges[0].1, 1);
 
             let (_, edges) = sampler.next(&context).unwrap();
             assert_eq!(edges.len(), 2);
-            assert_eq!(edges[0].from(), 1);
-            assert_eq!(edges[0].to(), 0);
+            assert_eq!(edges[0].0, 1);
+            assert_eq!(edges[0].1, 0);
 
-            assert_eq!(edges[0].from(), 1);
-            assert_eq!(edges[1].to(), 2);
+            assert_eq!(edges[0].0, 1);
+            assert_eq!(edges[1].1, 2);
 
             let (_, edges) = sampler.next(&context).unwrap();
             assert_eq!(edges.len(), 1);
-            assert_eq!(edges[0].from(), 2);
-            assert_eq!(edges[0].to(), 1);
+            assert_eq!(edges[0].0, 2);
+            assert_eq!(edges[0].1, 1);
         }
     }
 
@@ -184,7 +175,6 @@ mod tests {
 
     mod weighted_matrix {
         use super::*;
-        use crate::core::HasWeight;
 
         fn test_context() -> WeightedMatrix {
             vec![
@@ -202,14 +192,14 @@ mod tests {
             let context = test_context();
 
             let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges[0].weight(), 0.0);
+            assert_eq!(edges[0].2, 0.0);
 
             let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges[0].weight(), 4.0);
-            assert_eq!(edges[1].weight(), 2.0);
+            assert_eq!(edges[0].2, 4.0);
+            assert_eq!(edges[1].2, 2.0);
 
             let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges[0].weight(), -1.0);
+            assert_eq!(edges[0].2, -1.0);
         }
     }
 }

@@ -1,23 +1,23 @@
-use crate::core::Frontier;
+use crate::core::{Frontier, node::NodeKey};
 use std::{cmp::Ordering, collections::BinaryHeap};
 
 // A MinHeap (lowest-value first out) frontier implementation for graph traversal.
-pub struct MinHeap {
-    pub data: BinaryHeap<MinHeapItem>,
+pub struct MinHeap<K: NodeKey> {
+    pub data: BinaryHeap<MinHeapItem<K>>,
 }
 
-impl Frontier for MinHeap {
+impl<K: NodeKey> Frontier<K> for MinHeap<K> {
     fn new() -> Self {
         MinHeap {
-            data: BinaryHeap::<MinHeapItem>::new(),
+            data: BinaryHeap::<MinHeapItem<K>>::new(),
         }
     }
 
-    fn push(&mut self, id: u32, _cost: Option<f64>) {
+    fn push(&mut self, id: K, _cost: Option<f64>) {
         self.data.push(MinHeapItem(_cost.unwrap_or(0.0), id));
     }
 
-    fn pop(&mut self) -> Option<u32> {
+    fn pop(&mut self) -> Option<K> {
         Some(self.data.pop().unwrap().1)
     }
 
@@ -27,23 +27,23 @@ impl Frontier for MinHeap {
 }
 
 #[derive(Debug)]
-pub struct MinHeapItem(f64, u32);
+pub struct MinHeapItem<K: NodeKey>(f64, K);
 
-impl PartialEq for MinHeapItem {
+impl<K: NodeKey> PartialEq for MinHeapItem<K> {
     fn eq(&self, other: &Self) -> bool {
         self.0.to_bits() == other.0.to_bits()
     }
 }
 
-impl Eq for MinHeapItem {}
+impl<K: NodeKey> Eq for MinHeapItem<K> {}
 
-impl PartialOrd for MinHeapItem {
+impl<K: NodeKey> PartialOrd for MinHeapItem<K> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for MinHeapItem {
+impl<K: NodeKey> Ord for MinHeapItem<K> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.0.total_cmp(&other.0).reverse()
     }
@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn test_min_heap_new_should_be_empty() {
-        let min_heap = MinHeap::new();
+        let min_heap = MinHeap::<u32>::new();
         assert!(min_heap.is_empty());
     }
 

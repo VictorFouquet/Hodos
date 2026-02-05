@@ -8,19 +8,20 @@ use crate::core::*;
 #[derive(Debug)]
 pub struct DenyDanglingEdge;
 
-impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyDanglingEdge
+impl<N, E> Policy<E, Graph<N, E>> for DenyDanglingEdge
 where
-    Entity: Edge,
-    TNode: Node,
-    TEdge: Edge,
+    N: Node,
+    E: Edge<N::Key>,
 {
-    fn is_compliant(&self, entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &E, context: &Graph<N, E>) -> bool {
         context.nodes.contains_key(&entity.from()) && context.nodes.contains_key(&entity.to())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::core::node::NodeKey;
+
     use super::*;
 
     struct MockNode {
@@ -28,33 +29,34 @@ mod tests {
     }
 
     impl Node for MockNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+        fn id(&self) -> Self::Key {
             self.id
         }
     }
 
-    struct MockEdge {
-        from: u32,
-        to: u32,
+    struct MockEdge<K: NodeKey> {
+        from: K,
+        to: K,
     }
 
-    impl MockEdge {
-        fn new(from: u32, to: u32) -> Self {
+    impl<K: NodeKey> MockEdge<K> {
+        fn new(from: K, to: K) -> Self {
             MockEdge { from, to }
         }
     }
 
-    impl Edge for MockEdge {
-        fn from(&self) -> u32 {
+    impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn from(&self) -> K {
             self.from
         }
-        fn to(&self) -> u32 {
+        fn to(&self) -> K {
             self.to
         }
     }
 
-    fn create_graph_with_nodes(node_ids: Vec<u32>) -> Graph<MockNode, MockEdge> {
-        let mut graph = Graph::new();
+    fn create_graph_with_nodes(node_ids: Vec<u32>) -> Graph<MockNode, MockEdge<u32>> {
+        let mut graph = Graph::<MockNode, _>::new();
         for id in node_ids {
             graph.add_node(MockNode { id });
         }
@@ -90,7 +92,7 @@ mod tests {
 
     #[test]
     fn non_compliant_when_both_nodes_missing() {
-        let graph = Graph::<MockNode, MockEdge>::new();
+        let graph = Graph::<MockNode, _>::new();
         let policy = DenyDanglingEdge;
         let edge = MockEdge::new(0, 1);
 

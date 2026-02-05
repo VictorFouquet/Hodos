@@ -18,20 +18,20 @@ use std::collections::HashMap;
 ///
 /// # Type Parameters
 ///
-/// * `TNode` - Node type implementing the `Node` trait
-/// * `TEdge` - Edge type implementing the `Edge` trait
+/// * `N` - Node type implementing the `Node` trait
+/// * `E` - Edge type implementing the `Edge` trait
 #[derive(Debug, Default)]
-pub struct Graph<TNode, TEdge> {
+pub struct Graph<N: Node, E: Edge<N::Key>> {
     /// Map of node IDs to nodes
-    pub nodes: HashMap<u32, TNode>,
+    pub nodes: HashMap<N::Key, N>,
     /// Map of node IDs to their outgoing edges
-    pub edges: HashMap<u32, Vec<TEdge>>,
+    pub edges: HashMap<N::Key, Vec<E>>,
 }
 
-impl<TNode, TEdge> Graph<TNode, TEdge>
+impl<N, E> Graph<N, E>
 where
-    TNode: Node,
-    TEdge: Edge,
+    N: Node,
+    E: Edge<N::Key>,
 {
     /// Creates a new empty graph.
     pub fn new() -> Self {
@@ -48,7 +48,7 @@ where
     /// # Arguments
     ///
     /// * `node` - The node to add
-    pub fn add_node(&mut self, node: TNode) {
+    pub fn add_node(&mut self, node: N) {
         self.nodes.insert(node.id(), node);
     }
 
@@ -59,12 +59,12 @@ where
     /// # Arguments
     ///
     /// * `id` - The id of the node to get
-    pub fn get_node(&self, id: u32) -> Option<&TNode> {
+    pub fn get_node(&self, id: N::Key) -> Option<&N> {
         self.nodes.get(&id)
     }
 
     /// Gets all nodes of the graph.
-    pub fn get_nodes(&self) -> Vec<&TNode> {
+    pub fn get_nodes(&self) -> Vec<&N> {
         self.nodes.values().collect()
     }
 
@@ -77,7 +77,7 @@ where
     /// # Arguments
     ///
     /// * `edge` - The edge to add
-    pub fn add_edge(&mut self, edge: TEdge) {
+    pub fn add_edge(&mut self, edge: E) {
         let from = edge.from();
 
         self.edges.entry(from).or_default().push(edge);
@@ -90,12 +90,12 @@ where
     /// # Arguments
     ///
     /// * `id` - The id of the node to get edges from
-    pub fn get_edges_from(&self, id: u32) -> &[TEdge] {
+    pub fn get_edges_from(&self, id: N::Key) -> &[E] {
         self.edges.get(&id).map(Vec::as_slice).unwrap_or(&[])
     }
 
     /// Gets all nodes of the graph.
-    pub fn get_edges(&self) -> Vec<&TEdge> {
+    pub fn get_edges(&self) -> Vec<&E> {
         self.edges.values().flatten().collect()
     }
 
@@ -123,9 +123,9 @@ where
     ///    - Ask visitor about termination condition
     pub fn traverse(
         &self,
-        start: u32,
-        frontier: &mut dyn Frontier,
-        visitor: &mut dyn Visitor<Self>,
+        start: N::Key,
+        frontier: &mut dyn Frontier<N::Key>,
+        visitor: &mut dyn Visitor<Self, N>,
     ) {
         frontier.push(start, Some(visitor.init_cost(start, self)));
 
