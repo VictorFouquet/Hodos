@@ -189,8 +189,9 @@ mod graph_builder_integration {
 
     mod from_adjacency_list {
         use super::*;
-        use hodos::core::{Composite, HasWeight};
+        use hodos::core::HasWeight;
         use hodos::preset::edges::WeightedEdge;
+        use hodos::preset::policies::logic::Composite;
         use hodos::preset::policies::value::{AllowAll, AllowWhen, DenyValue};
         use hodos::preset::samplers::{
             WeightedAdjacencyListWithData, WeightedAdjacencyWithDataSampler,

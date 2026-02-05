@@ -1,7 +1,7 @@
 mod policy_integration {
-    use hodos::core::Composite;
     use hodos::core::Graph;
     use hodos::preset::policies::budget::{EdgeBudget, NodeBudget};
+    use hodos::preset::policies::logic::Composite;
     use hodos::preset::{DataNode, EmptyNode, UnweightedEdge};
 
     mod allow {
