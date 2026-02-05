@@ -6,11 +6,10 @@ use crate::core::{Edge, Graph, Node};
 #[derive(Debug, Default)]
 pub struct DenyNodeOverride {}
 
-impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyNodeOverride
+impl<N, E> Policy<N, Graph<N, E>> for DenyNodeOverride
 where
-    Entity: Node,
-    TNode: Node,
-    TEdge: Edge,
+    N: Node,
+    E: Edge<N::Key>,
 {
     /// Denies if a node with same id already exists
     ///
@@ -22,7 +21,7 @@ where
     /// # Returns
     ///
     /// `true` if this is the first time seeing this node ID, `false` otherwise
-    fn is_compliant(&self, entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &N, context: &Graph<N, E>) -> bool {
         !context
             .get_nodes()
             .into_iter()
@@ -32,6 +31,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::core::node::NodeKey;
+
     use super::*;
 
     #[derive(Clone)]
@@ -40,21 +41,34 @@ mod tests {
     }
 
     impl Node for MockNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+
+        fn id(&self) -> Self::Key {
             self.id
         }
     }
 
     #[derive(Clone)]
-    pub struct MockEdge {}
+    pub struct MockEdge<K: NodeKey> {
+        from: K,
+        to: K,
+    }
 
-    impl Edge for MockEdge {}
+    impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn from(&self) -> K {
+            self.from
+        }
+
+        fn to(&self) -> K {
+            self.to
+        }
+    }
 
     #[test]
     fn allows_unique_values() {
         let policy = DenyNodeOverride::default();
 
-        let mut graph = Graph::<MockNode, MockEdge>::new();
+        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
         let mut node = MockNode { id: 0 };
 
         assert!(policy.is_compliant(&node, &graph));
@@ -73,7 +87,7 @@ mod tests {
     #[test]
     fn denies_override_by_id() {
         let policy = DenyNodeOverride::default();
-        let mut graph = Graph::<MockNode, MockEdge>::new();
+        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
         let node = MockNode { id: 0 };
 
         assert!(policy.is_compliant(&node, &graph));

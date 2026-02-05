@@ -12,7 +12,7 @@ use crate::core::Policy;
 /// use hodos::preset::edges::WeightedEdge;
 /// use hodos::preset::policies::value::AllowWhen;
 ///
-/// let policy = AllowWhen::new(|edge: &WeightedEdge| {
+/// let policy = AllowWhen::new(|edge: &WeightedEdge<u32>| {
 ///     edge.weight() > 0.0 && edge.weight() <= 5.0
 /// });
 /// ```
@@ -91,7 +91,9 @@ mod tests {
     }
 
     impl Node for MockValueNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+
+        fn id(&self) -> Self::Key {
             0
         }
     }

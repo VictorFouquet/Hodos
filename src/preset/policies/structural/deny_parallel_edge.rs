@@ -7,11 +7,10 @@ use crate::core::{Edge, Graph, Node};
 #[derive(Debug)]
 pub struct DenyParallelEdge;
 
-impl<Entity, TNode, TEdge> Policy<Entity, Graph<TNode, TEdge>> for DenyParallelEdge
+impl<N, E> Policy<E, Graph<N, E>> for DenyParallelEdge
 where
-    Entity: Edge,
-    TNode: Node,
-    TEdge: Edge,
+    N: Node,
+    E: Edge<N::Key>,
 {
     /// Allows an edge if this (from, to) pair hasn't been seen before.
     ///
@@ -23,7 +22,7 @@ where
     /// # Returns
     ///
     /// `true` if this is the first time seeing this edge pair, `false` otherwise
-    fn is_compliant(&self, entity: &Entity, context: &Graph<TNode, TEdge>) -> bool {
+    fn is_compliant(&self, entity: &E, context: &Graph<N, E>) -> bool {
         !context
             .get_edges()
             .into_iter()
@@ -33,34 +32,37 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::core::node::NodeKey;
+
     use super::*;
 
     #[derive(Clone)]
     pub struct MockNode {}
 
     impl Node for MockNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+        fn id(&self) -> Self::Key {
             0
         }
     }
 
     #[derive(Clone)]
-    pub struct MockEdge {
-        to: u32,
-        from: u32,
+    pub struct MockEdge<K: NodeKey> {
+        to: K,
+        from: K,
     }
 
-    impl MockEdge {
-        fn new(from: u32, to: u32) -> Self {
+    impl<K: NodeKey> MockEdge<K> {
+        fn new(from: K, to: K) -> Self {
             MockEdge { from, to }
         }
     }
 
-    impl Edge for MockEdge {
-        fn to(&self) -> u32 {
+    impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn to(&self) -> K {
             self.to
         }
-        fn from(&self) -> u32 {
+        fn from(&self) -> K {
             self.from
         }
     }
@@ -68,7 +70,7 @@ mod tests {
     #[test]
     fn denies_parallel_edges() {
         let policy = DenyParallelEdge;
-        let mut graph = Graph::<MockNode, MockEdge>::new();
+        let mut graph = Graph::<MockNode, _>::new();
         let edge = MockEdge::new(0, 1);
 
         assert!(policy.is_compliant(&edge, &graph));
@@ -82,7 +84,7 @@ mod tests {
     fn allows_reversed_edges() {
         let policy = DenyParallelEdge;
 
-        let mut graph = Graph::<MockNode, MockEdge>::new();
+        let mut graph = Graph::<MockNode, _>::new();
 
         let forward = MockEdge::new(0, 1);
         let reverse = MockEdge::new(1, 0);

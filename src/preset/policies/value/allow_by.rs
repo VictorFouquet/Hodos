@@ -147,7 +147,9 @@ mod tests {
     }
 
     impl Node for MockValueNode {
-        fn id(&self) -> u32 {
+        type Key = u32;
+
+        fn id(&self) -> Self::Key {
             0
         }
     }
