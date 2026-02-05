@@ -1,23 +1,23 @@
-use crate::core::Frontier;
+use crate::core::{Frontier, node::NodeKey};
 use std::collections::VecDeque;
 
 /// A FIFO (First-In-First-Out) frontier implementation for graph traversal.
-pub struct Queue {
-    pub data: VecDeque<u32>,
+pub struct Queue<K> {
+    pub data: VecDeque<K>,
 }
 
-impl Frontier for Queue {
+impl<K: NodeKey> Frontier<K> for Queue<K> {
     fn new() -> Self {
         Queue {
             data: VecDeque::new(),
         }
     }
 
-    fn push(&mut self, id: u32, _cost: Option<f64>) {
+    fn push(&mut self, id: K, _cost: Option<f64>) {
         self.data.push_back(id);
     }
 
-    fn pop(&mut self) -> Option<u32> {
+    fn pop(&mut self) -> Option<K> {
         self.data.pop_front()
     }
 
@@ -32,7 +32,7 @@ mod tests {
 
     #[test]
     fn test_queue_new_should_be_empty() {
-        let queue = Queue::new();
+        let queue = Queue::<u32>::new();
         assert!(queue.is_empty());
     }
 

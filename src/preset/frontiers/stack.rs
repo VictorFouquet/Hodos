@@ -1,20 +1,20 @@
-use crate::core::Frontier;
+use crate::core::{Frontier, node::NodeKey};
 
 /// A LIFO (Last-In-First-Out) frontier implementation for graph traversal.
-pub struct Stack {
-    pub data: Vec<u32>,
+pub struct Stack<K: NodeKey> {
+    pub data: Vec<K>,
 }
 
-impl Frontier for Stack {
+impl<K: NodeKey> Frontier<K> for Stack<K> {
     fn new() -> Self {
         Stack { data: Vec::new() }
     }
 
-    fn push(&mut self, id: u32, _cost: Option<f64>) {
+    fn push(&mut self, id: K, _cost: Option<f64>) {
         self.data.push(id);
     }
 
-    fn pop(&mut self) -> Option<u32> {
+    fn pop(&mut self) -> Option<K> {
         self.data.pop()
     }
 
@@ -29,7 +29,7 @@ mod tests {
 
     #[test]
     fn test_stack_new_should_be_empty() {
-        let stack = Stack::new();
+        let stack = Stack::<u32>::new();
         assert!(stack.is_empty());
     }
 
