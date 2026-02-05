@@ -1,4 +1,4 @@
-use crate::{core::EdgeBuilder, preset::WeightedEdge};
+use crate::preset::{EdgeBuilder, WeightedEdge};
 
 pub struct WeightedEdgeBuilder;
 

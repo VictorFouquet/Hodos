@@ -1,4 +1,4 @@
-use crate::{core::NodeBuilder, preset::DataNode};
+use crate::preset::{DataNode, NodeBuilder};
 
 pub struct DataNodeBuilder<F> {
     id_generator: F,

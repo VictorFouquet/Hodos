@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
-use super::EdgeBuilder;
-use super::NodeBuilder;
 use crate::core::Edge;
 use crate::core::Graph;
 use crate::core::Node;
 use crate::core::Policy;
 use crate::core::Sampler;
 use crate::core::node::NodeKey;
+use crate::preset::EdgeBuilder;
+use crate::preset::NodeBuilder;
 
 /// A builder for constructing graphs using configurable policies and sampling strategies.
 ///

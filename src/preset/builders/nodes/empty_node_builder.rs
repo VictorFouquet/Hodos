@@ -1,4 +1,4 @@
-use crate::{core::NodeBuilder, preset::EmptyNode};
+use crate::preset::{EmptyNode, NodeBuilder};
 
 pub struct EmptyNodeBuilder;
 
