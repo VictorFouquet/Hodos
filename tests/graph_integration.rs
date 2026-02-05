@@ -4,6 +4,7 @@ mod graph_integration {
         core::Graph,
         core::Visitor,
         preset::Queue,
+        preset::traversals::Traverse,
         preset::{EmptyNode, UnweightedEdge},
     };
 

@@ -10,6 +10,7 @@ mod end_to_end {
         use hodos::preset::policies::traversal::GoalReached;
         use hodos::preset::policies::value::AllowAll;
         use hodos::preset::samplers::SimpleAdjacencySampler;
+        use hodos::preset::traversals::Traverse;
         use hodos::preset::{EmptyNode, EmptyNodeBuilder, UnweightedEdgeBuilder};
 
         fn run_bfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, EmptyNode> {
@@ -103,6 +104,7 @@ mod end_to_end {
         use hodos::preset::policies::traversal::GoalReached;
         use hodos::preset::policies::value::AllowAll;
         use hodos::preset::samplers::SimpleAdjacencySampler;
+        use hodos::preset::traversals::Traverse;
         use hodos::preset::{EmptyNode, EmptyNodeBuilder, Stack, UnweightedEdgeBuilder};
 
         fn run_dfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, EmptyNode> {
@@ -201,6 +203,7 @@ mod end_to_end {
         use hodos::preset::policies::value::{AllowAll, AllowWhen};
         use hodos::preset::samplers::WeightedMatrixSampler;
         use hodos::preset::structural_traits::HasWeight;
+        use hodos::preset::traversals::Traverse;
         use hodos::preset::{EmptyNodeBuilder, WeightedEdge, WeightedEdgeBuilder};
 
         fn run_dijkstra(

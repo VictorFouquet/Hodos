@@ -5,6 +5,7 @@ pub mod nodes;
 pub mod policies;
 pub mod samplers;
 pub mod structural_traits;
+pub mod traversals;
 pub mod visitors;
 
 pub use builders::*;
