@@ -8,9 +8,9 @@ use crate::core::Policy;
 ///
 /// ```
 /// use hodos::core::Edge;
-/// use hodos::core::HasWeight;
 /// use hodos::preset::edges::WeightedEdge;
 /// use hodos::preset::policies::value::DenyWhen;
+/// use hodos::preset::structural_traits::HasWeight;
 ///
 /// let policy = DenyWhen::new(|edge: &WeightedEdge<u32>| {
 ///     edge.weight() < 5.0 || edge.from() == 0
@@ -45,8 +45,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::HasData;
     use crate::core::Node;
+    use crate::preset::structural_traits::HasData;
 
     #[test]
     fn denies_according_to_simple_boolean() {

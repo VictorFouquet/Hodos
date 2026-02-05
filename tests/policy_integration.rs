@@ -48,11 +48,11 @@ mod policy_integration {
 
         mod composite_for_edges {
             use super::*;
-            use hodos::core::HasWeight;
             use hodos::preset::UnweightedEdge;
             use hodos::preset::WeightedEdge;
             use hodos::preset::policies::structural::DenyParallelEdge;
             use hodos::preset::policies::value::AllowWhen;
+            use hodos::preset::structural_traits::HasWeight;
 
             #[test]
             fn accepts_edges_under_budget_regardless_of_uniqueness() {

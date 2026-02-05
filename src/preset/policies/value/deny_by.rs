@@ -15,7 +15,7 @@ use std::hash::Hash;
 /// # Examples
 ///
 /// ```
-/// use hodos::core::HasData;
+/// use hodos::preset::structural_traits::HasData;
 /// use hodos::preset::policies::value::DenyBy;
 /// use hodos::preset::nodes::DataNode;
 ///
@@ -79,8 +79,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::HasData;
     use crate::core::Node;
+    use crate::preset::structural_traits::HasData;
 
     #[derive(Default, Clone, Copy)]
     pub struct Point {

@@ -1,4 +1,5 @@
-use crate::core::{Edge, HasWeight, node::NodeKey};
+use crate::core::{Edge, node::NodeKey};
+use crate::preset::structural_traits::HasWeight;
 
 /// A weighted edge connecting two nodes.
 ///
@@ -8,9 +9,9 @@ use crate::core::{Edge, HasWeight, node::NodeKey};
 /// # Examples
 ///
 /// ```
-/// use hodos::preset::edges::WeightedEdge;
 /// use hodos::core::Edge;
-/// use hodos::core::HasWeight;
+/// use hodos::preset::edges::WeightedEdge;
+/// use hodos::preset::structural_traits::HasWeight;
 ///
 /// let edge = WeightedEdge::new(0, 1, 5.0);
 /// assert_eq!(edge.from(), 0);

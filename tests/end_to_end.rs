@@ -194,13 +194,13 @@ mod end_to_end {
 
     mod dijkstra {
         use super::*;
-        use hodos::core::HasWeight;
         use hodos::preset::MinHeap;
         use hodos::preset::policies::logic::Composite;
         use hodos::preset::policies::structural::DenyDanglingEdge;
         use hodos::preset::policies::traversal::GoalReached;
         use hodos::preset::policies::value::{AllowAll, AllowWhen};
         use hodos::preset::samplers::WeightedMatrixSampler;
+        use hodos::preset::structural_traits::HasWeight;
         use hodos::preset::{EmptyNodeBuilder, WeightedEdge, WeightedEdgeBuilder};
 
         fn run_dijkstra(

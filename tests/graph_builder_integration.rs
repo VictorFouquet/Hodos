@@ -4,9 +4,9 @@ mod graph_builder_integration {
 
     mod from_matrix {
         use super::*;
-        use hodos::core::HasWeight;
         use hodos::preset::policies::value::{AllowAll, AllowWhen};
         use hodos::preset::samplers::{BinaryMatrixSampler, WeightedMatrixSampler};
+        use hodos::preset::structural_traits::HasWeight;
         use hodos::preset::{
             EmptyNodeBuilder, UnweightedEdgeBuilder, WeightedEdge, WeightedEdgeBuilder,
         };
@@ -189,13 +189,13 @@ mod graph_builder_integration {
 
     mod from_adjacency_list {
         use super::*;
-        use hodos::core::HasWeight;
         use hodos::preset::edges::WeightedEdge;
         use hodos::preset::policies::logic::Composite;
         use hodos::preset::policies::value::{AllowAll, AllowWhen, DenyValue};
         use hodos::preset::samplers::{
             WeightedAdjacencyListWithData, WeightedAdjacencyWithDataSampler,
         };
+        use hodos::preset::structural_traits::HasWeight;
         use hodos::preset::{DataNodeBuilder, WeightedEdgeBuilder};
 
         fn test_context() -> WeightedAdjacencyListWithData<char> {

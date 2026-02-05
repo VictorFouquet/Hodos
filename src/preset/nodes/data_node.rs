@@ -1,4 +1,5 @@
-use crate::core::{HasData, Node};
+use crate::core::Node;
+use crate::preset::structural_traits::HasData;
 
 /// A graph node that can contain associated data.
 ///
@@ -8,8 +9,9 @@ use crate::core::{HasData, Node};
 /// # Examples
 ///
 /// ```
+/// use hodos::core::Node;
 /// use hodos::preset::nodes::DataNode;
-/// use hodos::core::{HasData, Node};
+/// use hodos::preset::structural_traits::HasData;
 ///
 /// #[derive(Clone, Copy)]
 /// struct Point {

@@ -15,9 +15,9 @@ use std::hash::Hash;
 /// # Examples
 ///
 /// ```
-/// use hodos::core::HasData;
-/// use hodos::preset::policies::value::AllowBy;
 /// use hodos::preset::nodes::DataNode;
+/// use hodos::preset::policies::value::AllowBy;
+/// use hodos::preset::structural_traits::HasData;
 ///
 /// #[derive(Clone, Copy)]
 /// struct GridCell {
@@ -79,8 +79,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::HasData;
     use crate::core::Node;
+    use crate::preset::structural_traits::HasData;
 
     #[test]
     fn adds_denied_value_to_internal_state() {

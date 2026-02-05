@@ -1,5 +1,6 @@
+use crate::core::Policy;
 use crate::core::{Edge, Graph, Node};
-use crate::core::{HasData, Policy};
+use crate::preset::structural_traits::HasData;
 use std::{collections::HashSet, hash::Hash};
 
 /// Authorization policy that only allows entities with specific data values.
@@ -68,7 +69,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{HasData, node::NodeKey};
+    use crate::core::node::NodeKey;
+    use crate::preset::structural_traits::HasData;
 
     #[test]
     fn allows_none_when_whitelist_is_empty() {

@@ -1,4 +1,5 @@
-use crate::core::{Edge, Graph, HasData, HasPosition, Node};
+use crate::core::{Edge, Graph, Node};
+use crate::preset::structural_traits::{HasData, HasPosition};
 use crate::preset::visitors::HeuristicEstimator;
 
 /// A Manhattan-distance heuristic for 2D grid-based graphs.
@@ -70,9 +71,9 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, Graph, HasData, HasPosition, Node, node::NodeKey},
-        preset::visitors::HeuristicEstimator,
-        preset::visitors::ManhattanDistance,
+        core::{Edge, Graph, Node, node::NodeKey},
+        preset::structural_traits::{HasData, HasPosition},
+        preset::visitors::{HeuristicEstimator, ManhattanDistance},
     };
 
     #[test]

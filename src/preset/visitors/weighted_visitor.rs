@@ -1,4 +1,5 @@
-use crate::core::{Edge, Graph, HasWeight, Node, Policy, Visitor, node::NodeKey};
+use crate::core::{Edge, Graph, Node, Policy, Visitor, node::NodeKey};
+use crate::preset::structural_traits::HasWeight;
 use crate::preset::visitors::{CountVisited, TrackParent};
 use std::collections::HashMap;
 
@@ -148,7 +149,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::core::HasWeight;
+    use crate::preset::structural_traits::HasWeight;
 
     use super::*;
 

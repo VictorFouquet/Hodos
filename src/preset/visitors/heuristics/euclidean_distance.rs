@@ -1,4 +1,5 @@
-use crate::core::{Edge, Graph, HasData, HasPosition, Node};
+use crate::core::{Edge, Graph, Node};
+use crate::preset::structural_traits::{HasData, HasPosition};
 use crate::preset::visitors::HeuristicEstimator;
 
 /// A heuristic estimator based on Euclidean distance.
@@ -61,9 +62,9 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, Graph, HasData, HasPosition, Node, node::NodeKey},
-        preset::visitors::EuclideanDistance,
-        preset::visitors::HeuristicEstimator,
+        core::{Edge, Graph, Node, node::NodeKey},
+        preset::structural_traits::{HasData, HasPosition},
+        preset::visitors::{EuclideanDistance, HeuristicEstimator},
     };
 
     #[test]

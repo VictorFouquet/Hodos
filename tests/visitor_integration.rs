@@ -106,6 +106,7 @@ mod visitor_integration {
             use hodos::core::*;
             use hodos::preset::DataNode;
             use hodos::preset::policies::value::DenyAll;
+            use hodos::preset::structural_traits::HasPosition;
             use hodos::preset::visitors::{
                 EuclideanDistance, ManhattanDistance, WeightedCost, ZeroCost,
             };
