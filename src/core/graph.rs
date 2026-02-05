@@ -1,12 +1,6 @@
-pub mod edge;
-pub mod extension_traits;
-pub mod node;
-
-pub use edge::Edge;
-pub use extension_traits::*;
-pub use node::Node;
-
+use crate::core::Edge;
 use crate::core::Frontier;
+use crate::core::Node;
 use crate::core::Visitor;
 use std::collections::HashMap;
 
