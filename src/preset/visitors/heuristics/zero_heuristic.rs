@@ -1,4 +1,5 @@
-use crate::core::{Edge, Graph, HeuristicEstimator, Node};
+use crate::core::{Edge, Graph, Node};
+use crate::preset::visitors::HeuristicEstimator;
 
 /// A `HeuristicEstimator` that always returns zero.
 ///
@@ -37,7 +38,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{Edge, Graph, HeuristicEstimator, Node, node::NodeKey};
+    use crate::core::{Edge, Graph, Node, node::NodeKey};
+    use crate::preset::visitors::HeuristicEstimator;
 
     use super::ZeroHeuristic;
 

@@ -1,4 +1,5 @@
-use crate::core::{CostEstimator, Edge, Graph, Node};
+use crate::core::{Edge, Graph, Node};
+use crate::preset::visitors::CostEstimator;
 
 /// A `CostEstimator` that assigns a uniform cost of `1.0` to every edge.
 ///
@@ -41,7 +42,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{CostEstimator, Edge, Graph, Node, node::NodeKey},
+        core::{Edge, Graph, Node, node::NodeKey},
+        preset::visitors::CostEstimator,
         preset::visitors::UniformCost,
     };
 

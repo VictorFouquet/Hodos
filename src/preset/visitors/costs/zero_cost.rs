@@ -1,4 +1,5 @@
-use crate::core::{CostEstimator, Edge, Graph, Node};
+use crate::core::{Edge, Graph, Node};
+use crate::preset::visitors::CostEstimator;
 
 /// A `CostEstimator` that assigns a zero cost to every edge.
 ///
@@ -42,9 +43,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{CostEstimator, Edge, Graph, Node, node::NodeKey};
-
     use super::ZeroCost;
+    use crate::core::{Edge, Graph, Node, node::NodeKey};
+    use crate::preset::visitors::CostEstimator;
 
     #[test]
     fn cost_returns_zero() {

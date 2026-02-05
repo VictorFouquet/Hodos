@@ -1,4 +1,5 @@
-use crate::core::{CostEstimator, Edge, Graph, HasWeight, Node};
+use crate::core::{Edge, Graph, HasWeight, Node};
+use crate::preset::visitors::CostEstimator;
 
 /// A `CostEstimator` that uses the graph's actual edge weights.
 ///
@@ -52,7 +53,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{CostEstimator, Edge, Graph, HasWeight, Node, node::NodeKey},
+        core::{Edge, Graph, HasWeight, Node, node::NodeKey},
+        preset::visitors::CostEstimator,
         preset::visitors::WeightedCost,
     };
 
