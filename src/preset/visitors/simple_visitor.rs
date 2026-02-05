@@ -1,4 +1,5 @@
-use crate::core::{CountVisited, Node, Policy, TrackParent, Visitor};
+use crate::core::{Node, Policy, Visitor};
+use crate::preset::visitors::{CountVisited, TrackParent};
 use std::collections::HashMap;
 
 /// Simple visitor that prevents revisiting the same node twice.

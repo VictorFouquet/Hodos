@@ -1,6 +1,5 @@
-use crate::core::{
-    CountVisited, Edge, Graph, HasWeight, Node, Policy, TrackParent, Visitor, node::NodeKey,
-};
+use crate::core::{Edge, Graph, HasWeight, Node, Policy, Visitor, node::NodeKey};
+use crate::preset::visitors::{CountVisited, TrackParent};
 use std::collections::HashMap;
 
 /// Visitor for weighted graph traversal (Dijkstra's algorithm).

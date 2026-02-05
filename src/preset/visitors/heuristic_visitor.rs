@@ -1,8 +1,9 @@
 use crate::core::{
-    Edge, Graph, HasData, HasPosition, HasWeight, Node, Policy, TrackParent, Visitor, node::NodeKey,
+    Edge, Graph, HasData, HasPosition, HasWeight, Node, Policy, Visitor, node::NodeKey,
 };
 use crate::preset::visitors::CostEstimator;
 use crate::preset::visitors::HeuristicEstimator;
+use crate::preset::visitors::TrackParent;
 
 use std::collections::HashMap;
 

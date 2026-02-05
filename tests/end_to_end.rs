@@ -1,6 +1,5 @@
 mod end_to_end {
     use hodos::core::Frontier;
-    use hodos::core::TrackParent;
     use hodos::preset::GraphBuilder;
     use hodos::preset::Queue;
     use hodos::preset::visitors::*;
