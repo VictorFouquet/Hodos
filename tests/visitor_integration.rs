@@ -9,12 +9,14 @@ mod visitor_integration {
         use hodos::preset::policies::traversal::OpeningExhausted;
 
         mod simple_visitor {
+            use hodos::preset::EmptyNode;
+
             use super::*;
 
             #[test]
             fn stops_when_goal_reached() {
                 let goal = 2;
-                let visitor = SimpleVisitor::new(GoalReached::new(goal));
+                let visitor = SimpleVisitor::<_, EmptyNode>::new(GoalReached::new(goal));
 
                 assert!(!visitor.should_stop(0, &()));
                 assert!(!visitor.should_stop(1, &()));
@@ -23,7 +25,7 @@ mod visitor_integration {
 
             #[test]
             fn stops_when_budget_opening_exhausted() {
-                let mut visitor = SimpleVisitor::new(OpeningExhausted::new(2));
+                let mut visitor = SimpleVisitor::<_, EmptyNode>::new(OpeningExhausted::new(2));
 
                 assert!(!visitor.should_stop(0, &()));
                 visitor.visit(0, &());
@@ -39,7 +41,7 @@ mod visitor_integration {
                 let goal = 3;
                 let policy = Composite::Or(GoalReached::new(goal), OpeningExhausted::new(1));
 
-                let mut visitor = SimpleVisitor::new(policy);
+                let mut visitor = SimpleVisitor::<_, EmptyNode>::new(policy);
 
                 assert!(!visitor.should_stop(0, &())); // Rejects if not goal and budget respected
 
@@ -56,8 +58,8 @@ mod visitor_integration {
             use hodos::core::*;
             use hodos::preset::{EmptyNode, WeightedEdge};
 
-            fn get_graph() -> Graph<EmptyNode, WeightedEdge> {
-                Graph::<EmptyNode, WeightedEdge>::new()
+            fn get_graph() -> Graph<EmptyNode, WeightedEdge<u32>> {
+                Graph::<EmptyNode, WeightedEdge<u32>>::new()
             }
 
             #[test]
@@ -134,7 +136,7 @@ mod visitor_integration {
 
             #[test]
             fn handles_edges_weights_through_cost_estimation() {
-                let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+                let mut graph = Graph::new();
 
                 graph.add_node(DataNode::new(0, Point { x: 0.0, y: 0.0 }));
                 graph.add_node(DataNode::new(1, Point { x: 1.0, y: 1.0 }));
@@ -154,7 +156,7 @@ mod visitor_integration {
 
             #[test]
             fn handles_distance_to_target_through_heuristic_estimation() {
-                let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+                let mut graph = Graph::new();
 
                 graph.add_node(DataNode::new(0, Point { x: 0.0, y: 0.0 }));
                 graph.add_node(DataNode::new(1, Point { x: 1.0, y: 1.0 }));
@@ -176,7 +178,7 @@ mod visitor_integration {
 
             #[test]
             fn combines_cost_and_heuristic_estimation() {
-                let mut graph = Graph::<DataNode<Point>, WeightedEdge>::new();
+                let mut graph = Graph::new();
                 graph.add_node(DataNode::new(0, Point { x: 0.0, y: 0.0 }));
                 graph.add_node(DataNode::new(1, Point { x: 1.0, y: 1.0 }));
                 graph.add_node(DataNode::new(2, Point { x: 2.0, y: 2.0 }));

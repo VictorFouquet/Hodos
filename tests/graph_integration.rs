@@ -10,7 +10,7 @@ mod graph_integration {
     #[test]
     fn traversal_populates_frontier_with_allowed_nodes() {
         // Graph is [(0->1), (0->2)]
-        let mut graph: Graph<EmptyNode, UnweightedEdge> = Graph::default();
+        let mut graph = Graph::new();
         for i in 0..3 {
             graph.add_node(EmptyNode::new(i));
             if i != 0 {
@@ -27,7 +27,7 @@ mod graph_integration {
     #[test]
     fn traversal_ends_when_frontier_is_empty() {
         // Graph has a single node and no edge
-        let mut graph: Graph<EmptyNode, UnweightedEdge> = Graph::default();
+        let mut graph = Graph::<_, UnweightedEdge<u32>>::new();
         graph.add_node(EmptyNode::new(0));
 
         let mut frontier = Queue::new();
@@ -40,7 +40,7 @@ mod graph_integration {
     #[test]
     fn traversal_ends_when_visitor_decides() {
         // Graph has a single node and no edge
-        let mut graph: Graph<EmptyNode, UnweightedEdge> = Graph::default();
+        let mut graph = Graph::new();
         for i in 0..3 {
             graph.add_node(EmptyNode::new(i));
             if i != 0 {
@@ -58,7 +58,7 @@ mod graph_integration {
     #[test]
     fn traversal_uses_visitor_to_handle_push_decision() {
         // Graph is [(0->1), (0->2)]
-        let mut graph: Graph<EmptyNode, UnweightedEdge> = Graph::default();
+        let mut graph = Graph::new();
         for i in 0..3 {
             graph.add_node(EmptyNode::new(i));
             if i != 0 {
@@ -78,7 +78,7 @@ mod graph_integration {
     #[test]
     fn traversal_lets_visitor_visit_one_node_per_iteration() {
         // Graph is [(0->1), (0->2)]
-        let mut graph: Graph<EmptyNode, UnweightedEdge> = Graph::default();
+        let mut graph = Graph::new();
         for i in 0..3 {
             graph.add_node(EmptyNode::new(i));
             if i != 0 {
@@ -92,7 +92,7 @@ mod graph_integration {
     }
 
     struct TerminateFirstVisitor;
-    impl<Ctx> Visitor<Ctx> for TerminateFirstVisitor {
+    impl<Ctx> Visitor<Ctx, EmptyNode> for TerminateFirstVisitor {
         fn should_explore(&mut self, _from: u32, _to: u32, _context: &Ctx) -> bool {
             true
         }
@@ -105,7 +105,7 @@ mod graph_integration {
     }
 
     struct NeverTerminateVisitor;
-    impl<Ctx> Visitor<Ctx> for NeverTerminateVisitor {
+    impl<Ctx> Visitor<Ctx, EmptyNode> for NeverTerminateVisitor {
         fn should_explore(&mut self, _from: u32, _to: u32, _context: &Ctx) -> bool {
             true
         }
@@ -118,7 +118,7 @@ mod graph_integration {
     }
 
     struct ExploreAllVisitor;
-    impl<Ctx> Visitor<Ctx> for ExploreAllVisitor {
+    impl<Ctx> Visitor<Ctx, EmptyNode> for ExploreAllVisitor {
         fn should_explore(&mut self, _from: u32, _to: u32, _context: &Ctx) -> bool {
             true
         }
@@ -131,7 +131,7 @@ mod graph_integration {
     }
 
     struct ExploreNoneVisitor;
-    impl<Ctx> Visitor<Ctx> for ExploreNoneVisitor {
+    impl<Ctx> Visitor<Ctx, EmptyNode> for ExploreNoneVisitor {
         fn should_explore(&mut self, _from: u32, _to: u32, _context: &Ctx) -> bool {
             false
         }
@@ -146,7 +146,7 @@ mod graph_integration {
     struct LoopCountVisitor {
         pub count: u32,
     }
-    impl<Ctx> Visitor<Ctx> for LoopCountVisitor {
+    impl<Ctx> Visitor<Ctx, EmptyNode> for LoopCountVisitor {
         fn should_explore(&mut self, _from: u32, _to: u32, _context: &Ctx) -> bool {
             true
         }

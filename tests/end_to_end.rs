@@ -11,12 +11,19 @@ mod end_to_end {
         use hodos::preset::policies::traversal::GoalReached;
         use hodos::preset::policies::value::AllowAll;
         use hodos::preset::samplers::SimpleAdjacencySampler;
+        use hodos::preset::{EmptyNode, EmptyNodeBuilder, UnweightedEdgeBuilder};
 
-        fn run_bfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached> {
+        fn run_bfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, EmptyNode> {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
-            GraphBuilder::new(DenyDanglingEdge, AllowAll, SimpleAdjacencySampler::new())
-                .build(&context)
-                .traverse(0, &mut Queue::new(), &mut visitor);
+            GraphBuilder::new(
+                EmptyNodeBuilder,
+                UnweightedEdgeBuilder,
+                AllowAll,
+                DenyDanglingEdge,
+                SimpleAdjacencySampler::new(),
+            )
+            .build(&context)
+            .traverse(0, &mut Queue::new(), &mut visitor);
 
             visitor
         }
@@ -93,17 +100,23 @@ mod end_to_end {
 
     mod dfs {
         use super::*;
-        use hodos::preset::Stack;
         use hodos::preset::policies::structural::DenyDanglingEdge;
         use hodos::preset::policies::traversal::GoalReached;
         use hodos::preset::policies::value::AllowAll;
         use hodos::preset::samplers::SimpleAdjacencySampler;
+        use hodos::preset::{EmptyNode, EmptyNodeBuilder, Stack, UnweightedEdgeBuilder};
 
-        fn run_dfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached> {
+        fn run_dfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, EmptyNode> {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
-            GraphBuilder::new(DenyDanglingEdge, AllowAll, SimpleAdjacencySampler::new())
-                .build(&context)
-                .traverse(0, &mut Stack::new(), &mut visitor);
+            GraphBuilder::new(
+                EmptyNodeBuilder,
+                UnweightedEdgeBuilder,
+                AllowAll,
+                DenyDanglingEdge,
+                SimpleAdjacencySampler::new(),
+            )
+            .build(&context)
+            .traverse(0, &mut Stack::new(), &mut visitor);
 
             visitor
         }
@@ -184,24 +197,26 @@ mod end_to_end {
         use super::*;
         use hodos::core::{Composite, HasWeight};
         use hodos::preset::MinHeap;
-        use hodos::preset::WeightedEdge;
         use hodos::preset::policies::structural::DenyDanglingEdge;
         use hodos::preset::policies::traversal::GoalReached;
         use hodos::preset::policies::value::{AllowAll, AllowWhen};
         use hodos::preset::samplers::WeightedMatrixSampler;
+        use hodos::preset::{EmptyNodeBuilder, WeightedEdge, WeightedEdgeBuilder};
 
         fn run_dijkstra(
             start: u32,
             goal: u32,
             context: Vec<Vec<Option<f64>>>,
-        ) -> WeightedVisitor<GoalReached> {
+        ) -> WeightedVisitor<GoalReached, u32> {
             let mut visitor = WeightedVisitor::new(GoalReached::new(goal));
             GraphBuilder::new(
+                EmptyNodeBuilder,
+                WeightedEdgeBuilder,
+                AllowAll,
                 Composite::And(
                     DenyDanglingEdge,
-                    AllowWhen::new(|e: &WeightedEdge| e.weight() > 0.0),
+                    AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() > 0.0),
                 ),
-                AllowAll,
                 WeightedMatrixSampler::new(),
             )
             .build(&context)
