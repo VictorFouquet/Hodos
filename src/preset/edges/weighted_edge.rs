@@ -1,4 +1,4 @@
-use crate::core::{Edge, HasWeight};
+use crate::core::{Edge, HasWeight, node::NodeKey};
 
 /// A weighted edge connecting two nodes.
 ///
@@ -18,27 +18,27 @@ use crate::core::{Edge, HasWeight};
 /// assert_eq!(edge.weight(), 5.0);
 /// ```
 #[derive(Copy, Clone, Debug, Default)]
-pub struct WeightedEdge {
-    to: u32,
-    from: u32,
+pub struct WeightedEdge<K: NodeKey> {
+    to: K,
+    from: K,
     weight: f64,
 }
 
-impl WeightedEdge {
-    pub fn new(from: u32, to: u32, weight: f64) -> Self {
+impl<K: NodeKey> WeightedEdge<K> {
+    pub fn new(from: K, to: K, weight: f64) -> Self {
         WeightedEdge { from, to, weight }
     }
 }
-impl Edge for WeightedEdge {
-    fn to(&self) -> u32 {
+impl<K: NodeKey> Edge<K> for WeightedEdge<K> {
+    fn to(&self) -> K {
         self.to
     }
-    fn from(&self) -> u32 {
+    fn from(&self) -> K {
         self.from
     }
 }
 
-impl HasWeight for WeightedEdge {
+impl<K: NodeKey> HasWeight for WeightedEdge<K> {
     fn weight(&self) -> f64 {
         self.weight
     }
