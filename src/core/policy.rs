@@ -1,14 +1,18 @@
-/// A policy for authorizing the addition of entities to the graph.
+/// A policy for allowing entities depending on a context.
 ///
-/// Authorization policies decide whether nodes or edges should be accepted
-/// during graph construction based on domain-specific rules.
+/// Policies are predicates stating whether an entity is compliant with a given context
+///
+/// # Type Parameters
+///
+/// * `Entity` - Entity to allow
+/// * `Context` - Context to make decisions
 pub trait Policy<Entity, Context> {
-    /// Determines whether an entity should be added.
+    /// Determines whether an entity should be allowed.
     ///
     /// # Arguments
     ///
-    /// * `entity` - The entity being evaluated for addition
-    /// * `context` - Contextual information for the authorization decision
+    /// * `entity` - The entity being evaluated for allowance
+    /// * `context` - Contextual information for the allowance decision
     ///
     /// # Returns
     ///

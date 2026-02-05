@@ -4,6 +4,11 @@ use crate::core::Node;
 ///
 /// Visitors define custom behavior that executes when a node is encountered.
 /// They can inspect, modify, or collect information from nodes.
+///
+/// # Type Parameters
+///
+/// * `Ctx` - Context to be handled by visitor (usually a graph)
+/// * `N` - Node type contained in the graph
 pub trait Visitor<Ctx, N: Node> {
     /// Gives the initial search cost when starting the traversal.
     ///

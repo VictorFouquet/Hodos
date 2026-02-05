@@ -6,6 +6,10 @@ use super::node::NodeKey;
 /// choose to store weight or use the default unit weight of 1.0.
 ///
 /// Implementations define how edges are created and whether they store weights.
+///
+/// # Type Parameters
+///
+/// * `K` - NodeKey (id) of the associated nodes
 pub trait Edge<K: NodeKey> {
     /// Returns the destination node ID.
     fn to(&self) -> K;

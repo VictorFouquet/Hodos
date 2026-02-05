@@ -2,6 +2,10 @@
 ///
 /// Frontiers determine the order in which nodes are visited. Different implementations
 /// can be used to match predefined search algorith (BFS, DFS, Dijkstra...)
+///
+/// # Type Parameters
+///
+/// * `K` - NodeKey type for node ids
 pub trait Frontier<K> {
     /// Creates a new empty frontier.
     fn new() -> Self
