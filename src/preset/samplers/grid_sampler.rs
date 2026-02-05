@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
 use crate::core::Sampler;
-use crate::preset::DataNode;
-use crate::preset::UnweightedEdge;
 
 pub type Grid2D<T> = Vec<Vec<T>>;
 
@@ -99,14 +97,11 @@ impl<T> Default for Grid2DSampler<T> {
     }
 }
 
-impl<T> Sampler<Grid2D<T>> for Grid2DSampler<T>
+impl<T> Sampler<(u32, T), (u32, u32), Grid2D<T>> for Grid2DSampler<T>
 where
     T: Clone + Copy,
 {
-    type Node = DataNode<T>;
-    type Edge = UnweightedEdge;
-
-    fn next(&mut self, context: &Grid2D<T>) -> Option<(Vec<Self::Node>, Vec<Self::Edge>)> {
+    fn next(&mut self, context: &Grid2D<T>) -> Option<(Vec<(u32, T)>, Vec<(u32, u32)>)> {
         let i = self.current_y as usize;
 
         if i >= context.len() {
@@ -127,7 +122,7 @@ where
                     && v.1 + self.current_x < (context[i].len() as i32)
             })
             .map(|&v| {
-                UnweightedEdge::new(
+                (
                     current_id as u32,
                     ((v.0 + self.current_y) * (context[i].len() as i32) + (v.1 + self.current_x))
                         as u32,
@@ -135,7 +130,7 @@ where
             })
             .collect();
 
-        let nodes = vec![DataNode::new(current_id as u32, context[i][j])];
+        let nodes = vec![(current_id as u32, context[i][j])];
 
         self.current_x += 1;
         if self.current_x >= (context[i].len() as i32) {
@@ -150,7 +145,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{Edge, HasData, Node};
 
     fn test_context() -> Grid2D<char> {
         vec![
@@ -179,10 +173,10 @@ mod tests {
         let context = test_context();
 
         let (nodes1, _) = sampler.next(&context).unwrap();
-        assert_eq!(nodes1[0].id(), 0);
+        assert_eq!(nodes1[0].0, 0);
 
         let (nodes2, _) = sampler.next(&context).unwrap();
-        assert_eq!(nodes2[0].id(), 1);
+        assert_eq!(nodes2[0].0, 1);
     }
 
     #[test]
@@ -217,8 +211,8 @@ mod tests {
             assert_eq!(edges.len(), expected[i].len());
 
             for j in 0..expected[i].len() {
-                assert_eq!(edges[j].from(), i as u32);
-                assert_eq!(edges[j].to(), expected[i][j]);
+                assert_eq!(edges[j].0, i as u32);
+                assert_eq!(edges[j].1, expected[i][j]);
             }
         }
     }
@@ -245,8 +239,8 @@ mod tests {
             assert_eq!(edges.len(), expected[i].len());
 
             for j in 0..expected[i].len() {
-                assert_eq!(edges[j].from(), i as u32);
-                assert_eq!(edges[j].to(), expected[i][j]);
+                assert_eq!(edges[j].0, i as u32);
+                assert_eq!(edges[j].1, expected[i][j]);
             }
         }
     }
@@ -262,7 +256,7 @@ mod tests {
             for cell in row {
                 let (nodes, _) = sampler.next(&context).unwrap();
                 assert_eq!(nodes.len(), 1);
-                assert_eq!(nodes[0].data(), &cell);
+                assert_eq!(nodes[0].1, cell);
             }
         }
     }
