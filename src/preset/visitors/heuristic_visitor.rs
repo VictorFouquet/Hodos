@@ -139,34 +139,6 @@ where
         self.compute_g_cost(from, to, context) + self.compute_h_cost(to, context)
     }
 
-    fn should_explore(&mut self, from: Ctx::Key, to: Ctx::Key, context: &Ctx) -> bool {
-        let g = self.compute_g_cost(from, to, context);
-
-        match self.visited.get(&to) {
-            None => {
-                self.insert_visited(Some(from), to, g);
-                true
-            }
-            Some(&current) if g < current.cost => {
-                self.insert_visited(Some(from), to, g);
-                true
-            }
-            _ => false,
-        }
-    }
-
-    /// Provides next nodes to explore.
-    ///
-    /// Nodes to explore are current node's unexplored adjacent nodes
-    ///
-    /// # Arguments
-    ///
-    /// * `node_id` - The id of the node to explore from
-    /// * `context` - Contextual information available during traversal
-    ///
-    /// # Returns
-    ///
-    /// The list of node ids to explore next with their respective relaxed cost
     fn next_to_explore(&mut self, node_id: Ctx::Key, context: &Ctx) -> Vec<(Ctx::Key, f64)> {
         let edges = context.get_edges_from(node_id);
         let mut to_explore = Vec::new();
@@ -291,20 +263,75 @@ mod tests {
 
     #[test]
     fn should_explore_unvisited_node() {
-        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = BaseGraph::new();
+        graph.add_node(MockNode {
+            id: 0,
+            data: Point { x: 0.0, y: 0.0 },
+        });
+
+        graph.add_node(MockNode {
+            id: 1,
+            data: Point { x: 1.0, y: 1.0 },
+        });
+
+        graph.add_edge(MockEdge {
+            from: 0,
+            to: 1,
+            weight: 1.0,
+        });
+
+        let mut g_estimator = MockCostEstimator::new();
+        g_estimator.set_cost(0, 1, 1.0);
+
         let mut visitor = HeuristicVisitor::new(
             MockPolicy { stop_at: None },
-            MockCostEstimator::new(),
+            g_estimator,
             MockHeuristicEstimator::new(),
         );
 
-        assert!(visitor.should_explore(0, 1, &graph));
+        visitor.insert_visited(None, 0, 0.0);
+
+        let to_visit = visitor.next_to_explore(0, &graph);
+        assert_eq!(1, to_visit.len());
+        assert_eq!(1, to_visit[0].0);
+        assert_eq!(1.0, to_visit[0].1);
         assert_eq!(visitor.visited.get(&1).unwrap().parent_id, Some(0));
     }
 
     #[test]
     fn relaxes_path_when_lower_cost_found() {
-        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = BaseGraph::new();
+
+        graph.add_node(MockNode {
+            id: 0,
+            data: Point { x: 0.0, y: 0.0 },
+        });
+
+        graph.add_node(MockNode {
+            id: 1,
+            data: Point { x: 1.0, y: 1.0 },
+        });
+
+        graph.add_node(MockNode {
+            id: 2,
+            data: Point { x: 1.0, y: 2.0 },
+        });
+
+        graph.add_edge(MockEdge {
+            from: 0,
+            to: 1,
+            weight: 1.0,
+        });
+        graph.add_edge(MockEdge {
+            from: 0,
+            to: 2,
+            weight: 1.0,
+        });
+        graph.add_edge(MockEdge {
+            from: 1,
+            to: 2,
+            weight: 1.0,
+        });
 
         let mut g_estimator = MockCostEstimator::new();
         g_estimator.set_cost(0, 2, 1.0); // Direct path
@@ -319,13 +346,21 @@ mod tests {
         // First path: 0 -> 1 (cost 5) -> 2 (cost 6)
         visitor.insert_visited(None, 0, 0.0);
         visitor.insert_visited(Some(0), 1, 5.0);
-        visitor.should_explore(1, 2, &graph); // cost = 6.0
+
+        visitor.next_to_explore(1, &graph);
 
         assert_eq!(visitor.visited.get(&2).unwrap().cost, 6.0);
         assert_eq!(visitor.visited.get(&2).unwrap().parent_id, Some(1));
 
         // Better path: 0 -> 2 (cost 1)
-        assert!(visitor.should_explore(0, 2, &graph));
+
+        assert!(
+            visitor
+                .next_to_explore(0, &graph)
+                .iter()
+                .map(|(n, _)| n)
+                .any(|v| v == &2)
+        );
 
         assert_eq!(visitor.visited.get(&2).unwrap().cost, 1.0); // Relaxed
         assert_eq!(visitor.visited.get(&2).unwrap().parent_id, Some(0)); // Updated
@@ -347,7 +382,9 @@ mod tests {
         visitor.insert_visited(None, 0, 0.0);
         visitor.insert_visited(Some(0), 1, 5.0); // Already reached with cost 5
 
-        assert!(!visitor.should_explore(0, 1, &graph)); // New cost = 10, worse
+        let visit_next = visitor.next_to_explore(0, &graph);
+
+        assert!(!visit_next.iter().map(|(n, _)| n).any(|v| v == &1)); // New cost = 10, worse
     }
 
     #[test]
@@ -358,7 +395,7 @@ mod tests {
             MockHeuristicEstimator::new(),
         );
 
-        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = BaseGraph::<_, MockEdge<u32>>::new();
         graph.add_node(MockNode {
             id: 3,
             data: Point { x: 1.0, y: 0.0 },
@@ -391,7 +428,6 @@ mod tests {
         id: u32,
         data: Point,
     }
-
     impl Node for MockNode {
         type Key = u32;
         fn id(&self) -> Self::Key {

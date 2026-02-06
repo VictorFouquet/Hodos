@@ -90,10 +90,6 @@ mod graph_integration {
 
     struct TerminateFirstVisitor;
     impl<Ctx: Graph> Visitor<Ctx> for TerminateFirstVisitor {
-        fn should_explore(&mut self, _from: Ctx::Key, _to: Ctx::Key, _context: &Ctx) -> bool {
-            true
-        }
-
         fn next_to_explore(
             &mut self,
             node_id: <Ctx as Graph>::Key,
@@ -115,10 +111,6 @@ mod graph_integration {
 
     struct NeverTerminateVisitor;
     impl<Ctx: Graph> Visitor<Ctx> for NeverTerminateVisitor {
-        fn should_explore(&mut self, _from: Ctx::Key, _to: Ctx::Key, _context: &Ctx) -> bool {
-            true
-        }
-
         fn visit(&mut self, _node_id: Ctx::Key, _context: &Ctx) {}
 
         fn should_stop(&self, _node_id: Ctx::Key, _context: &Ctx) -> bool {
@@ -128,10 +120,6 @@ mod graph_integration {
 
     struct ExploreAllVisitor;
     impl<Ctx: Graph> Visitor<Ctx> for ExploreAllVisitor {
-        fn should_explore(&mut self, _from: Ctx::Key, _to: Ctx::Key, _context: &Ctx) -> bool {
-            true
-        }
-
         fn visit(&mut self, _node_id: Ctx::Key, _context: &Ctx) {}
 
         fn next_to_explore(
@@ -153,10 +141,6 @@ mod graph_integration {
 
     struct ExploreNoneVisitor;
     impl<Ctx: Graph> Visitor<Ctx> for ExploreNoneVisitor {
-        fn should_explore(&mut self, _from: Ctx::Key, _to: Ctx::Key, _context: &Ctx) -> bool {
-            false
-        }
-
         fn visit(&mut self, _node_id: Ctx::Key, _context: &Ctx) {}
 
         fn should_stop(&self, _node_id: Ctx::Key, _context: &Ctx) -> bool {
@@ -168,10 +152,6 @@ mod graph_integration {
         pub count: u32,
     }
     impl<Ctx: Graph> Visitor<Ctx> for LoopCountVisitor {
-        fn should_explore(&mut self, _from: Ctx::Key, _to: Ctx::Key, _context: &Ctx) -> bool {
-            true
-        }
-
         fn visit(&mut self, _node_id: Ctx::Key, _context: &Ctx) {
             self.count += 1;
         }

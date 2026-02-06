@@ -93,41 +93,6 @@ where
         from_dist + edge_weight
     }
 
-    /// Determines whether to explore a path to the target node.
-    ///
-    /// Exploration is allowed if:
-    /// - The target node has never been visited, OR
-    /// - A shorter path to the target has been discovered
-    ///
-    /// When a better path is found, the distance map is updated.
-    ///
-    /// # Arguments
-    ///
-    /// * `from` - Source node ID
-    /// * `to` - Target node ID
-    /// * `context` - The graph being traversed
-    ///
-    /// # Returns
-    ///
-    /// `true` if the path should be explored, `false` otherwise
-    fn should_explore(&mut self, from: Ctx::Key, to: Ctx::Key, context: &Ctx) -> bool {
-        let new_dist = self.exploration_cost(from, to, context);
-
-        match self.distances.get(&to) {
-            None => {
-                self.distances.insert(to, new_dist);
-                self.parents.insert(to, Some(from));
-                true
-            }
-            Some(&current_dist) if new_dist < current_dist => {
-                self.distances.insert(to, new_dist);
-                self.parents.insert(to, Some(from));
-                true
-            }
-            _ => false,
-        }
-    }
-
     /// Provides next nodes to explore.
     ///
     /// Nodes to explore are current node's unexplored adjacent nodes
@@ -195,6 +160,10 @@ mod tests {
 
     use super::*;
 
+    fn next_to_explore_contains(id: u32, nodes: Vec<(u32, f64)>) -> bool {
+        nodes.iter().map(|(n, _)| n).any(|n| n == &id)
+    }
+
     #[test]
     fn defaults_with_empty_distances() {
         let visitor = WeightedVisitor::new(Terminate);
@@ -215,53 +184,72 @@ mod tests {
 
     #[test]
     fn explores_unvisited_node() {
+        let mut graph = BaseGraph::<MockNode, _>::new();
+
+        graph.add_edge(MockWeightedEdge {
+            from: 0,
+            to: 1,
+            weight: 1.0,
+        });
+
         let mut visitor = WeightedVisitor::new(Terminate);
-        let graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
 
         assert!(!visitor.distances.contains_key(&1));
-        assert!(visitor.should_explore(0, 1, &graph));
+        assert!(next_to_explore_contains(
+            1,
+            visitor.next_to_explore(0, &graph)
+        ));
     }
 
     #[test]
     fn explores_when_lower_cost_found() {
-        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, _>::new();
         graph.add_edge(MockWeightedEdge::new(0, 1, 5.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.distances.insert(1, 10.0);
 
-        assert!(visitor.should_explore(0, 1, &graph));
+        assert!(next_to_explore_contains(
+            1,
+            visitor.next_to_explore(0, &graph)
+        ));
     }
 
     #[test]
     fn updates_distance_when_lower_cost_found() {
-        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, _>::new();
         graph.add_edge(MockWeightedEdge::new(0, 1, 5.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.distances.insert(1, 10.0);
 
-        visitor.should_explore(0, 1, &graph);
+        visitor.next_to_explore(0, &graph);
         assert_eq!(visitor.distances.get(&1), Some(&5.0));
     }
 
     #[test]
     fn does_not_revisit_with_equal_or_higher_cost() {
-        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, _>::new();
         graph.add_edge(MockWeightedEdge::new(0, 1, 5.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.distances.insert(1, 5.0);
 
-        assert!(!visitor.should_explore(0, 1, &graph));
+        assert!(!next_to_explore_contains(
+            1,
+            visitor.next_to_explore(0, &graph)
+        ));
 
         visitor.distances.insert(0, 10.0);
-        assert!(!visitor.should_explore(0, 1, &graph));
+        assert!(!next_to_explore_contains(
+            1,
+            visitor.next_to_explore(0, &graph)
+        ));
     }
 
     #[test]
     fn exploration_cost_sums_distance_and_weight() {
-        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, _>::new();
         graph.add_edge(MockWeightedEdge::new(0, 1, 3.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
@@ -272,17 +260,17 @@ mod tests {
 
     #[test]
     fn propagates_cumulative_distances_through_path() {
-        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, _>::new();
         graph.add_edge(MockWeightedEdge::new(0, 1, 2.0));
         graph.add_edge(MockWeightedEdge::new(1, 2, 3.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.visit(0, &graph);
 
-        visitor.should_explore(0, 1, &graph);
+        visitor.next_to_explore(0, &graph);
         assert_eq!(visitor.distances.get(&1), Some(&2.0));
 
-        visitor.should_explore(1, 2, &graph);
+        visitor.next_to_explore(1, &graph);
         assert_eq!(visitor.distances.get(&2), Some(&5.0));
     }
 
@@ -296,11 +284,11 @@ mod tests {
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.visit(0, &graph);
 
-        visitor.should_explore(0, 2, &graph);
+        visitor.next_to_explore(0, &graph);
         assert_eq!(visitor.distances.get(&2), Some(&10.0));
 
-        visitor.should_explore(0, 1, &graph);
-        visitor.should_explore(1, 2, &graph);
+        visitor.next_to_explore(0, &graph);
+        visitor.next_to_explore(1, &graph);
         assert_eq!(visitor.distances.get(&2), Some(&5.0));
     }
 
@@ -324,11 +312,13 @@ mod tests {
         assert!(visitor.should_stop(0, &graph));
     }
 
-    struct MockNode;
+    struct MockNode {
+        id: u32,
+    }
     impl Node for MockNode {
         type Key = u32;
         fn id(&self) -> Self::Key {
-            0
+            self.id
         }
     }
 

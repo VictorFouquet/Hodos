@@ -57,25 +57,6 @@ where
     G: Graph,
     P: Policy<G::Key, Self>,
 {
-    /// Determines whether traversal should continue toward a target node.
-    ///
-    /// # Arguments
-    ///
-    /// * `from` - The source node ID (unused)
-    /// * `to` - The target node ID being considered
-    /// * `_context` - Traversal context (unused)
-    ///
-    /// # Returns
-    ///
-    /// `true` if the target node has not been visited yet, `false` otherwise.
-    fn should_explore(&mut self, from: G::Key, to: G::Key, _context: &G) -> bool {
-        if let std::collections::hash_map::Entry::Vacant(e) = self.visited.entry(to) {
-            e.insert(Some(from));
-            return true;
-        }
-        false
-    }
-
     /// Provides next nodes to explore.
     ///
     /// Nodes to explore are current node's unexplored adjacent nodes
@@ -151,18 +132,26 @@ mod tests {
     fn explores_unvisited() {
         let mut visitor = SimpleVisitor::<_, MockGraph>::new(Terminate);
 
-        assert!(!visitor.visited.contains_key(&1));
-        assert!(visitor.should_explore(0, 1, &MockGraph::new()));
+        let mut graph = MockGraph::new();
+        graph.add_node(MockNode { id: 0 });
+        graph.add_node(MockNode { id: 1 });
+        graph.add_edge(MockEdge { from: 0, to: 1 });
+
+        assert_eq!(visitor.next_to_explore(0, &graph)[0].0, 1);
     }
 
     #[test]
     fn does_not_visit_twice() {
         let mut visitor = SimpleVisitor::<_, MockGraph>::new(Terminate);
 
+        let mut graph = MockGraph::new();
+        graph.add_node(MockNode { id: 0 });
+        graph.add_node(MockNode { id: 1 });
+        graph.add_edge(MockEdge { from: 0, to: 1 });
+
         visitor.visit(1, &MockGraph::new());
 
-        assert!(visitor.visited.contains_key(&1));
-        assert!(!visitor.should_explore(0, 1, &MockGraph::new()));
+        assert_eq!(0, visitor.next_to_explore(1, &graph).len());
     }
 
     #[test]
@@ -179,21 +168,26 @@ mod tests {
         }
     }
 
-    struct MockNode;
+    struct MockNode {
+        id: u32,
+    }
     impl Node for MockNode {
         type Key = u32;
         fn id(&self) -> Self::Key {
-            0
+            self.id
         }
     }
 
-    struct MockEdge;
+    struct MockEdge {
+        from: u32,
+        to: u32,
+    }
     impl Edge<u32> for MockEdge {
         fn from(&self) -> u32 {
-            0
+            self.from
         }
         fn to(&self) -> u32 {
-            0
+            self.to
         }
     }
 

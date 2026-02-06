@@ -50,17 +50,6 @@ pub trait Visitor<G: Graph> {
         vec![]
     }
 
-    /// Determines if a connection should be explored.
-    ///
-    /// Implement to determine if a node is opened or close, if a cheaper path is found...
-    ///
-    /// # Arguments
-    ///
-    /// * `from`    - The connection's source node id
-    /// * `to`      - The connection's target node id
-    /// * `context` - Contextual information available during traversal
-    fn should_explore(&mut self, from: G::Key, to: G::Key, context: &G) -> bool;
-
     /// Visits a node during traversal.
     ///
     /// Implement to keep track of visited nodes, global path, weights propagation...
