@@ -3,7 +3,7 @@ use crate::{
     preset::BaseGraph,
 };
 
-use super::Traverse;
+use crate::core::Traverse;
 
 impl<N, E> Traverse<N> for BaseGraph<N, E>
 where

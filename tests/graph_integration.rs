@@ -1,7 +1,7 @@
 mod graph_integration {
     use hodos::{
-        core::{Edge, Frontier, Graph, Visitor},
-        preset::{BaseGraph, EmptyNode, Queue, UnweightedEdge, traversals::Traverse},
+        core::{Edge, Frontier, Graph, Traverse, Visitor},
+        preset::{BaseGraph, EmptyNode, Queue, UnweightedEdge},
     };
 
     #[test]

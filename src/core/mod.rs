@@ -4,6 +4,7 @@ pub mod graph;
 pub mod node;
 pub mod policy;
 pub mod sampler;
+pub mod traverse;
 pub mod visitor;
 
 pub use edge::Edge;
@@ -12,4 +13,5 @@ pub use graph::*;
 pub use node::*;
 pub use policy::*;
 pub use sampler::Sampler;
+pub use traverse::*;
 pub use visitor::Visitor;
