@@ -1,17 +1,13 @@
 use std::marker::PhantomData;
 
-use crate::core::Edge;
-use crate::core::Graph;
-use crate::core::Node;
-use crate::core::Policy;
-use crate::core::Sampler;
-use crate::core::node::NodeKey;
+use crate::core::*;
+use crate::preset::BaseGraph;
 use crate::preset::EdgeBuilder;
 use crate::preset::NodeBuilder;
 
 /// A builder for constructing graphs using configurable policies and sampling strategies.
 ///
-/// The `GraphBuilder` separates graph construction into three pluggable components:
+/// The `BaseGraphBuilder` separates graph construction into three pluggable components:
 /// - Node authorization: determines which nodes are added to the graph
 /// - Edge authorization: determines which edges are added to the graph  
 /// - Sampling strategy: generates candidate nodes and edges
@@ -21,7 +17,7 @@ use crate::preset::NodeBuilder;
 /// * `NP` - Policy type that allows node additions
 /// * `EP` - Policy type that allows edge additions
 /// * `Samp` - Strategy type that generates graph samples
-pub struct GraphBuilder<K, NS, ES, NB, EB, NP, EP, Samp, Ctx> {
+pub struct BaseGraphBuilder<K, NS, ES, NB, EB, NP, EP, Samp, Ctx> {
     node_builder: NB,
     edge_builder: EB,
     node_policy: NP,
@@ -30,18 +26,18 @@ pub struct GraphBuilder<K, NS, ES, NB, EB, NP, EP, Samp, Ctx> {
     _ctx: PhantomData<(K, NS, ES, Ctx)>,
 }
 
-impl<K, NS, ES, NB, EB, NP, EP, Samp, Ctx> GraphBuilder<K, NS, ES, NB, EB, NP, EP, Samp, Ctx>
+impl<K, NS, ES, NB, EB, NP, EP, Samp, Ctx> BaseGraphBuilder<K, NS, ES, NB, EB, NP, EP, Samp, Ctx>
 where
     K: NodeKey,
     NB: NodeBuilder<NS>,
     NB::BuiltNode: Node<Key = K>,
     EB: EdgeBuilder<K, ES>,
     EB::BuiltEdge: Edge<K>,
-    NP: Policy<NB::BuiltNode, Graph<NB::BuiltNode, EB::BuiltEdge>>,
-    EP: Policy<EB::BuiltEdge, Graph<NB::BuiltNode, EB::BuiltEdge>>,
+    NP: Policy<NB::BuiltNode, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
+    EP: Policy<EB::BuiltEdge, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
     Samp: Sampler<NS, ES, Ctx>,
 {
-    /// Creates a new `GraphBuilder` with the specified policies and sampling strategy.
+    /// Creates a new `BaseGraphBuilder` with the specified policies and sampling strategy.
     ///
     /// # Arguments
     /// * `
@@ -56,7 +52,7 @@ where
         edge_policy: EP,
         sample_strategy: Samp,
     ) -> Self {
-        GraphBuilder {
+        BaseGraphBuilder {
             node_builder,
             node_policy,
             edge_builder,
@@ -83,9 +79,9 @@ where
     ///
     /// # Returns
     ///
-    /// A fully constructed `Graph` containing all allowed nodes and edges
-    pub fn build(&mut self, context: &Ctx) -> Graph<NB::BuiltNode, EB::BuiltEdge> {
-        let mut graph = Graph::new();
+    /// A fully constructed `BaseGraph` containing all allowed nodes and edges
+    pub fn build(&mut self, context: &Ctx) -> BaseGraph<NB::BuiltNode, EB::BuiltEdge> {
+        let mut graph = BaseGraph::new();
         let mut edges_buffer = Vec::new();
 
         while let Some((node_candidates, edges)) = self.sample_strategy.next(context) {
@@ -120,7 +116,7 @@ mod tests {
 
     #[test]
     fn builder_should_stop_when_sampler_returns_none() {
-        let mut builder = GraphBuilder::new(
+        let mut builder = BaseGraphBuilder::new(
             MockNodeBuilder,
             MockEdgeBuilder,
             AcceptAllPolicy,
@@ -129,13 +125,13 @@ mod tests {
         );
 
         let graph = builder.build(&vec![0, 1, 2]);
-        assert_eq!(graph.nodes.len(), 3);
-        assert_eq!(graph.edges.len(), 3);
+        assert_eq!(graph.get_nodes().len(), 3);
+        assert_eq!(graph.get_edges().len(), 3);
     }
 
     #[test]
     fn builder_should_respect_node_policy_rejection() {
-        let mut builder = GraphBuilder::new(
+        let mut builder = BaseGraphBuilder::new(
             MockNodeBuilder,
             MockEdgeBuilder,
             AcceptAllPolicy,
@@ -144,13 +140,13 @@ mod tests {
         );
 
         let graph = builder.build(&vec![0, 1, 2]);
-        assert_eq!(graph.nodes.len(), 3);
-        assert_eq!(graph.edges.len(), 0);
+        assert_eq!(graph.get_nodes().len(), 3);
+        assert_eq!(graph.get_edges().len(), 0);
     }
 
     #[test]
     fn builder_should_respect_edge_policy_rejection() {
-        let mut builder = GraphBuilder::new(
+        let mut builder = BaseGraphBuilder::new(
             MockNodeBuilder,
             MockEdgeBuilder,
             RejectAllPolicy,
@@ -159,13 +155,13 @@ mod tests {
         );
 
         let graph = builder.build(&vec![0, 1, 2]);
-        assert_eq!(graph.nodes.len(), 0);
-        assert_eq!(graph.edges.len(), 3);
+        assert_eq!(graph.get_nodes().len(), 0);
+        assert_eq!(graph.get_edges().len(), 3);
     }
 
     #[test]
     fn builder_should_provide_sampler_with_context() {
-        let mut builder = GraphBuilder::new(
+        let mut builder = BaseGraphBuilder::new(
             MockNodeBuilder,
             MockEdgeBuilder,
             AcceptAllPolicy,
@@ -174,8 +170,8 @@ mod tests {
         );
 
         let graph = builder.build(&vec![0, 1]);
-        assert_eq!(graph.nodes.len(), 2);
-        assert_eq!(graph.edges.len(), 2);
+        assert_eq!(graph.get_nodes().len(), 2);
+        assert_eq!(graph.get_edges().len(), 2);
     }
 
     pub struct MockNode {
@@ -243,16 +239,16 @@ mod tests {
 
     #[derive(Default)]
     struct AcceptAllPolicy;
-    impl<N: Node, E: Edge<N::Key>, V> Policy<V, Graph<N, E>> for AcceptAllPolicy {
-        fn is_compliant(&self, _: &V, _: &Graph<N, E>) -> bool {
+    impl<N: Node, E: Edge<N::Key>, V> Policy<V, BaseGraph<N, E>> for AcceptAllPolicy {
+        fn is_compliant(&self, _: &V, _: &BaseGraph<N, E>) -> bool {
             true
         }
     }
 
     #[derive(Default)]
     struct RejectAllPolicy;
-    impl<N: Node, E: Edge<N::Key>, V> Policy<V, Graph<N, E>> for RejectAllPolicy {
-        fn is_compliant(&self, _: &V, _: &Graph<N, E>) -> bool {
+    impl<N: Node, E: Edge<N::Key>, V> Policy<V, BaseGraph<N, E>> for RejectAllPolicy {
+        fn is_compliant(&self, _: &V, _: &BaseGraph<N, E>) -> bool {
             false
         }
     }

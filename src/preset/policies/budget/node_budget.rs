@@ -27,12 +27,11 @@ impl NodeBudget {
     }
 }
 
-impl<V, N, E> Policy<V, Graph<N, E>> for NodeBudget
+impl<V, G> Policy<V, G> for NodeBudget
 where
-    N: Node,
-    E: Edge<N::Key>,
+    G: Graph,
 {
-    fn is_compliant(&self, _entity: &V, context: &Graph<N, E>) -> bool {
+    fn is_compliant(&self, _entity: &V, context: &G) -> bool {
         context.get_nodes().len() < self.budget
     }
 }
@@ -40,7 +39,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{Node, node::NodeKey};
+    use crate::{
+        core::{Node, node::NodeKey},
+        preset::BaseGraph,
+    };
 
     pub struct MockNode {
         id: u32,
@@ -75,7 +77,7 @@ mod tests {
     #[test]
     fn rejects_once_budget_exhausted() {
         let policy = NodeBudget::new(2);
-        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let mut node = MockNode { id: 0 };
 
         assert!(policy.is_compliant(&node, &graph));
@@ -92,7 +94,7 @@ mod tests {
     #[test]
     fn zero_budget_rejects_all() {
         let policy = NodeBudget::new(0);
-        let graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
 
         assert!(!policy.is_compliant(&create_node(), &graph));
     }

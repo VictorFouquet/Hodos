@@ -1,5 +1,5 @@
 use crate::core::Policy;
-use crate::core::{Edge, Graph, Node};
+use crate::core::{Graph, Node};
 use crate::preset::structural_traits::HasData;
 use std::{collections::HashSet, hash::Hash};
 
@@ -11,7 +11,7 @@ use std::{collections::HashSet, hash::Hash};
 /// # Type Parameters
 ///
 /// * `T` - The type of entity data to filter on (must be `Eq + Hash`)
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct AllowValue<T> {
     allowed_values: HashSet<T>,
 }
@@ -45,11 +45,11 @@ where
     }
 }
 
-impl<N, E> Policy<N, Graph<N, E>> for AllowValue<N::Data>
+impl<G> Policy<G::Node, G> for AllowValue<<G::Node as HasData>::Data>
 where
-    N: Node + HasData,
-    E: Edge<N::Key>,
-    N::Data: Eq + Hash,
+    G: Graph,
+    G::Node: Node + HasData,
+    <G::Node as HasData>::Data: Eq + Hash,
 {
     /// Allows an entity if its data matches a whitelisted value.
     ///
@@ -61,7 +61,7 @@ where
     /// # Returns
     ///
     /// `true` if the entity's data is in the whitelist, `false` otherwise.
-    fn is_compliant(&self, entity: &N, _context: &Graph<N, E>) -> bool {
+    fn is_compliant(&self, entity: &G::Node, _context: &G) -> bool {
         self.allowed_values.contains(entity.data())
     }
 }
@@ -69,13 +69,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::Edge;
     use crate::core::node::NodeKey;
+    use crate::preset::BaseGraph;
     use crate::preset::structural_traits::HasData;
 
     #[test]
     fn allows_none_when_whitelist_is_empty() {
         let policy = AllowValue::<bool>::default();
-        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockValueNode, MockEdge<u32>>::new();
         assert_eq!(policy.allowed_values.len(), 0);
 
         let node = make_node();
@@ -88,7 +90,7 @@ mod tests {
     fn allows_values_in_whitelist() {
         let mut policy = AllowValue::<bool>::default();
 
-        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockValueNode, MockEdge<u32>>::new();
 
         policy.add_allowed_value(true);
         assert_eq!(policy.allowed_values.len(), 1);
@@ -103,7 +105,7 @@ mod tests {
     fn denies_when_value_not_in_whitelist() {
         let mut policy = AllowValue::<bool>::default();
 
-        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockValueNode, MockEdge<u32>>::new();
 
         policy.add_allowed_value(false);
         assert_eq!(policy.allowed_values.len(), 1);

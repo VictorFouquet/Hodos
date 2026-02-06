@@ -1,15 +1,14 @@
 use crate::core::Policy;
-use crate::core::{Edge, Graph, Node};
+use crate::core::{Graph, Node};
 
 /// Authorization policy that ensures a node doesn't override
 /// a previously added node with same id.
 #[derive(Debug, Default)]
-pub struct DenyNodeOverride {}
+pub struct DenyNodeOverride;
 
-impl<N, E> Policy<N, Graph<N, E>> for DenyNodeOverride
+impl<G> Policy<G::Node, G> for DenyNodeOverride
 where
-    N: Node,
-    E: Edge<N::Key>,
+    G: Graph,
 {
     /// Denies if a node with same id already exists
     ///
@@ -21,7 +20,7 @@ where
     /// # Returns
     ///
     /// `true` if this is the first time seeing this node ID, `false` otherwise
-    fn is_compliant(&self, entity: &N, context: &Graph<N, E>) -> bool {
+    fn is_compliant(&self, entity: &G::Node, context: &G) -> bool {
         !context
             .get_nodes()
             .into_iter()
@@ -31,7 +30,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::core::node::NodeKey;
+    use crate::{core::edge::Edge, core::node::NodeKey, preset::BaseGraph};
 
     use super::*;
 
@@ -66,9 +65,9 @@ mod tests {
 
     #[test]
     fn allows_unique_values() {
-        let policy = DenyNodeOverride::default();
+        let policy = DenyNodeOverride;
 
-        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let mut node = MockNode { id: 0 };
 
         assert!(policy.is_compliant(&node, &graph));
@@ -86,8 +85,8 @@ mod tests {
 
     #[test]
     fn denies_override_by_id() {
-        let policy = DenyNodeOverride::default();
-        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let policy = DenyNodeOverride;
+        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let node = MockNode { id: 0 };
 
         assert!(policy.is_compliant(&node, &graph));

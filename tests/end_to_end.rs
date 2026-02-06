@@ -1,6 +1,6 @@
 mod end_to_end {
     use hodos::core::Frontier;
-    use hodos::preset::GraphBuilder;
+    use hodos::preset::BaseGraphBuilder;
     use hodos::preset::Queue;
     use hodos::preset::visitors::*;
 
@@ -15,7 +15,7 @@ mod end_to_end {
 
         fn run_bfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, EmptyNode> {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
-            GraphBuilder::new(
+            BaseGraphBuilder::new(
                 EmptyNodeBuilder,
                 UnweightedEdgeBuilder,
                 AllowAll,
@@ -109,7 +109,7 @@ mod end_to_end {
 
         fn run_dfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, EmptyNode> {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
-            GraphBuilder::new(
+            BaseGraphBuilder::new(
                 EmptyNodeBuilder,
                 UnweightedEdgeBuilder,
                 AllowAll,
@@ -212,7 +212,7 @@ mod end_to_end {
             context: Vec<Vec<Option<f64>>>,
         ) -> WeightedVisitor<GoalReached, u32> {
             let mut visitor = WeightedVisitor::new(GoalReached::new(goal));
-            GraphBuilder::new(
+            BaseGraphBuilder::new(
                 EmptyNodeBuilder,
                 WeightedEdgeBuilder,
                 AllowAll,

@@ -1,4 +1,4 @@
-use crate::core::{Edge, Graph, Node};
+use crate::core::Graph;
 use crate::preset::visitors::CostEstimator;
 
 /// A `CostEstimator` that assigns a zero cost to every edge.
@@ -31,12 +31,11 @@ use crate::preset::visitors::CostEstimator;
 #[derive(Debug, Default)]
 pub struct ZeroCost;
 
-impl<N, E> CostEstimator<N, E> for ZeroCost
+impl<G> CostEstimator<G> for ZeroCost
 where
-    N: Node,
-    E: Edge<N::Key>,
+    G: Graph,
 {
-    fn cost(&self, _from: N::Key, _to: N::Key, _graph: &Graph<N, E>) -> f64 {
+    fn cost(&self, _from: G::Key, _to: G::Key, _graph: &G) -> f64 {
         0.0
     }
 }
@@ -44,12 +43,13 @@ where
 #[cfg(test)]
 mod tests {
     use super::ZeroCost;
-    use crate::core::{Edge, Graph, Node, node::NodeKey};
+    use crate::core::{Edge, Node, node::NodeKey};
+    use crate::preset::BaseGraph;
     use crate::preset::visitors::CostEstimator;
 
     #[test]
     fn cost_returns_zero() {
-        let graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let estimator = ZeroCost;
         assert_eq!(estimator.cost(0, 0, &graph), 0.0);
         assert_eq!(estimator.cost(10, 10, &graph), 0.0);

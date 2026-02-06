@@ -1,4 +1,4 @@
-use crate::core::{Edge, Graph, Node};
+use crate::core::Graph;
 use crate::preset::visitors::CostEstimator;
 
 /// A `CostEstimator` that assigns a uniform cost of `1.0` to every edge.
@@ -27,14 +27,14 @@ use crate::preset::visitors::CostEstimator;
 ///     ZeroHeuristic, // h(n) = 0
 /// );
 /// ```
+#[derive(Debug)]
 pub struct UniformCost;
 
-impl<N, E> CostEstimator<N, E> for UniformCost
+impl<G> CostEstimator<G> for UniformCost
 where
-    N: Node,
-    E: Edge<N::Key>,
+    G: Graph,
 {
-    fn cost(&self, _from: N::Key, _to: N::Key, _graph: &Graph<N, E>) -> f64 {
+    fn cost(&self, _from: G::Key, _to: G::Key, _graph: &G) -> f64 {
         1.0
     }
 }
@@ -42,14 +42,16 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, Graph, Node, node::NodeKey},
-        preset::visitors::CostEstimator,
-        preset::visitors::UniformCost,
+        core::{Edge, Node, node::NodeKey},
+        preset::{
+            BaseGraph,
+            visitors::{CostEstimator, UniformCost},
+        },
     };
 
     #[test]
     fn cost_returns_one() {
-        let graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let estimator = UniformCost;
         assert_eq!(estimator.cost(0, 0, &graph), 1.0);
         assert_eq!(estimator.cost(10, 10, &graph), 1.0);

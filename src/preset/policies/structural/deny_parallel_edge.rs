@@ -1,5 +1,5 @@
 use crate::core::Policy;
-use crate::core::{Edge, Graph, Node};
+use crate::core::{Edge, Graph};
 
 /// Authorization policy that ensures each edge is added only once.
 ///
@@ -7,10 +7,9 @@ use crate::core::{Edge, Graph, Node};
 #[derive(Debug)]
 pub struct DenyParallelEdge;
 
-impl<N, E> Policy<E, Graph<N, E>> for DenyParallelEdge
+impl<G> Policy<G::Edge, G> for DenyParallelEdge
 where
-    N: Node,
-    E: Edge<N::Key>,
+    G: Graph,
 {
     /// Allows an edge if this (from, to) pair hasn't been seen before.
     ///
@@ -22,7 +21,7 @@ where
     /// # Returns
     ///
     /// `true` if this is the first time seeing this edge pair, `false` otherwise
-    fn is_compliant(&self, entity: &E, context: &Graph<N, E>) -> bool {
+    fn is_compliant(&self, entity: &G::Edge, context: &G) -> bool {
         !context
             .get_edges()
             .into_iter()
@@ -32,7 +31,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::core::node::NodeKey;
+    use crate::{
+        core::{Node, node::NodeKey},
+        preset::BaseGraph,
+    };
 
     use super::*;
 
@@ -70,7 +72,7 @@ mod tests {
     #[test]
     fn denies_parallel_edges() {
         let policy = DenyParallelEdge;
-        let mut graph = Graph::<MockNode, _>::new();
+        let mut graph = BaseGraph::<MockNode, _>::new();
         let edge = MockEdge::new(0, 1);
 
         assert!(policy.is_compliant(&edge, &graph));
@@ -84,7 +86,7 @@ mod tests {
     fn allows_reversed_edges() {
         let policy = DenyParallelEdge;
 
-        let mut graph = Graph::<MockNode, _>::new();
+        let mut graph = BaseGraph::<MockNode, _>::new();
 
         let forward = MockEdge::new(0, 1);
         let reverse = MockEdge::new(1, 0);

@@ -27,12 +27,11 @@ impl EdgeBudget {
     }
 }
 
-impl<V, N, E> Policy<V, Graph<N, E>> for EdgeBudget
+impl<V, G> Policy<V, G> for EdgeBudget
 where
-    N: Node,
-    E: Edge<N::Key>,
+    G: Graph,
 {
-    fn is_compliant(&self, _entity: &V, context: &Graph<N, E>) -> bool {
+    fn is_compliant(&self, _entity: &V, context: &G) -> bool {
         context.get_edges().len() < self.budget
     }
 }

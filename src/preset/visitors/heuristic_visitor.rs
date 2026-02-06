@@ -1,5 +1,5 @@
-use crate::core::{Edge, Graph, Node, Policy, Visitor, node::NodeKey};
-use crate::preset::structural_traits::{HasData, HasPosition, HasWeight};
+use crate::core::{Graph, Node, Policy, Visitor, node::NodeKey};
+use crate::preset::structural_traits::{HasData, HasPosition};
 use crate::preset::visitors::{CostEstimator, HeuristicEstimator, TrackParent};
 
 use std::collections::HashMap;
@@ -45,25 +45,27 @@ pub struct VisitState<K: NodeKey> {
 /// );
 /// ```
 #[derive(Debug)]
-pub struct HeuristicVisitor<P, G, H, K: NodeKey> {
+pub struct HeuristicVisitor<P, G, H, Ctx: Graph> {
     terminate: P,
     g_estimator: G,
     h_estimator: H,
-    visited: HashMap<K, VisitState<K>>,
+    visited: HashMap<Ctx::Key, VisitState<Ctx::Key>>,
 }
 
-impl<P, G, H, K> TrackParent<K> for HeuristicVisitor<P, G, H, K>
+impl<P, G, H, Ctx> TrackParent<Ctx::Key> for HeuristicVisitor<P, G, H, Ctx>
 where
-    K: NodeKey,
+    Ctx: Graph,
 {
-    fn get_parent(&self, node_id: K) -> Option<K> {
+    fn get_parent(&self, node_id: Ctx::Key) -> Option<Ctx::Key> {
         self.visited.get(&node_id).and_then(|v| v.parent_id)
     }
 }
 
-impl<P, G, H, K> HeuristicVisitor<P, G, H, K>
+impl<P, G, H, Ctx> HeuristicVisitor<P, G, H, Ctx>
 where
-    K: NodeKey,
+    Ctx: Graph,
+    G: CostEstimator<Ctx>,
+    H: HeuristicEstimator<Ctx>,
 {
     /// Creates a new heuristic visitor.
     ///
@@ -88,7 +90,7 @@ where
     /// * `parent_id` - ID of the parent node, or None for the start node
     /// * `node_id` - ID of the node being visited
     /// * `cost` - Cumulative cost to reach this node
-    pub fn insert_visited(&mut self, parent_id: Option<K>, node_id: K, cost: f64) {
+    pub fn insert_visited(&mut self, parent_id: Option<Ctx::Key>, node_id: Ctx::Key, cost: f64) {
         self.visited.insert(node_id, VisitState { parent_id, cost });
     }
 
@@ -102,12 +104,7 @@ where
     /// * `from` - Source node ID
     /// * `to` - Destination node ID
     /// * `context` - Graph context
-    pub fn compute_g_cost<N, E>(&self, from: N::Key, to: N::Key, context: &Graph<N, E>) -> f64
-    where
-        N: Node<Key = K>,
-        E: Edge<N::Key> + HasWeight,
-        G: CostEstimator<N, E>,
-    {
+    pub fn compute_g_cost(&self, from: Ctx::Key, to: Ctx::Key, context: &Ctx) -> f64 {
         // Get cummulated cost to reach current
         let c = self.visited.get(&from).map(|s| s.cost).unwrap_or(0.0);
 
@@ -120,36 +117,29 @@ where
     ///
     /// * `id` - Node ID
     /// * `context` - Graph context
-    pub fn compute_h_cost<N, E, T>(&self, id: N::Key, context: &Graph<N, E>) -> f64
-    where
-        T: HasPosition + Clone + Copy,
-        N: Node + HasData<Data = T>,
-        E: Edge<N::Key> + HasWeight,
-        H: HeuristicEstimator<N, E>,
-    {
+    pub fn compute_h_cost(&self, id: Ctx::Key, context: &Ctx) -> f64 {
         self.h_estimator.heuristic(id, context)
     }
 }
 
-impl<N, E, T, P, G, H, K> Visitor<Graph<N, E>, N> for HeuristicVisitor<P, G, H, K>
+impl<Ctx, T, P, G, H> Visitor<Ctx, Ctx::Node> for HeuristicVisitor<P, G, H, Ctx>
 where
-    K: NodeKey,
-    N: Node<Key = K> + HasData<Data = T>,
-    E: Edge<N::Key> + HasWeight,
+    Ctx: Graph,
     T: HasPosition + Clone + Copy,
-    P: Policy<N, Graph<N, E>>,
-    G: CostEstimator<N, E>,
-    H: HeuristicEstimator<N, E>,
+    Ctx::Node: Node + HasData<Data = T>,
+    P: Policy<Ctx::Node, Ctx>,
+    G: CostEstimator<Ctx>,
+    H: HeuristicEstimator<Ctx>,
 {
-    fn init_cost(&self, _node_id: N::Key, _context: &Graph<N, E>) -> f64 {
+    fn init_cost(&self, _node_id: Ctx::Key, _context: &Ctx) -> f64 {
         0.0
     }
 
-    fn exploration_cost(&self, from: N::Key, to: N::Key, context: &Graph<N, E>) -> f64 {
+    fn exploration_cost(&self, from: Ctx::Key, to: Ctx::Key, context: &Ctx) -> f64 {
         self.compute_g_cost(from, to, context) + self.compute_h_cost(to, context)
     }
 
-    fn should_explore(&mut self, from: N::Key, to: N::Key, context: &Graph<N, E>) -> bool {
+    fn should_explore(&mut self, from: Ctx::Key, to: Ctx::Key, context: &Ctx) -> bool {
         let g = self.compute_g_cost(from, to, context);
 
         match self.visited.get(&to) {
@@ -165,11 +155,11 @@ where
         }
     }
 
-    fn visit(&mut self, node_id: N::Key, context: &Graph<N, E>) {
+    fn visit(&mut self, node_id: Ctx::Key, context: &Ctx) {
         self.insert_visited(None, node_id, self.init_cost(node_id, context));
     }
 
-    fn should_stop(&self, node_id: N::Key, context: &Graph<N, E>) -> bool {
+    fn should_stop(&self, node_id: Ctx::Key, context: &Ctx) -> bool {
         let node = context.get_node(node_id).unwrap();
         self.terminate.is_compliant(node, context)
     }
@@ -177,13 +167,16 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::core::node::NodeKey;
+    use crate::{
+        core::{Edge, node::NodeKey},
+        preset::{BaseGraph, HasWeight},
+    };
 
     use super::*;
 
     #[test]
     fn inserts_visited_states() {
-        let mut visitor = HeuristicVisitor::new(
+        let mut visitor = HeuristicVisitor::<_, _, _, BaseGraph<MockNode, MockEdge<u32>>>::new(
             MockPolicy::<u32> { stop_at: None },
             MockCostEstimator::<u32>::new(),
             MockHeuristicEstimator::<u32>::new(),
@@ -203,7 +196,7 @@ mod tests {
 
     #[test]
     fn computes_g_cost_using_cost_estimator() {
-        let graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
 
         let mut g_estimator = MockCostEstimator::<u32>::new();
         g_estimator.set_cost(0, 1, 3.0);
@@ -223,12 +216,12 @@ mod tests {
 
     #[test]
     fn computes_h_cost_using_heuristic_estimator() {
-        let graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
 
         let mut h_estimator = MockHeuristicEstimator::<u32>::new();
         h_estimator.set_estimate(1, 7.0);
 
-        let visitor = HeuristicVisitor::<_, _, _, u32>::new(
+        let visitor = HeuristicVisitor::new(
             MockPolicy::<u32> { stop_at: None },
             MockCostEstimator::<u32>::new(),
             h_estimator,
@@ -241,7 +234,7 @@ mod tests {
 
     #[test]
     fn exploration_cost_sums_g_and_h() {
-        let graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
 
         let mut g_estimator = MockCostEstimator::new();
         g_estimator.set_cost(0, 1, 3.0);
@@ -261,7 +254,7 @@ mod tests {
 
     #[test]
     fn should_explore_unvisited_node() {
-        let graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let mut visitor = HeuristicVisitor::new(
             MockPolicy { stop_at: None },
             MockCostEstimator::new(),
@@ -274,7 +267,7 @@ mod tests {
 
     #[test]
     fn relaxes_path_when_lower_cost_found() {
-        let graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
 
         let mut g_estimator = MockCostEstimator::new();
         g_estimator.set_cost(0, 2, 1.0); // Direct path
@@ -303,7 +296,7 @@ mod tests {
 
     #[test]
     fn does_not_explore_when_higher_cost() {
-        let graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
 
         let mut g_estimator = MockCostEstimator::new();
         g_estimator.set_cost(0, 1, 10.0);
@@ -328,7 +321,7 @@ mod tests {
             MockHeuristicEstimator::new(),
         );
 
-        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         graph.add_node(MockNode {
             id: 3,
             data: Point { x: 1.0, y: 0.0 },
@@ -414,8 +407,8 @@ mod tests {
         }
     }
 
-    impl<N: Node, E: Edge<N::Key>> CostEstimator<N, E> for MockCostEstimator<N::Key> {
-        fn cost(&self, from: N::Key, to: N::Key, _: &Graph<N, E>) -> f64 {
+    impl<Ctx: Graph> CostEstimator<Ctx> for MockCostEstimator<Ctx::Key> {
+        fn cost(&self, from: Ctx::Key, to: Ctx::Key, _: &Ctx) -> f64 {
             self.costs
                 .get(&(from, to))
                 .copied()
@@ -440,8 +433,8 @@ mod tests {
         }
     }
 
-    impl<N: Node, E: Edge<N::Key>> HeuristicEstimator<N, E> for MockHeuristicEstimator<N::Key> {
-        fn heuristic(&self, node_id: N::Key, _: &Graph<N, E>) -> f64 {
+    impl<Ctx: Graph> HeuristicEstimator<Ctx> for MockHeuristicEstimator<Ctx::Key> {
+        fn heuristic(&self, node_id: Ctx::Key, _: &Ctx) -> f64 {
             self.estimates.get(&node_id).copied().unwrap_or(0.0)
         }
     }
@@ -451,12 +444,8 @@ mod tests {
         stop_at: Option<K>,
     }
 
-    impl<N, E> Policy<N, Graph<N, E>> for MockPolicy<N::Key>
-    where
-        N: Node,
-        E: Edge<N::Key>,
-    {
-        fn is_compliant(&self, node: &N, _: &Graph<N, E>) -> bool {
+    impl<Ctx: Graph> Policy<Ctx::Node, Ctx> for MockPolicy<Ctx::Key> {
+        fn is_compliant(&self, node: &Ctx::Node, _: &Ctx) -> bool {
             match self.stop_at {
                 Some(id) => node.id() == id,
                 None => false,

@@ -1,4 +1,4 @@
-use crate::core::{Edge, Graph, Node};
+use crate::core::Graph;
 use crate::preset::visitors::HeuristicEstimator;
 
 /// A `HeuristicEstimator` that always returns zero.
@@ -24,28 +24,29 @@ use crate::preset::visitors::HeuristicEstimator;
 ///     ZeroHeuristic, // h(n) = 0
 /// );
 /// ```
+#[derive(Debug)]
 pub struct ZeroHeuristic;
 
-impl<N, E> HeuristicEstimator<N, E> for ZeroHeuristic
+impl<G> HeuristicEstimator<G> for ZeroHeuristic
 where
-    N: Node,
-    E: Edge<N::Key>,
+    G: Graph,
 {
-    fn heuristic(&self, _: N::Key, _: &Graph<N, E>) -> f64 {
+    fn heuristic(&self, _: G::Key, _: &G) -> f64 {
         0.0
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{Edge, Graph, Node, node::NodeKey};
+    use crate::core::{Edge, Node, node::NodeKey};
+    use crate::preset::BaseGraph;
     use crate::preset::visitors::HeuristicEstimator;
 
     use super::ZeroHeuristic;
 
     #[test]
     fn heuristic_returns_zero() {
-        let graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let estimator = ZeroHeuristic;
         assert_eq!(estimator.heuristic(0, &graph), 0.0);
         assert_eq!(estimator.heuristic(10, &graph), 0.0);

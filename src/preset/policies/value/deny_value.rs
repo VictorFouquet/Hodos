@@ -1,5 +1,5 @@
 use crate::core::Policy;
-use crate::core::{Edge, Graph, Node};
+use crate::core::{Graph, Node};
 use crate::preset::structural_traits::HasData;
 use std::{collections::HashSet, hash::Hash};
 
@@ -10,7 +10,7 @@ use std::{collections::HashSet, hash::Hash};
 /// # Type Parameters
 ///
 /// * `T` - The type of node data to filter on (must be `Eq + Hash`)
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct DenyValue<T> {
     denied_values: HashSet<T>,
 }
@@ -44,11 +44,11 @@ where
     }
 }
 
-impl<N, E> Policy<N, Graph<N, E>> for DenyValue<N::Data>
+impl<G> Policy<G::Node, G> for DenyValue<<G::Node as HasData>::Data>
 where
-    N: Node + HasData,
-    E: Edge<N::Key>,
-    N::Data: Eq + Hash,
+    G: Graph,
+    G::Node: Node + HasData,
+    <G::Node as HasData>::Data: Eq + Hash,
 {
     /// Denies a node if its data matches a blacklisted value.
     ///
@@ -60,21 +60,24 @@ where
     /// # Returns
     ///
     /// `false` if the node's data is in the blacklist, `true` otherwise.
-    fn is_compliant(&self, entity: &N, _context: &Graph<N, E>) -> bool {
+    fn is_compliant(&self, entity: &G::Node, _context: &G) -> bool {
         !self.denied_values.contains(entity.data())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::core::node::NodeKey;
+    use crate::{
+        core::{Edge, node::NodeKey},
+        preset::BaseGraph,
+    };
 
     use super::*;
 
     #[test]
     fn accepts_all_when_blacklist_is_empty() {
         let policy = DenyValue::<bool>::default();
-        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockValueNode, MockEdge<u32>>::new();
         assert_eq!(policy.denied_values.len(), 0);
 
         assert!(policy.is_compliant(&MockValueNode::new(0, true), &graph));
@@ -85,7 +88,7 @@ mod tests {
     fn accepts_values_not_in_blacklist() {
         let mut policy = DenyValue::<bool>::default();
 
-        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockValueNode, MockEdge<u32>>::new();
 
         policy.add_denied_value(true);
         assert_eq!(policy.denied_values.len(), 1);
@@ -97,7 +100,7 @@ mod tests {
     fn rejects_values_in_blacklist() {
         let mut policy = DenyValue::<bool>::default();
 
-        let graph = Graph::<MockValueNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockValueNode, MockEdge<u32>>::new();
 
         policy.add_denied_value(true);
         assert_eq!(policy.denied_values.len(), 1);

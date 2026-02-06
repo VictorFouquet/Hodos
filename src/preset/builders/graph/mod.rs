@@ -1,3 +1,3 @@
-pub mod graph_builder;
+pub mod base_graph_builder;
 
-pub use graph_builder::GraphBuilder;
+pub use base_graph_builder::BaseGraphBuilder;

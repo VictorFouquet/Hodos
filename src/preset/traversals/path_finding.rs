@@ -1,8 +1,11 @@
-use crate::core::{Edge, Frontier, Graph, Node, Visitor};
+use crate::{
+    core::{Edge, Frontier, Graph, Node, Visitor},
+    preset::BaseGraph,
+};
 
 use super::Traverse;
 
-impl<N, E> Traverse<N> for Graph<N, E>
+impl<N, E> Traverse<N> for BaseGraph<N, E>
 where
     N: Node,
     E: Edge<N::Key>,
@@ -43,8 +46,7 @@ where
                 None => break,
             };
 
-            let default = Vec::new();
-            let edges = self.edges.get(&current_id).unwrap_or(&default);
+            let edges = self.get_edges_from(current_id);
 
             for edge in edges {
                 if visitor.should_explore(edge.from(), edge.to(), self) {

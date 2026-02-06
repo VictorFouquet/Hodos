@@ -55,11 +55,10 @@ mod visitor_integration {
 
         mod weighted_visitor {
             use super::*;
-            use hodos::core::*;
-            use hodos::preset::{EmptyNode, WeightedEdge};
+            use hodos::preset::{BaseGraph, EmptyNode, WeightedEdge};
 
-            fn get_graph() -> Graph<EmptyNode, WeightedEdge<u32>> {
-                Graph::<EmptyNode, WeightedEdge<u32>>::new()
+            fn get_graph() -> BaseGraph<EmptyNode, WeightedEdge<u32>> {
+                BaseGraph::<EmptyNode, WeightedEdge<u32>>::new()
             }
 
             #[test]
@@ -104,12 +103,12 @@ mod visitor_integration {
 
         mod heuristic_visitor {
             use hodos::core::*;
-            use hodos::preset::DataNode;
             use hodos::preset::policies::value::DenyAll;
             use hodos::preset::structural_traits::HasPosition;
             use hodos::preset::visitors::{
                 EuclideanDistance, ManhattanDistance, WeightedCost, ZeroCost,
             };
+            use hodos::preset::{BaseGraph, DataNode};
             use hodos::preset::{
                 edges::WeightedEdge,
                 visitors::{HeuristicVisitor, UniformCost, ZeroHeuristic},
@@ -137,7 +136,7 @@ mod visitor_integration {
 
             #[test]
             fn handles_edges_weights_through_cost_estimation() {
-                let mut graph = Graph::new();
+                let mut graph = BaseGraph::new();
 
                 graph.add_node(DataNode::new(0, Point { x: 0.0, y: 0.0 }));
                 graph.add_node(DataNode::new(1, Point { x: 1.0, y: 1.0 }));
@@ -157,7 +156,7 @@ mod visitor_integration {
 
             #[test]
             fn handles_distance_to_target_through_heuristic_estimation() {
-                let mut graph = Graph::new();
+                let mut graph = BaseGraph::new();
 
                 graph.add_node(DataNode::new(0, Point { x: 0.0, y: 0.0 }));
                 graph.add_node(DataNode::new(1, Point { x: 1.0, y: 1.0 }));
@@ -179,7 +178,7 @@ mod visitor_integration {
 
             #[test]
             fn combines_cost_and_heuristic_estimation() {
-                let mut graph = Graph::new();
+                let mut graph = BaseGraph::new();
                 graph.add_node(DataNode::new(0, Point { x: 0.0, y: 0.0 }));
                 graph.add_node(DataNode::new(1, Point { x: 1.0, y: 1.0 }));
                 graph.add_node(DataNode::new(2, Point { x: 2.0, y: 2.0 }));

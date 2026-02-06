@@ -1,37 +1,17 @@
 use crate::core::Edge;
 use crate::core::Node;
-use std::collections::HashMap;
+
+use super::NodeKey;
 
 /// A graph data structure storing nodes and directed edges.
 ///
 /// Graphs are represented as adjacency lists where each node ID maps to its
 /// outgoing edges. Both nodes and edges are stored generically, allowing
 /// custom implementations with domain-specific data.
-///
-/// # Type Parameters
-///
-/// * `N` - Node type implementing the `Node` trait
-/// * `E` - Edge type implementing the `Edge` trait
-#[derive(Debug, Default)]
-pub struct Graph<N: Node, E: Edge<N::Key>> {
-    /// Map of node IDs to nodes
-    pub nodes: HashMap<N::Key, N>,
-    /// Map of node IDs to their outgoing edges
-    pub edges: HashMap<N::Key, Vec<E>>,
-}
-
-impl<N, E> Graph<N, E>
-where
-    N: Node,
-    E: Edge<N::Key>,
-{
-    /// Creates a new empty graph.
-    pub fn new() -> Self {
-        Graph {
-            nodes: HashMap::new(),
-            edges: HashMap::new(),
-        }
-    }
+pub trait Graph {
+    type Key: NodeKey;
+    type Node: Node<Key = Self::Key>;
+    type Edge: Edge<Self::Key>;
 
     /// Adds a node to the graph.
     ///
@@ -40,9 +20,7 @@ where
     /// # Arguments
     ///
     /// * `node` - The node to add
-    pub fn add_node(&mut self, node: N) {
-        self.nodes.insert(node.id(), node);
-    }
+    fn add_node(&mut self, node: Self::Node);
 
     /// Gets a node by id.
     ///
@@ -51,14 +29,18 @@ where
     /// # Arguments
     ///
     /// * `id` - The id of the node to get
-    pub fn get_node(&self, id: N::Key) -> Option<&N> {
-        self.nodes.get(&id)
-    }
+    ///
+    /// # Returns
+    ///
+    /// * `node` - The node that was requested if it exists, else None
+    fn get_node(&self, id: <Self::Node as Node>::Key) -> Option<&Self::Node>;
 
     /// Gets all nodes of the graph.
-    pub fn get_nodes(&self) -> Vec<&N> {
-        self.nodes.values().collect()
-    }
+    ///
+    /// # Returns
+    ///
+    /// * `nodes` - All the graph's nodes
+    fn get_nodes(&self) -> Vec<&Self::Node>;
 
     /// Adds a directed edge to the graph.
     ///
@@ -69,11 +51,7 @@ where
     /// # Arguments
     ///
     /// * `edge` - The edge to add
-    pub fn add_edge(&mut self, edge: E) {
-        let from = edge.from();
-
-        self.edges.entry(from).or_default().push(edge);
-    }
+    fn add_edge(&mut self, edge: Self::Edge);
 
     /// Gets a node's outgoing edges.
     ///
@@ -82,12 +60,16 @@ where
     /// # Arguments
     ///
     /// * `id` - The id of the node to get edges from
-    pub fn get_edges_from(&self, id: N::Key) -> &[E] {
-        self.edges.get(&id).map(Vec::as_slice).unwrap_or(&[])
-    }
+    ///
+    /// # Returns
+    ///
+    /// * `edges` - The outgoing edges from requested node
+    fn get_edges_from(&self, id: <Self::Node as Node>::Key) -> &[Self::Edge];
 
-    /// Gets all nodes of the graph.
-    pub fn get_edges(&self) -> Vec<&E> {
-        self.edges.values().flatten().collect()
-    }
+    /// Gets all edges of the graph.
+    ///
+    /// # Returns
+    ///
+    /// * `edges` - All the graph's edges
+    fn get_edges(&self) -> Vec<&Self::Edge>;
 }

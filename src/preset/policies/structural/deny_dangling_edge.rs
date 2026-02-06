@@ -8,19 +8,18 @@ use crate::core::*;
 #[derive(Debug)]
 pub struct DenyDanglingEdge;
 
-impl<N, E> Policy<E, Graph<N, E>> for DenyDanglingEdge
+impl<G> Policy<G::Edge, G> for DenyDanglingEdge
 where
-    N: Node,
-    E: Edge<N::Key>,
+    G: Graph,
 {
-    fn is_compliant(&self, entity: &E, context: &Graph<N, E>) -> bool {
-        context.nodes.contains_key(&entity.from()) && context.nodes.contains_key(&entity.to())
+    fn is_compliant(&self, entity: &G::Edge, context: &G) -> bool {
+        context.get_node(entity.from()).is_some() && context.get_node(entity.to()).is_some()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::core::node::NodeKey;
+    use crate::{core::node::NodeKey, preset::BaseGraph};
 
     use super::*;
 
@@ -55,8 +54,8 @@ mod tests {
         }
     }
 
-    fn create_graph_with_nodes(node_ids: Vec<u32>) -> Graph<MockNode, MockEdge<u32>> {
-        let mut graph = Graph::<MockNode, _>::new();
+    fn create_graph_with_nodes(node_ids: Vec<u32>) -> BaseGraph<MockNode, MockEdge<u32>> {
+        let mut graph = BaseGraph::<MockNode, _>::new();
         for id in node_ids {
             graph.add_node(MockNode { id });
         }
@@ -92,7 +91,7 @@ mod tests {
 
     #[test]
     fn non_compliant_when_both_nodes_missing() {
-        let graph = Graph::<MockNode, _>::new();
+        let graph = BaseGraph::<MockNode, _>::new();
         let policy = DenyDanglingEdge;
         let edge = MockEdge::new(0, 1);
 

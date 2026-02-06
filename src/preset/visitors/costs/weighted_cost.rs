@@ -1,4 +1,4 @@
-use crate::core::{Edge, Graph, Node};
+use crate::core::{Edge, Graph};
 use crate::preset::structural_traits::HasWeight;
 use crate::preset::visitors::CostEstimator;
 
@@ -34,14 +34,15 @@ use crate::preset::visitors::CostEstimator;
 ///     heuristic,        // h(n) = estimated remaining cost
 /// );
 /// ```
+#[derive(Debug)]
 pub struct WeightedCost;
 
-impl<N, E> CostEstimator<N, E> for WeightedCost
+impl<G> CostEstimator<G> for WeightedCost
 where
-    N: Node,
-    E: Edge<N::Key> + HasWeight,
+    G: Graph,
+    G::Edge: HasWeight,
 {
-    fn cost(&self, from: N::Key, to: N::Key, graph: &Graph<N, E>) -> f64 {
+    fn cost(&self, from: G::Key, to: G::Key, graph: &G) -> f64 {
         graph
             .get_edges_from(from)
             .iter()
@@ -55,14 +56,16 @@ where
 mod tests {
     use crate::{
         core::{Edge, Graph, Node, node::NodeKey},
-        preset::structural_traits::HasWeight,
-        preset::visitors::CostEstimator,
-        preset::visitors::WeightedCost,
+        preset::{
+            BaseGraph,
+            structural_traits::HasWeight,
+            visitors::{CostEstimator, WeightedCost},
+        },
     };
 
     #[test]
     fn cost_returns_edge_weight() {
-        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let estimator = WeightedCost;
 
         graph.add_edge(MockEdge::new(0, 1, 1.0));

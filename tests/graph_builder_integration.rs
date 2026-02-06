@@ -1,6 +1,6 @@
 mod graph_builder_integration {
-    use hodos::core::{Edge, Node};
-    use hodos::preset::GraphBuilder;
+    use hodos::core::{Edge, Graph, Node};
+    use hodos::preset::BaseGraphBuilder;
 
     mod from_matrix {
         use super::*;
@@ -20,7 +20,7 @@ mod graph_builder_integration {
             ];
             let sampler = BinaryMatrixSampler::default();
 
-            let mut graph_builder = GraphBuilder::new(
+            let mut graph_builder = BaseGraphBuilder::new(
                 EmptyNodeBuilder,
                 UnweightedEdgeBuilder,
                 AllowAll,
@@ -59,7 +59,7 @@ mod graph_builder_integration {
             let node_policy = AllowAll;
             let edge_policy = AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() > 0.0);
 
-            let mut graph_builder = GraphBuilder::new(
+            let mut graph_builder = BaseGraphBuilder::new(
                 EmptyNodeBuilder,
                 WeightedEdgeBuilder,
                 node_policy,
@@ -107,7 +107,7 @@ mod graph_builder_integration {
             let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = DenyDanglingEdge;
 
-            let mut graph_builder = GraphBuilder::new(
+            let mut graph_builder = BaseGraphBuilder::new(
                 DataNodeBuilder::new(|k| k),
                 UnweightedEdgeBuilder,
                 node_policy,
@@ -130,7 +130,7 @@ mod graph_builder_integration {
             let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = DenyDanglingEdge;
 
-            let mut graph_builder = GraphBuilder::new(
+            let mut graph_builder = BaseGraphBuilder::new(
                 DataNodeBuilder::new(|k| k),
                 UnweightedEdgeBuilder,
                 node_policy,
@@ -152,7 +152,7 @@ mod graph_builder_integration {
             let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = DenyDanglingEdge;
 
-            let mut graph_builder = GraphBuilder::new(
+            let mut graph_builder = BaseGraphBuilder::new(
                 DataNodeBuilder::new(|k| k),
                 UnweightedEdgeBuilder,
                 node_policy,
@@ -222,7 +222,7 @@ mod graph_builder_integration {
             let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = AllowAll;
 
-            let mut graph_builder = GraphBuilder::new(
+            let mut graph_builder = BaseGraphBuilder::new(
                 DataNodeBuilder::new(|k| k),
                 WeightedEdgeBuilder,
                 node_policy,
@@ -248,7 +248,7 @@ mod graph_builder_integration {
                 AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() < 11.0),
             );
 
-            let mut graph_builder = GraphBuilder::new(
+            let mut graph_builder = BaseGraphBuilder::new(
                 DataNodeBuilder::new(|k| k),
                 WeightedEdgeBuilder,
                 node_policy,

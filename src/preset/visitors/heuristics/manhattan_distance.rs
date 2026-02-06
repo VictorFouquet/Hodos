@@ -1,4 +1,4 @@
-use crate::core::{Edge, Graph, Node};
+use crate::core::{Graph, Node};
 use crate::preset::structural_traits::{HasData, HasPosition};
 use crate::preset::visitors::HeuristicEstimator;
 
@@ -55,13 +55,13 @@ impl ManhattanDistance {
     }
 }
 
-impl<N, E, T> HeuristicEstimator<N, E> for ManhattanDistance
+impl<G, T> HeuristicEstimator<G> for ManhattanDistance
 where
-    N: Node + HasData<Data = T>,
-    E: Edge<N::Key>,
+    G: Graph,
+    G::Node: Node + HasData<Data = T>,
     T: HasPosition,
 {
-    fn heuristic(&self, node_id: N::Key, graph: &Graph<N, E>) -> f64 {
+    fn heuristic(&self, node_id: G::Key, graph: &G) -> f64 {
         let node = graph.get_node(node_id).unwrap();
         let data = node.data();
         (data.x() - self.target_x).abs() + (data.y() - self.target_y).abs()
@@ -72,13 +72,16 @@ where
 mod tests {
     use crate::{
         core::{Edge, Graph, Node, node::NodeKey},
-        preset::structural_traits::{HasData, HasPosition},
-        preset::visitors::{HeuristicEstimator, ManhattanDistance},
+        preset::{
+            BaseGraph,
+            structural_traits::{HasData, HasPosition},
+            visitors::{HeuristicEstimator, ManhattanDistance},
+        },
     };
 
     #[test]
     fn computes_manhattan_distance() {
-        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let estimator = ManhattanDistance::new(2.0, 2.0);
 
         graph.add_node(MockNode {
@@ -111,7 +114,7 @@ mod tests {
 
     #[test]
     fn manhattan_distance_handles_negative_coordinates() {
-        let mut graph = Graph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let estimator = ManhattanDistance::new(0.0, 0.0);
 
         graph.add_node(MockNode {

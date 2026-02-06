@@ -1,4 +1,4 @@
-use crate::core::{Edge, Graph, Node, Policy, Visitor, node::NodeKey};
+use crate::core::{Edge, Graph, Policy, Visitor, node::NodeKey};
 use crate::preset::structural_traits::HasWeight;
 use crate::preset::visitors::{CountVisited, TrackParent};
 use std::collections::HashMap;
@@ -59,11 +59,11 @@ impl<P, K: NodeKey> TrackParent<K> for WeightedVisitor<P, K> {
     }
 }
 
-impl<N, E, P> Visitor<Graph<N, E>, N> for WeightedVisitor<P, N::Key>
+impl<Ctx, P> Visitor<Ctx, Ctx::Node> for WeightedVisitor<P, Ctx::Key>
 where
-    N: Node,
-    E: Edge<N::Key> + HasWeight,
-    P: Policy<N::Key, Self>,
+    Ctx: Graph,
+    Ctx::Edge: HasWeight,
+    P: Policy<Ctx::Key, Self>,
 {
     /// Computes the cumulative cost to reach a target node via a specific edge.
     ///
@@ -80,7 +80,7 @@ where
     /// # Returns
     ///
     /// The total cumulative cost to reach `to` via `from`
-    fn exploration_cost(&self, from: N::Key, to: N::Key, context: &Graph<N, E>) -> f64 {
+    fn exploration_cost(&self, from: Ctx::Key, to: Ctx::Key, context: &Ctx) -> f64 {
         let from_dist = self.distances.get(&from).unwrap_or(&0.0);
 
         let edge_weight = context
@@ -110,7 +110,7 @@ where
     /// # Returns
     ///
     /// `true` if the path should be explored, `false` otherwise
-    fn should_explore(&mut self, from: N::Key, to: N::Key, context: &Graph<N, E>) -> bool {
+    fn should_explore(&mut self, from: Ctx::Key, to: Ctx::Key, context: &Ctx) -> bool {
         let new_dist = self.exploration_cost(from, to, context);
 
         match self.distances.get(&to) {
@@ -137,19 +137,22 @@ where
     ///
     /// * `node_id` - The ID of the node being visited
     /// * `_context` - The graph being traversed (unused)
-    fn visit(&mut self, node_id: N::Key, _context: &Graph<N, E>) {
+    fn visit(&mut self, node_id: Ctx::Key, _context: &Ctx) {
         self.distances.entry(node_id).or_insert(0.0);
         self.parents.entry(node_id).or_insert(None);
     }
 
-    fn should_stop(&self, node_id: N::Key, _context: &Graph<N, E>) -> bool {
+    fn should_stop(&self, node_id: Ctx::Key, _context: &Ctx) -> bool {
         self.terminate.is_compliant(&node_id, self)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::preset::structural_traits::HasWeight;
+    use crate::{
+        core::Node,
+        preset::{BaseGraph, structural_traits::HasWeight},
+    };
 
     use super::*;
 
@@ -209,7 +212,7 @@ mod tests {
     #[test]
     fn visit_initializes_start_node_to_zero() {
         let mut visitor = WeightedVisitor::new(Terminate::default());
-        let graph = Graph::<MockNode, MockWeightedEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
         assert_eq!(visitor.distances.len(), 0);
 
         visitor.visit(0, &graph);
@@ -221,7 +224,7 @@ mod tests {
     #[test]
     fn explores_unvisited_node() {
         let mut visitor = WeightedVisitor::new(Terminate::default());
-        let graph = Graph::<MockNode, MockWeightedEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
 
         assert!(!visitor.distances.contains_key(&1));
         assert!(visitor.should_explore(0, 1, &graph));
@@ -229,7 +232,7 @@ mod tests {
 
     #[test]
     fn explores_when_lower_cost_found() {
-        let mut graph = Graph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
         graph.add_edge(MockWeightedEdge::new(0, 1, 5.0));
 
         let mut visitor = WeightedVisitor::new(Terminate::default());
@@ -240,7 +243,7 @@ mod tests {
 
     #[test]
     fn updates_distance_when_lower_cost_found() {
-        let mut graph = Graph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
         graph.add_edge(MockWeightedEdge::new(0, 1, 5.0));
 
         let mut visitor = WeightedVisitor::new(Terminate::default());
@@ -252,7 +255,7 @@ mod tests {
 
     #[test]
     fn does_not_revisit_with_equal_or_higher_cost() {
-        let mut graph = Graph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
         graph.add_edge(MockWeightedEdge::new(0, 1, 5.0));
 
         let mut visitor = WeightedVisitor::new(Terminate::default());
@@ -266,7 +269,7 @@ mod tests {
 
     #[test]
     fn exploration_cost_sums_distance_and_weight() {
-        let mut graph = Graph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
         graph.add_edge(MockWeightedEdge::new(0, 1, 3.0));
 
         let mut visitor = WeightedVisitor::new(Terminate::default());
@@ -277,7 +280,7 @@ mod tests {
 
     #[test]
     fn propagates_cumulative_distances_through_path() {
-        let mut graph = Graph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
         graph.add_edge(MockWeightedEdge::new(0, 1, 2.0));
         graph.add_edge(MockWeightedEdge::new(1, 2, 3.0));
 
@@ -293,7 +296,7 @@ mod tests {
 
     #[test]
     fn chooses_shortest_path_among_alternatives() {
-        let mut graph = Graph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
         graph.add_edge(MockWeightedEdge::new(0, 2, 10.0));
         graph.add_edge(MockWeightedEdge::new(0, 1, 2.0));
         graph.add_edge(MockWeightedEdge::new(1, 2, 3.0));
@@ -311,7 +314,7 @@ mod tests {
 
     #[test]
     fn exploration_cost_uses_current_distances() {
-        let mut graph = Graph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
         graph.add_edge(MockWeightedEdge::new(1, 2, 4.0));
 
         let mut visitor = WeightedVisitor::new(Terminate::default());
@@ -323,7 +326,7 @@ mod tests {
 
     #[test]
     fn uses_embedded_policy_to_stop() {
-        let graph = Graph::<MockNode, MockWeightedEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
         let visitor = WeightedVisitor::new(Terminate::default());
 
         assert!(visitor.should_stop(0, &graph));

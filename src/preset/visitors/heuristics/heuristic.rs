@@ -1,7 +1,7 @@
-use crate::core::{Edge, Graph, Node};
+use crate::core::Graph;
 
-pub trait HeuristicEstimator<N: Node, E: Edge<N::Key>> {
-    fn heuristic(&self, _node_id: N::Key, _graph: &Graph<N, E>) -> f64 {
+pub trait HeuristicEstimator<G: Graph> {
+    fn heuristic(&self, _node_id: G::Key, _graph: &G) -> f64 {
         0.0
     }
 }

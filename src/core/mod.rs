@@ -9,7 +9,7 @@ pub mod visitor;
 pub use edge::Edge;
 pub use frontier::Frontier;
 pub use graph::*;
-pub use node::Node;
+pub use node::*;
 pub use policy::*;
 pub use sampler::Sampler;
 pub use visitor::Visitor;
