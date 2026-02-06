@@ -1,4 +1,4 @@
-use crate::core::{Node, Policy, Visitor};
+use crate::core::{Edge, Graph, Policy, Visitor};
 use crate::preset::visitors::{CountVisited, TrackParent};
 use std::collections::HashMap;
 
@@ -12,39 +12,39 @@ use std::collections::HashMap;
 /// - Preventing infinite loops in cyclic graphs
 /// - Basic exploration control without domain-specific logic
 #[derive(Debug, Default)]
-pub struct SimpleVisitor<P, N: Node> {
+pub struct SimpleVisitor<P, G: Graph> {
     /// Set of node IDs that have already been visited.
-    visited: HashMap<N::Key, Option<N::Key>>,
+    visited: HashMap<G::Key, Option<G::Key>>,
     terminate: P,
 }
 
-impl<P, N> SimpleVisitor<P, N>
+impl<P, G> SimpleVisitor<P, G>
 where
-    N: Node,
-    P: Policy<N::Key, Self>,
+    G: Graph,
+    P: Policy<G::Key, Self>,
 {
     pub fn new(terminate: P) -> Self {
-        SimpleVisitor::<P, N> {
+        SimpleVisitor::<P, G> {
             visited: HashMap::new(),
             terminate,
         }
     }
 }
 
-impl<P, N> CountVisited for SimpleVisitor<P, N>
+impl<P, G> CountVisited for SimpleVisitor<P, G>
 where
-    N: Node,
+    G: Graph,
 {
     fn visited_count(&self) -> usize {
         self.visited.len()
     }
 }
 
-impl<P, N> TrackParent<N::Key> for SimpleVisitor<P, N>
+impl<P, G> TrackParent<G::Key> for SimpleVisitor<P, G>
 where
-    N: Node,
+    G: Graph,
 {
-    fn get_parent(&self, node_id: N::Key) -> Option<N::Key> {
+    fn get_parent(&self, node_id: G::Key) -> Option<G::Key> {
         if self.visited.contains_key(&node_id) {
             return self.visited[&node_id];
         }
@@ -52,28 +52,54 @@ where
     }
 }
 
-impl<Ctx, P, N> Visitor<Ctx, N> for SimpleVisitor<P, N>
+impl<G, P> Visitor<G> for SimpleVisitor<P, G>
 where
-    N: Node,
-    P: Policy<N::Key, Self>,
+    G: Graph,
+    P: Policy<G::Key, Self>,
 {
     /// Determines whether traversal should continue toward a target node.
     ///
     /// # Arguments
     ///
-    /// * `_from` - The source node ID (unused)
+    /// * `from` - The source node ID (unused)
     /// * `to` - The target node ID being considered
     /// * `_context` - Traversal context (unused)
     ///
     /// # Returns
     ///
     /// `true` if the target node has not been visited yet, `false` otherwise.
-    fn should_explore(&mut self, from: N::Key, to: N::Key, _context: &Ctx) -> bool {
+    fn should_explore(&mut self, from: G::Key, to: G::Key, _context: &G) -> bool {
         if let std::collections::hash_map::Entry::Vacant(e) = self.visited.entry(to) {
             e.insert(Some(from));
             return true;
         }
         false
+    }
+
+    /// Provides next nodes to explore.
+    ///
+    /// Nodes to explore are current node's unexplored adjacent nodes
+    ///
+    /// # Arguments
+    ///
+    /// * `node_id` - The id of the node to explore from
+    /// * `context` - Contextual information available during traversal
+    ///
+    /// # Returns
+    ///
+    /// The list of node ids to explore next with 0.0 cost
+    fn next_to_explore(&mut self, node_id: G::Key, context: &G) -> Vec<(G::Key, f64)> {
+        let edges = context.get_edges_from(node_id);
+        let mut to_explore = Vec::new();
+
+        for edge in edges {
+            if let std::collections::hash_map::Entry::Vacant(e) = self.visited.entry(edge.to()) {
+                e.insert(Some(edge.from()));
+                to_explore.push((edge.to(), 0.0));
+            }
+        }
+
+        to_explore
     }
 
     /// Marks a node as visited.
@@ -82,50 +108,38 @@ where
     ///
     /// * `node_id` - The ID of the node being visited
     /// * `_context` - Traversal context (unused)
-    fn visit(&mut self, node_id: N::Key, _context: &Ctx) {
+    fn visit(&mut self, node_id: G::Key, _context: &G) {
         self.visited.entry(node_id).or_insert(None);
     }
 
-    fn should_stop(&self, node_id: N::Key, _context: &Ctx) -> bool {
+    fn should_stop(&self, node_id: G::Key, _context: &G) -> bool {
         self.terminate.is_compliant(&node_id, self)
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::{
+        core::{Edge, Node},
+        preset::BaseGraph,
+    };
+
     use super::*;
-
-    #[derive(Debug, Default)]
-    pub struct Terminate {}
-
-    impl<N: Node> Policy<N::Key, SimpleVisitor<Self, N>> for Terminate {
-        fn is_compliant(&self, _: &N::Key, __: &SimpleVisitor<Self, N>) -> bool {
-            true
-        }
-    }
-
-    pub struct MockNode;
-    impl Node for MockNode {
-        type Key = u32;
-        fn id(&self) -> Self::Key {
-            0
-        }
-    }
 
     #[test]
     fn defaults_with_empty_visited_hashset() {
-        let visitor = SimpleVisitor::<_, MockNode>::new(Terminate::default());
+        let visitor = SimpleVisitor::<_, MockGraph>::new(Terminate);
         assert_eq!(visitor.visited.len(), 0);
     }
 
     #[test]
     fn adds_id_to_visited() {
-        let mut visitor = SimpleVisitor::<_, MockNode>::new(Terminate::default());
+        let mut visitor = SimpleVisitor::<_, MockGraph>::new(Terminate);
         assert_eq!(visitor.visited.len(), 0);
 
-        visitor.visit(0, &());
-        visitor.visit(1, &());
-        visitor.visit(2, &());
+        visitor.visit(0, &MockGraph::new());
+        visitor.visit(1, &MockGraph::new());
+        visitor.visit(2, &MockGraph::new());
 
         assert_eq!(visitor.visited.len(), 3);
         assert!(visitor.visited.contains_key(&0));
@@ -135,26 +149,53 @@ mod tests {
 
     #[test]
     fn explores_unvisited() {
-        let mut visitor = SimpleVisitor::<_, MockNode>::new(Terminate::default());
+        let mut visitor = SimpleVisitor::<_, MockGraph>::new(Terminate);
 
         assert!(!visitor.visited.contains_key(&1));
-        assert!(visitor.should_explore(0, 1, &()));
+        assert!(visitor.should_explore(0, 1, &MockGraph::new()));
     }
 
     #[test]
     fn does_not_visit_twice() {
-        let mut visitor = SimpleVisitor::<_, MockNode>::new(Terminate::default());
+        let mut visitor = SimpleVisitor::<_, MockGraph>::new(Terminate);
 
-        visitor.visit(1, &());
+        visitor.visit(1, &MockGraph::new());
 
         assert!(visitor.visited.contains_key(&1));
-        assert!(!visitor.should_explore(0, 1, &()));
+        assert!(!visitor.should_explore(0, 1, &MockGraph::new()));
     }
 
     #[test]
     fn stops_when_policy_returns_true() {
-        let visitor = SimpleVisitor::<_, MockNode>::new(Terminate::default());
+        let visitor = SimpleVisitor::<_, MockGraph>::new(Terminate);
 
-        assert!(visitor.should_stop(0, &()));
+        assert!(visitor.should_stop(0, &MockGraph::new()));
     }
+
+    struct Terminate;
+    impl<G: Graph> Policy<G::Key, SimpleVisitor<Self, G>> for Terminate {
+        fn is_compliant(&self, _: &G::Key, __: &SimpleVisitor<Self, G>) -> bool {
+            true
+        }
+    }
+
+    struct MockNode;
+    impl Node for MockNode {
+        type Key = u32;
+        fn id(&self) -> Self::Key {
+            0
+        }
+    }
+
+    struct MockEdge;
+    impl Edge<u32> for MockEdge {
+        fn from(&self) -> u32 {
+            0
+        }
+        fn to(&self) -> u32 {
+            0
+        }
+    }
+
+    type MockGraph = BaseGraph<MockNode, MockEdge>;
 }

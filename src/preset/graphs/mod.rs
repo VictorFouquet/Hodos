@@ -2,6 +2,13 @@ use std::collections::HashMap;
 
 use crate::core::{Edge, Graph, Node};
 
+use super::{DataNode, EmptyNode, UnweightedEdge, WeightedEdge};
+
+pub type SimpleGraph = BaseGraph<EmptyNode, UnweightedEdge<<EmptyNode as Node>::Key>>;
+pub type DataGraph<T> = BaseGraph<DataNode<T>, UnweightedEdge<<DataNode<T> as Node>::Key>>;
+pub type WeightedGraph = BaseGraph<EmptyNode, WeightedEdge<<EmptyNode as Node>::Key>>;
+pub type WeightedDataGraph<T> = BaseGraph<DataNode<T>, WeightedEdge<<DataNode<T> as Node>::Key>>;
+
 #[derive(Default, Debug)]
 pub struct BaseGraph<N: Node, E: Edge<N::Key>> {
     nodes: HashMap<N::Key, N>,

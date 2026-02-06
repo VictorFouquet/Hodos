@@ -1,4 +1,4 @@
-use crate::core::{Graph, Node, Policy, Visitor, node::NodeKey};
+use crate::core::{Edge, Graph, Node, Policy, Visitor, node::NodeKey};
 use crate::preset::structural_traits::{HasData, HasPosition};
 use crate::preset::visitors::{CostEstimator, HeuristicEstimator, TrackParent};
 
@@ -122,7 +122,7 @@ where
     }
 }
 
-impl<Ctx, T, P, G, H> Visitor<Ctx, Ctx::Node> for HeuristicVisitor<P, G, H, Ctx>
+impl<Ctx, T, P, G, H> Visitor<Ctx> for HeuristicVisitor<P, G, H, Ctx>
 where
     Ctx: Graph,
     T: HasPosition + Clone + Copy,
@@ -153,6 +153,43 @@ where
             }
             _ => false,
         }
+    }
+
+    /// Provides next nodes to explore.
+    ///
+    /// Nodes to explore are current node's unexplored adjacent nodes
+    ///
+    /// # Arguments
+    ///
+    /// * `node_id` - The id of the node to explore from
+    /// * `context` - Contextual information available during traversal
+    ///
+    /// # Returns
+    ///
+    /// The list of node ids to explore next with their respective relaxed cost
+    fn next_to_explore(&mut self, node_id: Ctx::Key, context: &Ctx) -> Vec<(Ctx::Key, f64)> {
+        let edges = context.get_edges_from(node_id);
+        let mut to_explore = Vec::new();
+
+        for edge in edges {
+            let from = edge.from();
+            let to = edge.to();
+            let g = self.compute_g_cost(from, to, context);
+
+            match self.visited.get(&to) {
+                None => {
+                    self.insert_visited(Some(from), to, g);
+                    to_explore.push((to, g + self.compute_h_cost(to, context)));
+                }
+                Some(&current) if g < current.cost => {
+                    self.insert_visited(Some(from), to, g);
+                    to_explore.push((to, self.compute_h_cost(to, context)));
+                }
+                _ => {}
+            }
+        }
+
+        to_explore
     }
 
     fn visit(&mut self, node_id: Ctx::Key, context: &Ctx) {

@@ -7,6 +7,6 @@ pub trait Traverse<N: Node> {
         &self,
         start: N::Key,
         frontier: &mut dyn Frontier<N::Key>,
-        visitor: &mut dyn Visitor<Self, N>,
+        visitor: &mut dyn Visitor<Self>,
     );
 }

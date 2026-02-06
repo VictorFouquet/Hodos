@@ -1,4 +1,4 @@
-use crate::core::Node;
+use super::Graph;
 
 /// A strategy for processing nodes during graph traversal.
 ///
@@ -7,9 +7,8 @@ use crate::core::Node;
 ///
 /// # Type Parameters
 ///
-/// * `Ctx` - Context to be handled by visitor (usually a graph)
-/// * `N` - Node type contained in the graph
-pub trait Visitor<Ctx, N: Node> {
+/// * `G` - Context to be handled by visitor (usually a graph)
+pub trait Visitor<G: Graph> {
     /// Gives the initial search cost when starting the traversal.
     ///
     /// Should usually return zero but some business rule may want to override it.
@@ -18,7 +17,7 @@ pub trait Visitor<Ctx, N: Node> {
     ///
     /// * `node_id` - The start node index
     /// * `context` - Contextual information available during traversal
-    fn init_cost(&self, _node_id: N::Key, _context: &Ctx) -> f64 {
+    fn init_cost(&self, _node_id: G::Key, _context: &G) -> f64 {
         0.0
     }
 
@@ -31,7 +30,7 @@ pub trait Visitor<Ctx, N: Node> {
     /// * `from`    - The connection's source node id
     /// * `to`      - The connection's target node id
     /// * `context` - Contextual information available during traversal
-    fn exploration_cost(&self, _from: N::Key, _to: N::Key, _context: &Ctx) -> f64 {
+    fn exploration_cost(&self, _from: G::Key, _to: G::Key, _context: &G) -> f64 {
         1.0
     }
 
@@ -47,7 +46,7 @@ pub trait Visitor<Ctx, N: Node> {
     /// # Returns
     ///
     /// The list of node ids to explore next with their respective cost
-    fn next_to_explore(&mut self, _node_id: N::Key, _context: &Ctx) -> Vec<(N::Key, f64)> {
+    fn next_to_explore(&mut self, _node_id: G::Key, _context: &G) -> Vec<(G::Key, f64)> {
         vec![]
     }
 
@@ -60,7 +59,7 @@ pub trait Visitor<Ctx, N: Node> {
     /// * `from`    - The connection's source node id
     /// * `to`      - The connection's target node id
     /// * `context` - Contextual information available during traversal
-    fn should_explore(&mut self, from: N::Key, to: N::Key, context: &Ctx) -> bool;
+    fn should_explore(&mut self, from: G::Key, to: G::Key, context: &G) -> bool;
 
     /// Visits a node during traversal.
     ///
@@ -70,7 +69,7 @@ pub trait Visitor<Ctx, N: Node> {
     ///
     /// * `node_id` - The id of the node being visited
     /// * `context` - Contextual information available during traversal
-    fn visit(&mut self, node_id: N::Key, context: &Ctx);
+    fn visit(&mut self, node_id: G::Key, context: &G);
 
     /// Determines if exploration should be stopped.
     ///
@@ -84,7 +83,7 @@ pub trait Visitor<Ctx, N: Node> {
     /// # Returns
     ///
     /// `true` if the exploration should stop, `false` otherwise
-    fn should_stop(&self, _node_id: N::Key, _context: &Ctx) -> bool {
+    fn should_stop(&self, _node_id: G::Key, _context: &G) -> bool {
         false
     }
 }

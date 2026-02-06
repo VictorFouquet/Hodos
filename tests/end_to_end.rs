@@ -11,9 +11,9 @@ mod end_to_end {
         use hodos::preset::policies::value::AllowAll;
         use hodos::preset::samplers::SimpleAdjacencySampler;
         use hodos::preset::traversals::Traverse;
-        use hodos::preset::{EmptyNode, EmptyNodeBuilder, UnweightedEdgeBuilder};
+        use hodos::preset::{EmptyNodeBuilder, SimpleGraph, UnweightedEdgeBuilder};
 
-        fn run_bfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, EmptyNode> {
+        fn run_bfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, SimpleGraph> {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
             BaseGraphBuilder::new(
                 EmptyNodeBuilder,
@@ -105,9 +105,9 @@ mod end_to_end {
         use hodos::preset::policies::value::AllowAll;
         use hodos::preset::samplers::SimpleAdjacencySampler;
         use hodos::preset::traversals::Traverse;
-        use hodos::preset::{EmptyNode, EmptyNodeBuilder, Stack, UnweightedEdgeBuilder};
+        use hodos::preset::{EmptyNodeBuilder, SimpleGraph, Stack, UnweightedEdgeBuilder};
 
-        fn run_dfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, EmptyNode> {
+        fn run_dfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, SimpleGraph> {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
             BaseGraphBuilder::new(
                 EmptyNodeBuilder,

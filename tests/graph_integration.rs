@@ -1,6 +1,6 @@
 mod graph_integration {
     use hodos::{
-        core::{Frontier, Graph, Visitor},
+        core::{Edge, Frontier, Graph, Visitor},
         preset::{BaseGraph, EmptyNode, Queue, UnweightedEdge, traversals::Traverse},
     };
 
@@ -53,7 +53,7 @@ mod graph_integration {
     }
 
     #[test]
-    fn traversal_uses_visitor_to_handle_push_decision() {
+    fn traversal_uses_visitor_to_get_the_nodes_to_push() {
         // Graph is [(0->1), (0->2)]
         let mut graph = BaseGraph::new();
         for i in 0..3 {
@@ -85,57 +85,81 @@ mod graph_integration {
 
         let mut visitor = LoopCountVisitor { count: 0 };
         graph.traverse(0, &mut Queue::new(), &mut visitor);
-        assert_eq!(visitor.count, 3);
+        assert_eq!(visitor.count, 1);
     }
 
     struct TerminateFirstVisitor;
-    impl<Ctx> Visitor<Ctx, EmptyNode> for TerminateFirstVisitor {
-        fn should_explore(&mut self, _from: u32, _to: u32, _context: &Ctx) -> bool {
+    impl<Ctx: Graph> Visitor<Ctx> for TerminateFirstVisitor {
+        fn should_explore(&mut self, _from: Ctx::Key, _to: Ctx::Key, _context: &Ctx) -> bool {
             true
         }
 
-        fn visit(&mut self, _node_id: u32, _context: &Ctx) {}
+        fn next_to_explore(
+            &mut self,
+            node_id: <Ctx as Graph>::Key,
+            context: &Ctx,
+        ) -> Vec<(<Ctx as Graph>::Key, f64)> {
+            context
+                .get_edges_from(node_id)
+                .iter()
+                .map(|e| (e.to(), 0.0))
+                .collect()
+        }
 
-        fn should_stop(&self, _node_id: u32, _context: &Ctx) -> bool {
+        fn visit(&mut self, _node_id: Ctx::Key, _context: &Ctx) {}
+
+        fn should_stop(&self, _node_id: Ctx::Key, _context: &Ctx) -> bool {
             true
         }
     }
 
     struct NeverTerminateVisitor;
-    impl<Ctx> Visitor<Ctx, EmptyNode> for NeverTerminateVisitor {
-        fn should_explore(&mut self, _from: u32, _to: u32, _context: &Ctx) -> bool {
+    impl<Ctx: Graph> Visitor<Ctx> for NeverTerminateVisitor {
+        fn should_explore(&mut self, _from: Ctx::Key, _to: Ctx::Key, _context: &Ctx) -> bool {
             true
         }
 
-        fn visit(&mut self, _node_id: u32, _context: &Ctx) {}
+        fn visit(&mut self, _node_id: Ctx::Key, _context: &Ctx) {}
 
-        fn should_stop(&self, _node_id: u32, _context: &Ctx) -> bool {
+        fn should_stop(&self, _node_id: Ctx::Key, _context: &Ctx) -> bool {
             false
         }
     }
 
     struct ExploreAllVisitor;
-    impl<Ctx> Visitor<Ctx, EmptyNode> for ExploreAllVisitor {
-        fn should_explore(&mut self, _from: u32, _to: u32, _context: &Ctx) -> bool {
+    impl<Ctx: Graph> Visitor<Ctx> for ExploreAllVisitor {
+        fn should_explore(&mut self, _from: Ctx::Key, _to: Ctx::Key, _context: &Ctx) -> bool {
             true
         }
 
-        fn visit(&mut self, _node_id: u32, _context: &Ctx) {}
+        fn visit(&mut self, _node_id: Ctx::Key, _context: &Ctx) {}
 
-        fn should_stop(&self, _node_id: u32, _context: &Ctx) -> bool {
+        fn next_to_explore(
+            &mut self,
+            node_id: <Ctx as Graph>::Key,
+            context: &Ctx,
+        ) -> Vec<(<Ctx as Graph>::Key, f64)> {
+            context
+                .get_edges_from(node_id)
+                .iter()
+                .map(|e| (e.to(), 0.0))
+                .collect()
+        }
+
+        fn should_stop(&self, _node_id: Ctx::Key, _context: &Ctx) -> bool {
             true
         }
     }
 
     struct ExploreNoneVisitor;
-    impl<Ctx> Visitor<Ctx, EmptyNode> for ExploreNoneVisitor {
-        fn should_explore(&mut self, _from: u32, _to: u32, _context: &Ctx) -> bool {
+    impl<Ctx: Graph> Visitor<Ctx> for ExploreNoneVisitor {
+        fn should_explore(&mut self, _from: Ctx::Key, _to: Ctx::Key, _context: &Ctx) -> bool {
             false
         }
 
-        fn visit(&mut self, _node_id: u32, _context: &Ctx) {}
+        fn visit(&mut self, _node_id: Ctx::Key, _context: &Ctx) {}
 
-        fn should_stop(&self, _node_id: u32, _context: &Ctx) -> bool {
+        fn should_stop(&self, _node_id: Ctx::Key, _context: &Ctx) -> bool {
             true
         }
     }
@@ -143,16 +167,16 @@ mod graph_integration {
     struct LoopCountVisitor {
         pub count: u32,
     }
-    impl<Ctx> Visitor<Ctx, EmptyNode> for LoopCountVisitor {
-        fn should_explore(&mut self, _from: u32, _to: u32, _context: &Ctx) -> bool {
+    impl<Ctx: Graph> Visitor<Ctx> for LoopCountVisitor {
+        fn should_explore(&mut self, _from: Ctx::Key, _to: Ctx::Key, _context: &Ctx) -> bool {
             true
         }
 
-        fn visit(&mut self, _node_id: u32, _context: &Ctx) {
+        fn visit(&mut self, _node_id: Ctx::Key, _context: &Ctx) {
             self.count += 1;
         }
 
-        fn should_stop(&self, _node_id: u32, _context: &Ctx) -> bool {
+        fn should_stop(&self, _node_id: Ctx::Key, _context: &Ctx) -> bool {
             self.count == 3
         }
     }

@@ -1,5 +1,5 @@
 use crate::{
-    core::{Edge, Frontier, Graph, Node, Visitor},
+    core::{Edge, Frontier, Node, Visitor},
     preset::BaseGraph,
 };
 
@@ -36,7 +36,7 @@ where
         &self,
         start: N::Key,
         frontier: &mut dyn Frontier<N::Key>,
-        visitor: &mut dyn Visitor<Self, N>,
+        visitor: &mut dyn Visitor<Self>,
     ) {
         frontier.push(start, Some(visitor.init_cost(start, self)));
 
@@ -46,15 +46,10 @@ where
                 None => break,
             };
 
-            let edges = self.get_edges_from(current_id);
+            let to_explore = visitor.next_to_explore(current_id, self);
 
-            for edge in edges {
-                if visitor.should_explore(edge.from(), edge.to(), self) {
-                    frontier.push(
-                        edge.to(),
-                        Some(visitor.exploration_cost(edge.from(), edge.to(), self)),
-                    );
-                }
+            for (id, cost) in to_explore {
+                frontier.push(id, Some(cost));
             }
 
             visitor.visit(current_id, self);
