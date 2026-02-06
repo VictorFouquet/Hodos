@@ -35,6 +35,22 @@ pub trait Visitor<Ctx, N: Node> {
         1.0
     }
 
+    /// Provides next nodes to explore.
+    ///
+    /// Helpful to get full control over graph exploration like needed in iterative traversals
+    ///
+    /// # Arguments
+    ///
+    /// * `node_id` - The id of the node to explore from
+    /// * `context` - Contextual information available during traversal
+    ///
+    /// # Returns
+    ///
+    /// The list of node ids to explore next with their respective cost
+    fn next_to_explore(&mut self, _node_id: N::Key, _context: &Ctx) -> Vec<(N::Key, f64)> {
+        vec![]
+    }
+
     /// Determines if a connection should be explored.
     ///
     /// Implement to determine if a node is opened or close, if a cheaper path is found...
