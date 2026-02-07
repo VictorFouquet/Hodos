@@ -57,6 +57,10 @@ impl Planner {
             return Err(FindPathError::GoalNotFound(goal));
         }
 
+        if start == goal {
+            return Ok(VecDeque::from([start]));
+        }
+
         graph.traverse(start, frontier, visitor);
 
         let mut path = VecDeque::new();
