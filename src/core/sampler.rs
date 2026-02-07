@@ -1,16 +1,15 @@
 type Sample<NC, EC> = (Vec<NC>, Vec<EC>);
 
-/// A strategy for generating graph samples.
+/// A strategy for generating graph samples incrementally.
 ///
-/// Samplers produce `Sample` instances that contain candidate nodes and edges
-/// for graph construction. The sampler maintains internal state and can generate
-/// samples incrementally based on the provided context.
+/// Samplers produce `Sample` instances containing candidate nodes and edges
+/// for graph construction. They maintain internal state and generate samples
+/// on-demand, similar to an iterator pattern. Sampling completes when `__next__`
+/// returns `None`.
 ///
 /// # Type Parameters
 ///
-/// * `NC` - Node candidate type
-/// * `EC` - Edge candidate type
-/// * `Ctx` - Domain context mapped by the sampler
+/// * `Ctx` - Domain context that guides sample generation
 pub trait Sampler<Ctx> {
     type NodeCandidate;
     type EdgeCandidate;

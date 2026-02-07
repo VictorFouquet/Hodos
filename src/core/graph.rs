@@ -63,7 +63,7 @@ pub trait Graph {
     ///
     /// # Returns
     ///
-    /// * `edges` - The outgoing edges from requested node
+    /// * `edges` - A slice containing the outgoing edges from the requested node
     fn get_edges_from(&self, id: <Self::Node as Node>::Key) -> &[Self::Edge];
 
     /// Gets all edges of the graph.

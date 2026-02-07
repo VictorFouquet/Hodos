@@ -34,9 +34,11 @@ pub trait Visitor<G: Graph> {
         1.0
     }
 
-    /// Provides next nodes to explore.
+    /// Provides the next nodes to explore from a given node.
     ///
-    /// Helpful to get full control over graph exploration like needed in iterative traversals
+    /// Returns a list of (node_id, cost) tuples representing potential next steps.
+    /// Useful for custom traversal logic that needs full control over exploration order,
+    /// such as in iterative deepening or beam search.
     ///
     /// # Arguments
     ///
@@ -45,7 +47,7 @@ pub trait Visitor<G: Graph> {
     ///
     /// # Returns
     ///
-    /// The list of node ids to explore next with their respective cost
+    /// A vector of tuples containing node IDs to explore next and their respective costs
     fn next_to_explore(&mut self, _node_id: G::Key, _context: &G) -> Vec<(G::Key, f64)> {
         vec![]
     }
