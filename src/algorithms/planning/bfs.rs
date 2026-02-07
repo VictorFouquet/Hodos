@@ -204,7 +204,7 @@ mod tests {
     }
 
     #[test]
-    fn finds_shortest_path_in_undirected_cyclic_graph() {
+    fn finds_shortest_path() {
         // [[1], [0, 2, 3], [2, 3], [4], [3]];
 
         let mut graph = BaseGraph::new();
