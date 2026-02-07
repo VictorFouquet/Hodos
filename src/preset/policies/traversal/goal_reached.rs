@@ -1,18 +1,18 @@
-use crate::core::Policy;
+use crate::core::{NodeKey, Policy};
 
 #[derive(Debug, Default)]
-pub struct GoalReached {
-    pub goal: u32,
+pub struct GoalReached<K: NodeKey> {
+    pub goal: K,
 }
 
-impl GoalReached {
-    pub fn new(goal: u32) -> Self {
+impl<K: NodeKey> GoalReached<K> {
+    pub fn new(goal: K) -> Self {
         GoalReached { goal }
     }
 }
 
-impl<Ctx> Policy<u32, Ctx> for GoalReached {
-    fn is_compliant(&self, node_id: &u32, _ctx: &Ctx) -> bool {
+impl<K: NodeKey, Ctx> Policy<K, Ctx> for GoalReached<K> {
+    fn is_compliant(&self, node_id: &K, _ctx: &Ctx) -> bool {
         *node_id == self.goal
     }
 }

@@ -12,7 +12,10 @@ mod end_to_end {
         use hodos::preset::samplers::SimpleAdjacencySampler;
         use hodos::preset::{EmptyNodeBuilder, GraphBuilder, SimpleGraph, UnweightedEdgeBuilder};
 
-        fn run_bfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, SimpleGraph> {
+        fn run_bfs(
+            goal: u32,
+            context: Vec<Vec<u32>>,
+        ) -> SimpleVisitor<GoalReached<u32>, SimpleGraph> {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
             GraphBuilder::new(
                 EmptyNodeBuilder,
@@ -107,7 +110,10 @@ mod end_to_end {
             EmptyNodeBuilder, GraphBuilder, SimpleGraph, Stack, UnweightedEdgeBuilder,
         };
 
-        fn run_dfs(goal: u32, context: Vec<Vec<u32>>) -> SimpleVisitor<GoalReached, SimpleGraph> {
+        fn run_dfs(
+            goal: u32,
+            context: Vec<Vec<u32>>,
+        ) -> SimpleVisitor<GoalReached<u32>, SimpleGraph> {
             let mut visitor = SimpleVisitor::new(GoalReached::new(goal));
             GraphBuilder::new(
                 EmptyNodeBuilder,
@@ -209,7 +215,7 @@ mod end_to_end {
             start: u32,
             goal: u32,
             context: Vec<Vec<Option<f64>>>,
-        ) -> WeightedVisitor<GoalReached, u32> {
+        ) -> WeightedVisitor<GoalReached<u32>, u32> {
             let mut visitor = WeightedVisitor::new(GoalReached::new(goal));
 
             GraphBuilder::new(
