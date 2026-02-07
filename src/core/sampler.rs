@@ -11,11 +11,14 @@ type Sample<NC, EC> = (Vec<NC>, Vec<EC>);
 /// * `NC` - Node candidate type
 /// * `EC` - Edge candidate type
 /// * `Ctx` - Domain context mapped by the sampler
-pub trait Sampler<NC, EC, Ctx> {
+pub trait Sampler<Ctx> {
+    type NodeCandidate;
+    type EdgeCandidate;
+
     /// Generates the next sample, or `None` when sampling is complete.
     ///
     /// # Arguments
     ///
     /// * `context` - Contextual information that guides sample generation
-    fn next(&mut self, context: &Ctx) -> Option<Sample<NC, EC>>;
+    fn next(&mut self, context: &Ctx) -> Option<Sample<Self::NodeCandidate, Self::EdgeCandidate>>;
 }

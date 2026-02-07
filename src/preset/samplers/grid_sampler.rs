@@ -97,10 +97,13 @@ impl<T> Default for Grid2DSampler<T> {
     }
 }
 
-impl<T> Sampler<(u32, T), (u32, u32), Grid2D<T>> for Grid2DSampler<T>
+impl<T> Sampler<Grid2D<T>> for Grid2DSampler<T>
 where
     T: Clone + Copy,
 {
+    type NodeCandidate = (u32, T);
+    type EdgeCandidate = (u32, u32);
+
     fn next(&mut self, context: &Grid2D<T>) -> Option<(Vec<(u32, T)>, Vec<(u32, u32)>)> {
         let i = self.current_y as usize;
 

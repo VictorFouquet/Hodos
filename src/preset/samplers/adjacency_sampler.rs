@@ -52,7 +52,10 @@ pub struct WeightedAdjacencyListWithData<T> {
     pub adjacency: WeightedAdjacencyList,
 }
 
-impl Sampler<u32, (u32, u32), AdjacencyList> for SimpleAdjacencySampler {
+impl Sampler<AdjacencyList> for SimpleAdjacencySampler {
+    type NodeCandidate = u32;
+    type EdgeCandidate = (u32, u32);
+
     fn next(&mut self, context: &AdjacencyList) -> Option<(Vec<u32>, Vec<(u32, u32)>)> {
         let i = self.current_id as usize;
 
@@ -73,7 +76,10 @@ impl Sampler<u32, (u32, u32), AdjacencyList> for SimpleAdjacencySampler {
     }
 }
 
-impl Sampler<u32, (u32, u32, f64), WeightedAdjacencyList> for WeightedAdjacencySampler {
+impl Sampler<WeightedAdjacencyList> for WeightedAdjacencySampler {
+    type NodeCandidate = u32;
+    type EdgeCandidate = (u32, u32, f64);
+
     fn next(
         &mut self,
         context: &WeightedAdjacencyList,
@@ -97,9 +103,10 @@ impl Sampler<u32, (u32, u32, f64), WeightedAdjacencyList> for WeightedAdjacencyS
     }
 }
 
-impl<T: Clone> Sampler<(u32, T), (u32, u32), AdjacencyListWithData<T>>
-    for AdjacencyWithDataSampler<T>
-{
+impl<T: Clone> Sampler<AdjacencyListWithData<T>> for AdjacencyWithDataSampler<T> {
+    type NodeCandidate = (u32, T);
+    type EdgeCandidate = (u32, u32);
+
     fn next(
         &mut self,
         context: &AdjacencyListWithData<T>,
@@ -127,9 +134,10 @@ impl<T: Clone> Sampler<(u32, T), (u32, u32), AdjacencyListWithData<T>>
     }
 }
 
-impl<T: Clone> Sampler<(u32, T), (u32, u32, f64), WeightedAdjacencyListWithData<T>>
-    for WeightedAdjacencyWithDataSampler<T>
-{
+impl<T: Clone> Sampler<WeightedAdjacencyListWithData<T>> for WeightedAdjacencyWithDataSampler<T> {
+    type NodeCandidate = (u32, T);
+    type EdgeCandidate = (u32, u32, f64);
+
     fn next(
         &mut self,
         context: &WeightedAdjacencyListWithData<T>,

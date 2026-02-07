@@ -59,11 +59,11 @@ impl<P, K: NodeKey> TrackParent<K> for WeightedVisitor<P, K> {
     }
 }
 
-impl<Ctx, P> Visitor<Ctx> for WeightedVisitor<P, Ctx::Key>
+impl<G, P> Visitor<G> for WeightedVisitor<P, G::Key>
 where
-    Ctx: Graph,
-    Ctx::Edge: HasWeight,
-    P: Policy<Ctx::Key, Self>,
+    G: Graph,
+    G::Edge: HasWeight,
+    P: Policy<G::Key, Self>,
 {
     /// Computes the cumulative cost to reach a target node via a specific edge.
     ///
@@ -80,7 +80,7 @@ where
     /// # Returns
     ///
     /// The total cumulative cost to reach `to` via `from`
-    fn exploration_cost(&self, from: Ctx::Key, to: Ctx::Key, context: &Ctx) -> f64 {
+    fn exploration_cost(&self, from: G::Key, to: G::Key, context: &G) -> f64 {
         let from_dist = self.distances.get(&from).unwrap_or(&0.0);
 
         let edge_weight = context
@@ -105,7 +105,7 @@ where
     /// # Returns
     ///
     /// The list of node ids to explore next with their respective relaxed cost
-    fn next_to_explore(&mut self, node_id: Ctx::Key, context: &Ctx) -> Vec<(Ctx::Key, f64)> {
+    fn next_to_explore(&mut self, node_id: G::Key, context: &G) -> Vec<(G::Key, f64)> {
         let edges = context.get_edges_from(node_id);
         let mut to_explore = Vec::new();
 
@@ -141,12 +141,12 @@ where
     ///
     /// * `node_id` - The ID of the node being visited
     /// * `_context` - The graph being traversed (unused)
-    fn visit(&mut self, node_id: Ctx::Key, _context: &Ctx) {
+    fn visit(&mut self, node_id: G::Key, _context: &G) {
         self.distances.entry(node_id).or_insert(0.0);
         self.parents.entry(node_id).or_insert(None);
     }
 
-    fn should_stop(&self, node_id: Ctx::Key, _context: &Ctx) -> bool {
+    fn should_stop(&self, node_id: G::Key, _context: &G) -> bool {
         self.terminate.is_compliant(&node_id, self)
     }
 }

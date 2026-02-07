@@ -48,7 +48,10 @@ impl<N, E> Default for MatrixSampler<N, E> {
     }
 }
 
-impl Sampler<u32, (u32, u32), BinaryMatrix> for BinaryMatrixSampler {
+impl Sampler<BinaryMatrix> for BinaryMatrixSampler {
+    type NodeCandidate = u32;
+    type EdgeCandidate = (u32, u32);
+
     fn next(&mut self, context: &BinaryMatrix) -> Option<(Vec<u32>, Vec<(u32, u32)>)> {
         let i = self.current_id as usize;
 
@@ -71,7 +74,10 @@ impl Sampler<u32, (u32, u32), BinaryMatrix> for BinaryMatrixSampler {
     }
 }
 
-impl Sampler<u32, (u32, u32, f64), WeightedMatrix> for WeightedMatrixSampler {
+impl Sampler<WeightedMatrix> for WeightedMatrixSampler {
+    type NodeCandidate = u32;
+    type EdgeCandidate = (u32, u32, f64);
+
     fn next(&mut self, context: &WeightedMatrix) -> Option<(Vec<u32>, Vec<(u32, u32, f64)>)> {
         let i = self.current_id as usize;
 

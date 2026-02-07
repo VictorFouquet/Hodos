@@ -19,13 +19,13 @@ use crate::preset::policies::value::AllowAll;
 /// * `EP` - Policy type that allows edge additions
 /// * `Samp` - Strategy type that generates graph samples
 #[derive(Debug)]
-pub struct GraphBuilder<NS, NB, NP = AllowAll, ES = (), EB = (), EP = AllowAll, S = (), Ctx = ()>
+pub struct GraphBuilder<NB, NP = AllowAll, EB = (), EP = AllowAll, S = (), Ctx = ()>
 where
-    NB: NodeBuilder<NS>,
+    S: Sampler<Ctx>,
+    NB: NodeBuilder<S::NodeCandidate>,
     NP: Policy<NB::BuiltNode, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
-    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, ES>,
+    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, S::EdgeCandidate>,
     EP: Policy<EB::BuiltEdge, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
-    S: Sampler<NS, ES, Ctx>,
 {
     node_builder: NB,
     node_policy: Option<NP>,
@@ -33,14 +33,14 @@ where
     edge_policy: Option<EP>,
     sampler: S,
 
-    _phantom: PhantomData<(NS, ES, Ctx)>,
+    _phantom: PhantomData<Ctx>,
 }
 
-impl<NS, NB, ES, EB, S, Ctx> GraphBuilder<NS, NB, AllowAll, ES, EB, AllowAll, S, Ctx>
+impl<NB, EB, S, Ctx> GraphBuilder<NB, AllowAll, EB, AllowAll, S, Ctx>
 where
-    NB: NodeBuilder<NS>,
-    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, ES>,
-    S: Sampler<NS, ES, Ctx>,
+    S: Sampler<Ctx>,
+    NB: NodeBuilder<S::NodeCandidate>,
+    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, S::EdgeCandidate>,
 {
     pub fn allow_all(node_builder: NB, edge_builder: EB, sampler: S) -> Self {
         Self {
@@ -54,12 +54,12 @@ where
     }
 }
 
-impl<NS, NB, ES, EB, EP, S, Ctx> GraphBuilder<NS, NB, AllowAll, ES, EB, EP, S, Ctx>
+impl<NB, EB, EP, S, Ctx> GraphBuilder<NB, AllowAll, EB, EP, S, Ctx>
 where
-    NB: NodeBuilder<NS>,
-    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, ES>,
+    S: Sampler<Ctx>,
+    NB: NodeBuilder<S::NodeCandidate>,
+    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, S::EdgeCandidate>,
     EP: Policy<EB::BuiltEdge, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
-    S: Sampler<NS, ES, Ctx>,
 {
     pub fn filter_edges(node_builder: NB, edge_builder: EB, sampler: S) -> Self {
         Self {
@@ -73,12 +73,12 @@ where
     }
 }
 
-impl<NS, NB, NP, ES, EB, S, Ctx> GraphBuilder<NS, NB, NP, ES, EB, AllowAll, S, Ctx>
+impl<NB, NP, EB, S, Ctx> GraphBuilder<NB, NP, EB, AllowAll, S, Ctx>
 where
-    NB: NodeBuilder<NS>,
+    S: Sampler<Ctx>,
+    NB: NodeBuilder<S::NodeCandidate>,
     NP: Policy<NB::BuiltNode, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
-    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, ES>,
-    S: Sampler<NS, ES, Ctx>,
+    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, S::EdgeCandidate>,
 {
     pub fn filter_nodes(node_builder: NB, edge_builder: EB, sampler: S) -> Self {
         Self {
@@ -92,13 +92,13 @@ where
     }
 }
 
-impl<NS, NB, NP, ES, EB, EP, S, Ctx> GraphBuilder<NS, NB, NP, ES, EB, EP, S, Ctx>
+impl<NB, NP, EB, EP, S, Ctx> GraphBuilder<NB, NP, EB, EP, S, Ctx>
 where
-    NB: NodeBuilder<NS>,
+    S: Sampler<Ctx>,
+    NB: NodeBuilder<S::NodeCandidate>,
     NP: Policy<NB::BuiltNode, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
-    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, ES>,
+    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, S::EdgeCandidate>,
     EP: Policy<EB::BuiltEdge, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
-    S: Sampler<NS, ES, Ctx>,
 {
     pub fn new(node_builder: NB, edge_builder: EB, sampler: S) -> Self {
         GraphBuilder {
@@ -260,7 +260,10 @@ mod tests {
         count: u32,
     }
 
-    impl Sampler<u32, (u32, u32), Vec<u32>> for MockSampler {
+    impl Sampler<Vec<u32>> for MockSampler {
+        type NodeCandidate = u32;
+        type EdgeCandidate = (u32, u32);
+
         fn next(&mut self, context: &Vec<u32>) -> Option<(Vec<u32>, Vec<(u32, u32)>)> {
             if self.count as usize >= context.len() || self.count >= 3 {
                 return None;
