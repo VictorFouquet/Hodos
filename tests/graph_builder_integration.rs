@@ -1,6 +1,5 @@
 mod graph_builder_integration {
     use hodos::core::{Edge, Graph, Node};
-    use hodos::preset::BaseGraphBuilder;
 
     mod from_matrix {
         use super::*;
@@ -8,7 +7,8 @@ mod graph_builder_integration {
         use hodos::preset::samplers::{BinaryMatrixSampler, WeightedMatrixSampler};
         use hodos::preset::structural_traits::HasWeight;
         use hodos::preset::{
-            EmptyNodeBuilder, UnweightedEdgeBuilder, WeightedEdge, WeightedEdgeBuilder,
+            EmptyNodeBuilder, GraphBuilder, UnweightedEdgeBuilder, WeightedEdge,
+            WeightedEdgeBuilder,
         };
 
         #[test]
@@ -20,13 +20,8 @@ mod graph_builder_integration {
             ];
             let sampler = BinaryMatrixSampler::default();
 
-            let mut graph_builder = BaseGraphBuilder::new(
-                EmptyNodeBuilder,
-                UnweightedEdgeBuilder,
-                AllowAll,
-                AllowAll,
-                sampler,
-            );
+            let mut graph_builder =
+                GraphBuilder::allow_all(EmptyNodeBuilder, UnweightedEdgeBuilder, sampler);
             let graph = graph_builder.build(&matrix);
 
             assert_eq!(graph.get_nodes().len(), 3);
@@ -59,13 +54,10 @@ mod graph_builder_integration {
             let node_policy = AllowAll;
             let edge_policy = AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() > 0.0);
 
-            let mut graph_builder = BaseGraphBuilder::new(
-                EmptyNodeBuilder,
-                WeightedEdgeBuilder,
-                node_policy,
-                edge_policy,
-                sampler,
-            );
+            let mut graph_builder =
+                GraphBuilder::new(EmptyNodeBuilder, WeightedEdgeBuilder, sampler)
+                    .with_node_validation(node_policy)
+                    .with_edge_validation(edge_policy);
             let graph = graph_builder.build(&matrix);
 
             assert_eq!(graph.get_nodes().len(), 3);
@@ -90,7 +82,7 @@ mod graph_builder_integration {
         use hodos::preset::policies::structural::DenyDanglingEdge;
         use hodos::preset::policies::value::DenyValue;
         use hodos::preset::samplers::{Grid2D, Grid2DSampler};
-        use hodos::preset::{DataNodeBuilder, UnweightedEdgeBuilder};
+        use hodos::preset::{DataNodeBuilder, GraphBuilder, UnweightedEdgeBuilder};
 
         fn test_context() -> Grid2D<char> {
             vec![
@@ -107,13 +99,10 @@ mod graph_builder_integration {
             let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = DenyDanglingEdge;
 
-            let mut graph_builder = BaseGraphBuilder::new(
-                DataNodeBuilder::new(|k| k),
-                UnweightedEdgeBuilder,
-                node_policy,
-                edge_policy,
-                sampler,
-            );
+            let mut graph_builder =
+                GraphBuilder::new(DataNodeBuilder::new(|k| k), UnweightedEdgeBuilder, sampler)
+                    .with_node_validation(node_policy)
+                    .with_edge_validation(edge_policy);
             let graph = graph_builder.build(&grid);
 
             let expected_ids = [0, 2, 3, 4, 5, 6];
@@ -130,13 +119,10 @@ mod graph_builder_integration {
             let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = DenyDanglingEdge;
 
-            let mut graph_builder = BaseGraphBuilder::new(
-                DataNodeBuilder::new(|k| k),
-                UnweightedEdgeBuilder,
-                node_policy,
-                edge_policy,
-                sampler,
-            );
+            let mut graph_builder =
+                GraphBuilder::new(DataNodeBuilder::new(|k| k), UnweightedEdgeBuilder, sampler)
+                    .with_node_validation(node_policy)
+                    .with_edge_validation(edge_policy);
             let graph = graph_builder.build(&grid);
 
             let obstacle_ids = [1, 7, 8];
@@ -152,13 +138,10 @@ mod graph_builder_integration {
             let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = DenyDanglingEdge;
 
-            let mut graph_builder = BaseGraphBuilder::new(
-                DataNodeBuilder::new(|k| k),
-                UnweightedEdgeBuilder,
-                node_policy,
-                edge_policy,
-                sampler,
-            );
+            let mut graph_builder =
+                GraphBuilder::new(DataNodeBuilder::new(|k| k), UnweightedEdgeBuilder, sampler)
+                    .with_node_validation(node_policy)
+                    .with_edge_validation(edge_policy);
             let graph = graph_builder.build(&grid);
 
             let expected_edges = vec![
@@ -196,7 +179,7 @@ mod graph_builder_integration {
             WeightedAdjacencyListWithData, WeightedAdjacencyWithDataSampler,
         };
         use hodos::preset::structural_traits::HasWeight;
-        use hodos::preset::{DataNodeBuilder, WeightedEdgeBuilder};
+        use hodos::preset::{DataNodeBuilder, GraphBuilder, WeightedEdgeBuilder};
 
         fn test_context() -> WeightedAdjacencyListWithData<char> {
             WeightedAdjacencyListWithData::<char> {
@@ -222,13 +205,10 @@ mod graph_builder_integration {
             let node_policy = DenyValue::new(vec!['#']);
             let edge_policy = AllowAll;
 
-            let mut graph_builder = BaseGraphBuilder::new(
-                DataNodeBuilder::new(|k| k),
-                WeightedEdgeBuilder,
-                node_policy,
-                edge_policy,
-                sampler,
-            );
+            let mut graph_builder =
+                GraphBuilder::new(DataNodeBuilder::new(|k| k), WeightedEdgeBuilder, sampler)
+                    .with_node_validation(node_policy)
+                    .with_edge_validation(edge_policy);
             let graph = graph_builder.build(&grid);
 
             let expected_ids = [0, 2, 3, 4, 5, 6];
@@ -248,13 +228,10 @@ mod graph_builder_integration {
                 AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() < 11.0),
             );
 
-            let mut graph_builder = BaseGraphBuilder::new(
-                DataNodeBuilder::new(|k| k),
-                WeightedEdgeBuilder,
-                node_policy,
-                edge_policy,
-                sampler,
-            );
+            let mut graph_builder =
+                GraphBuilder::new(DataNodeBuilder::new(|k| k), WeightedEdgeBuilder, sampler)
+                    .with_node_validation(node_policy)
+                    .with_edge_validation(edge_policy);
             let graph = graph_builder.build(&grid);
 
             let expected_ids = [0, 2, 3, 4, 5, 6];

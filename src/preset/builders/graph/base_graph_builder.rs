@@ -4,10 +4,11 @@ use crate::core::*;
 use crate::preset::BaseGraph;
 use crate::preset::EdgeBuilder;
 use crate::preset::NodeBuilder;
+use crate::preset::policies::value::AllowAll;
 
 /// A builder for constructing graphs using configurable policies and sampling strategies.
 ///
-/// The `BaseGraphBuilder` separates graph construction into three pluggable components:
+/// The `GraphBuilder` separates graph construction into three pluggable components:
 /// - Node authorization: determines which nodes are added to the graph
 /// - Edge authorization: determines which edges are added to the graph  
 /// - Sampling strategy: generates candidate nodes and edges
@@ -17,78 +18,124 @@ use crate::preset::NodeBuilder;
 /// * `NP` - Policy type that allows node additions
 /// * `EP` - Policy type that allows edge additions
 /// * `Samp` - Strategy type that generates graph samples
-pub struct BaseGraphBuilder<K, NS, ES, NB, EB, NP, EP, Samp, Ctx> {
+#[derive(Debug)]
+pub struct GraphBuilder<NS, NB, NP = AllowAll, ES = (), EB = (), EP = AllowAll, S = (), Ctx = ()>
+where
+    NB: NodeBuilder<NS>,
+    NP: Policy<NB::BuiltNode, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
+    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, ES>,
+    EP: Policy<EB::BuiltEdge, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
+    S: Sampler<NS, ES, Ctx>,
+{
     node_builder: NB,
+    node_policy: Option<NP>,
     edge_builder: EB,
-    node_policy: NP,
-    edge_policy: EP,
-    sample_strategy: Samp,
-    _ctx: PhantomData<(K, NS, ES, Ctx)>,
+    edge_policy: Option<EP>,
+    sampler: S,
+
+    _phantom: PhantomData<(NS, ES, Ctx)>,
 }
 
-impl<K, NS, ES, NB, EB, NP, EP, Samp, Ctx> BaseGraphBuilder<K, NS, ES, NB, EB, NP, EP, Samp, Ctx>
+impl<NS, NB, ES, EB, S, Ctx> GraphBuilder<NS, NB, AllowAll, ES, EB, AllowAll, S, Ctx>
 where
-    K: NodeKey,
     NB: NodeBuilder<NS>,
-    NB::BuiltNode: Node<Key = K>,
-    EB: EdgeBuilder<K, ES>,
-    EB::BuiltEdge: Edge<K>,
-    NP: Policy<NB::BuiltNode, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
-    EP: Policy<EB::BuiltEdge, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
-    Samp: Sampler<NS, ES, Ctx>,
+    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, ES>,
+    S: Sampler<NS, ES, Ctx>,
 {
-    /// Creates a new `BaseGraphBuilder` with the specified policies and sampling strategy.
-    ///
-    /// # Arguments
-    /// * `
-    /// node_policy` - Policy that determines whether nodes should be added
-    ///
-    /// * `node_policy` - Policy that determines whether edges should be added
-    /// * `sample_strategy` - Strategy that generates candidate nodes and edges
-    pub fn new(
-        node_builder: NB,
-        edge_builder: EB,
-        node_policy: NP,
-        edge_policy: EP,
-        sample_strategy: Samp,
-    ) -> Self {
-        BaseGraphBuilder {
+    pub fn allow_all(node_builder: NB, edge_builder: EB, sampler: S) -> Self {
+        Self {
             node_builder,
-            node_policy,
             edge_builder,
-            edge_policy,
-            sample_strategy,
-            _ctx: PhantomData,
+            sampler,
+            node_policy: None,
+            edge_policy: None,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<NS, NB, ES, EB, EP, S, Ctx> GraphBuilder<NS, NB, AllowAll, ES, EB, EP, S, Ctx>
+where
+    NB: NodeBuilder<NS>,
+    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, ES>,
+    EP: Policy<EB::BuiltEdge, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
+    S: Sampler<NS, ES, Ctx>,
+{
+    pub fn filter_edges(node_builder: NB, edge_builder: EB, sampler: S) -> Self {
+        Self {
+            node_builder,
+            edge_builder,
+            sampler,
+            node_policy: None,
+            edge_policy: None,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<NS, NB, NP, ES, EB, S, Ctx> GraphBuilder<NS, NB, NP, ES, EB, AllowAll, S, Ctx>
+where
+    NB: NodeBuilder<NS>,
+    NP: Policy<NB::BuiltNode, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
+    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, ES>,
+    S: Sampler<NS, ES, Ctx>,
+{
+    pub fn filter_nodes(node_builder: NB, edge_builder: EB, sampler: S) -> Self {
+        Self {
+            node_builder,
+            edge_builder,
+            sampler,
+            node_policy: None,
+            edge_policy: None,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<NS, NB, NP, ES, EB, EP, S, Ctx> GraphBuilder<NS, NB, NP, ES, EB, EP, S, Ctx>
+where
+    NB: NodeBuilder<NS>,
+    NP: Policy<NB::BuiltNode, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
+    EB: EdgeBuilder<<NB::BuiltNode as Node>::Key, ES>,
+    EP: Policy<EB::BuiltEdge, BaseGraph<NB::BuiltNode, EB::BuiltEdge>>,
+    S: Sampler<NS, ES, Ctx>,
+{
+    pub fn new(node_builder: NB, edge_builder: EB, sampler: S) -> Self {
+        GraphBuilder {
+            node_builder,
+            edge_builder,
+            sampler,
+            node_policy: None,
+            edge_policy: None,
+            _phantom: PhantomData,
         }
     }
 
-    /// Builds a graph by repeatedly sampling and filtering through authorization policies.
-    ///
-    /// The builder will:
-    /// 1. Request samples from the sampling strategy
-    /// 2. Filter nodes through the node authorization policy
-    /// 3. Add allowed nodes and edges to the graph
-    /// 4. Filter edges through the edge authorization policy
-    /// 5. Add allowed nodes and edges to the graph
-    ///
-    /// This process continues until the sampler returns `None`.
-    ///
-    /// # Arguments
-    ///
-    /// * `context` - Contextual information passed to policies and sampling strategy
-    ///
-    /// # Returns
-    ///
-    /// A fully constructed `BaseGraph` containing all allowed nodes and edges
+    pub fn with_node_validation(mut self, policy: NP) -> Self {
+        self.node_policy = Some(policy);
+        self
+    }
+
+    pub fn with_edge_validation(mut self, policy: EP) -> Self {
+        self.edge_policy = Some(policy);
+        self
+    }
+
     pub fn build(&mut self, context: &Ctx) -> BaseGraph<NB::BuiltNode, EB::BuiltEdge> {
         let mut graph = BaseGraph::new();
         let mut edges_buffer = Vec::new();
 
-        while let Some((node_candidates, edges)) = self.sample_strategy.next(context) {
+        while let Some((node_candidates, edges)) = self.sampler.next(context) {
             for candidate in node_candidates {
                 let node = self.node_builder.build_node(candidate);
-                if self.node_policy.is_compliant(&node, &graph) {
-                    graph.add_node(node);
+
+                match &self.node_policy {
+                    None => graph.add_node(node), // no policy = allow all
+                    Some(policy) => {
+                        if policy.is_compliant(&node, &graph) {
+                            graph.add_node(node)
+                        }
+                    }
                 }
             }
             edges_buffer.extend(edges);
@@ -97,8 +144,13 @@ where
         for edge_candidate in edges_buffer {
             let edge = self.edge_builder.build_edge(edge_candidate);
 
-            if self.edge_policy.is_compliant(&edge, &graph) {
-                graph.add_edge(edge);
+            match &self.edge_policy {
+                None => graph.add_edge(edge), // no policy = allow all
+                Some(policy) => {
+                    if policy.is_compliant(&edge, &graph) {
+                        graph.add_edge(edge)
+                    }
+                }
             }
         }
 
@@ -116,13 +168,8 @@ mod tests {
 
     #[test]
     fn builder_should_stop_when_sampler_returns_none() {
-        let mut builder = BaseGraphBuilder::new(
-            MockNodeBuilder,
-            MockEdgeBuilder,
-            AcceptAllPolicy,
-            AcceptAllPolicy,
-            MockSampler::default(),
-        );
+        let mut builder =
+            GraphBuilder::allow_all(MockNodeBuilder, MockEdgeBuilder, MockSampler::default());
 
         let graph = builder.build(&vec![0, 1, 2]);
         assert_eq!(graph.get_nodes().len(), 3);
@@ -131,28 +178,9 @@ mod tests {
 
     #[test]
     fn builder_should_respect_node_policy_rejection() {
-        let mut builder = BaseGraphBuilder::new(
-            MockNodeBuilder,
-            MockEdgeBuilder,
-            AcceptAllPolicy,
-            RejectAllPolicy,
-            MockSampler::default(),
-        );
-
-        let graph = builder.build(&vec![0, 1, 2]);
-        assert_eq!(graph.get_nodes().len(), 3);
-        assert_eq!(graph.get_edges().len(), 0);
-    }
-
-    #[test]
-    fn builder_should_respect_edge_policy_rejection() {
-        let mut builder = BaseGraphBuilder::new(
-            MockNodeBuilder,
-            MockEdgeBuilder,
-            RejectAllPolicy,
-            AcceptAllPolicy,
-            MockSampler::default(),
-        );
+        let mut builder =
+            GraphBuilder::filter_nodes(MockNodeBuilder, MockEdgeBuilder, MockSampler::default())
+                .with_node_validation(RejectAllPolicy);
 
         let graph = builder.build(&vec![0, 1, 2]);
         assert_eq!(graph.get_nodes().len(), 0);
@@ -160,14 +188,20 @@ mod tests {
     }
 
     #[test]
+    fn builder_should_respect_edge_policy_rejection() {
+        let mut builder =
+            GraphBuilder::filter_edges(MockNodeBuilder, MockEdgeBuilder, MockSampler::default())
+                .with_edge_validation(RejectAllPolicy);
+
+        let graph = builder.build(&vec![0, 1, 2]);
+        assert_eq!(graph.get_nodes().len(), 3);
+        assert_eq!(graph.get_edges().len(), 0);
+    }
+
+    #[test]
     fn builder_should_provide_sampler_with_context() {
-        let mut builder = BaseGraphBuilder::new(
-            MockNodeBuilder,
-            MockEdgeBuilder,
-            AcceptAllPolicy,
-            AcceptAllPolicy,
-            MockSampler::default(),
-        );
+        let mut builder =
+            GraphBuilder::allow_all(MockNodeBuilder, MockEdgeBuilder, MockSampler::default());
 
         let graph = builder.build(&vec![0, 1]);
         assert_eq!(graph.get_nodes().len(), 2);
@@ -234,14 +268,6 @@ mod tests {
             let res = Some((vec![self.count], vec![(self.count, self.count)]));
             self.count += 1;
             res
-        }
-    }
-
-    #[derive(Default)]
-    struct AcceptAllPolicy;
-    impl<N: Node, E: Edge<N::Key>, V> Policy<V, BaseGraph<N, E>> for AcceptAllPolicy {
-        fn is_compliant(&self, _: &V, _: &BaseGraph<N, E>) -> bool {
-            true
         }
     }
 
