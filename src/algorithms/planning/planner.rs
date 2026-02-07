@@ -5,13 +5,7 @@ use crate::{
     preset::visitors::TrackParent,
 };
 
-/// Errors that can be faced when path planning
-#[derive(Debug)]
-pub enum FindPathError<K: Debug> {
-    StartNotFound(K),
-    GoalNotFound(K),
-    PathNotFound(K, K),
-}
+use super::FindPathError;
 
 /// Provides a generic path-finding orchestration function.
 ///
