@@ -5,27 +5,12 @@ use crate::{
     preset::visitors::TrackParent,
 };
 
+/// Errors that can be faced when path planning
 #[derive(Debug)]
 pub enum FindPathError<K: Debug> {
     StartNotFound(K),
     GoalNotFound(K),
     PathNotFound(K, K),
-}
-
-impl<GK: Debug> std::fmt::Display for FindPathError<GK> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FindPathError::GoalNotFound(k) => write!(f, "Node not found for goal with id: {:?}", k),
-            FindPathError::PathNotFound(from, to) => write!(
-                f,
-                "No path exists between start {:?} and goal {:?}",
-                from, to
-            ),
-            FindPathError::StartNotFound(k) => {
-                write!(f, "Node not found for goal with id: {:?}", k)
-            }
-        }
-    }
 }
 
 /// Provides a generic path-finding orchestration function.
