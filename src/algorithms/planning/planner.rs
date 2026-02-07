@@ -50,7 +50,7 @@ impl Planner {
         F: Frontier<G::Key>,
     {
         if graph.get_node(start).is_none() {
-            return Err(FindPathError::GoalNotFound(start));
+            return Err(FindPathError::StartNotFound(start));
         }
 
         if graph.get_node(goal).is_none() {
