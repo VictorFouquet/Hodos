@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
-use crate::core::{Frontier, Graph, Node, Policy, Traverse};
+use crate::core::{Frontier, Graph, Node, Traverse};
 use crate::preset::policies::traversal::GoalReached;
 use crate::preset::visitors::{HeuristicEstimator, HeuristicVisitor, WeightedCost};
 use crate::preset::{HasData, HasPosition, HasWeight, MinHeap};
@@ -37,7 +37,6 @@ impl Astar {
         G: Graph<Node = N, Key = N::Key> + Traverse<N>,
         G::Edge: HasWeight,
         G::Key: Debug,
-        GoalReached<G::Key>: Policy<N, G>,
         H: HeuristicEstimator<G>,
     {
         Planner::find_path(

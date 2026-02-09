@@ -1,7 +1,8 @@
-use crate::core::{Edge, Graph, Policy, Visitor, node::NodeKey};
+use crate::core::{Edge, Graph, NodeKey, Policy, Visitor};
 use crate::preset::structural_traits::HasWeight;
 use crate::preset::visitors::{CountVisited, TrackParent};
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 /// Visitor for weighted graph traversal (Dijkstra's algorithm).
 ///
@@ -23,20 +24,22 @@ use std::collections::HashMap;
 /// Dijkstra's algorithm. The frontier will prioritize nodes with the lowest
 /// cumulative cost.
 #[derive(Debug, Default)]
-pub struct WeightedVisitor<P, K: NodeKey> {
+pub struct WeightedVisitor<P, G: Graph> {
     /// Maps node IDs to their shortest known cumulative distance from the start
-    distances: HashMap<K, f64>,
-    parents: HashMap<K, Option<K>>,
+    distances: HashMap<G::Key, f64>,
+    parents: HashMap<G::Key, Option<G::Key>>,
     terminate: P,
 }
 
-impl<P, K> WeightedVisitor<P, K>
+impl<P, G> WeightedVisitor<P, G>
 where
-    K: NodeKey,
-    P: Policy<K, Self>,
+    G: Graph,
+    G::Key: NodeKey,
+    Self: CountVisited + TrackParent<G::Key>,
+    P: Policy<G::Node, Self>,
 {
     pub fn new(terminate: P) -> Self {
-        WeightedVisitor::<P, K> {
+        WeightedVisitor::<P, G> {
             distances: HashMap::new(),
             parents: HashMap::new(),
             terminate,
@@ -44,14 +47,14 @@ where
     }
 }
 
-impl<P, K: NodeKey> CountVisited for WeightedVisitor<P, K> {
+impl<P, G: Graph> CountVisited for WeightedVisitor<P, G> {
     fn visited_count(&self) -> usize {
         self.distances.len()
     }
 }
 
-impl<P, K: NodeKey> TrackParent<K> for WeightedVisitor<P, K> {
-    fn get_parent(&self, node_id: K) -> Option<K> {
+impl<P, G: Graph> TrackParent<G::Key> for WeightedVisitor<P, G> {
+    fn get_parent(&self, node_id: G::Key) -> Option<G::Key> {
         if self.parents.contains_key(&node_id) {
             return self.parents[&node_id];
         }
@@ -59,11 +62,13 @@ impl<P, K: NodeKey> TrackParent<K> for WeightedVisitor<P, K> {
     }
 }
 
-impl<G, P> Visitor<G> for WeightedVisitor<P, G::Key>
+impl<G, P> Visitor<G> for WeightedVisitor<P, G>
 where
     G: Graph,
+    G::Key: NodeKey + Debug,
     G::Edge: HasWeight,
-    P: Policy<G::Key, Self>,
+    Self: CountVisited + TrackParent<G::Key>,
+    P: Policy<G::Node, Self>,
 {
     /// Computes the cumulative cost to reach a target node via a specific edge.
     ///
@@ -146,15 +151,18 @@ where
         self.parents.entry(node_id).or_insert(None);
     }
 
-    fn should_stop(&self, node_id: G::Key, _context: &G) -> bool {
-        self.terminate.is_compliant(&node_id, self)
+    fn should_stop(&self, node_id: G::Key, context: &G) -> bool {
+        let node = context
+            .get_node(node_id)
+            .unwrap_or_else(|| panic!("Node does not exist: {:?}", node_id));
+        self.terminate.is_compliant(node, self)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::Node,
+        core::{Node, NodeKey},
         preset::{BaseGraph, structural_traits::HasWeight},
     };
 
@@ -166,7 +174,7 @@ mod tests {
 
     #[test]
     fn defaults_with_empty_distances() {
-        let visitor = WeightedVisitor::new(Terminate);
+        let visitor = WeightedVisitor::<_, MockGraph>::new(Terminate);
         assert_eq!(visitor.distances.len(), 0);
     }
 
@@ -306,12 +314,15 @@ mod tests {
 
     #[test]
     fn uses_embedded_policy_to_stop() {
-        let graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
+        let mut graph = MockGraph::new();
+        graph.add_node(MockNode { id: 0 });
+
         let visitor = WeightedVisitor::new(Terminate);
 
         assert!(visitor.should_stop(0, &graph));
     }
 
+    type MockGraph = BaseGraph<MockNode, MockWeightedEdge<<MockNode as Node>::Key>>;
     struct MockNode {
         id: u32,
     }
@@ -323,8 +334,8 @@ mod tests {
     }
 
     struct Terminate;
-    impl Policy<u32, WeightedVisitor<Self, u32>> for Terminate {
-        fn is_compliant(&self, _: &u32, __: &WeightedVisitor<Self, u32>) -> bool {
+    impl<V> Policy<<MockGraph as Graph>::Node, V> for Terminate {
+        fn is_compliant(&self, _: &<MockGraph as Graph>::Node, __: &V) -> bool {
             true
         }
     }

@@ -1,19 +1,19 @@
-use crate::core::{NodeKey, Policy};
+use crate::core::{Node, Policy};
 
 #[derive(Debug, Default)]
-pub struct GoalReached<K: NodeKey> {
-    pub goal: K,
+pub struct GoalReached<N: Node> {
+    pub goal: N::Key,
 }
 
-impl<K: NodeKey> GoalReached<K> {
-    pub fn new(goal: K) -> Self {
+impl<N: Node> GoalReached<N> {
+    pub fn new(goal: N::Key) -> Self {
         GoalReached { goal }
     }
 }
 
-impl<K: NodeKey, Ctx> Policy<K, Ctx> for GoalReached<K> {
-    fn is_compliant(&self, node_id: &K, _ctx: &Ctx) -> bool {
-        *node_id == self.goal
+impl<N: Node, Ctx> Policy<N, Ctx> for GoalReached<N> {
+    fn is_compliant(&self, node: &N, _ctx: &Ctx) -> bool {
+        node.id() == self.goal
     }
 }
 
@@ -21,17 +21,26 @@ impl<K: NodeKey, Ctx> Policy<K, Ctx> for GoalReached<K> {
 mod tests {
     use super::*;
 
+    struct MockNode {
+        id: u32,
+    }
+    impl Node for MockNode {
+        type Key = u32;
+        fn id(&self) -> Self::Key {
+            self.id
+        }
+    }
     #[test]
     fn returns_true_when_goal_reached() {
         let policy = GoalReached::new(42);
-        assert!(policy.is_compliant(&42, &()));
+        assert!(policy.is_compliant(&MockNode { id: 42 }, &()));
     }
 
     #[test]
     fn returns_false_when_goal_not_reached() {
         let policy = GoalReached::new(42);
-        assert!(!policy.is_compliant(&0, &()));
-        assert!(!policy.is_compliant(&41, &()));
-        assert!(!policy.is_compliant(&43, &()));
+        assert!(!policy.is_compliant(&MockNode { id: 0 }, &()));
+        assert!(!policy.is_compliant(&MockNode { id: 41 }, &()));
+        assert!(!policy.is_compliant(&MockNode { id: 43 }, &()));
     }
 }

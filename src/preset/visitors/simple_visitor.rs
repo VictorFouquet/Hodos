@@ -1,6 +1,7 @@
 use crate::core::{Edge, Graph, Policy, Visitor};
 use crate::preset::visitors::{CountVisited, TrackParent};
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 /// Simple visitor that prevents revisiting the same node twice.
 ///
@@ -21,7 +22,8 @@ pub struct SimpleVisitor<P, G: Graph> {
 impl<P, G> SimpleVisitor<P, G>
 where
     G: Graph,
-    P: Policy<G::Key, Self>,
+    Self: CountVisited + TrackParent<G::Key>,
+    P: Policy<G::Node, Self>,
 {
     pub fn new(terminate: P) -> Self {
         SimpleVisitor::<P, G> {
@@ -55,7 +57,9 @@ where
 impl<G, P> Visitor<G> for SimpleVisitor<P, G>
 where
     G: Graph,
-    P: Policy<G::Key, Self>,
+    G::Key: Debug,
+    Self: CountVisited + TrackParent<G::Key>,
+    P: Policy<G::Node, Self>,
 {
     /// Provides next nodes to explore.
     ///
@@ -93,8 +97,11 @@ where
         self.visited.entry(node_id).or_insert(None);
     }
 
-    fn should_stop(&self, node_id: G::Key, _context: &G) -> bool {
-        self.terminate.is_compliant(&node_id, self)
+    fn should_stop(&self, node_id: G::Key, context: &G) -> bool {
+        let node = context
+            .get_node(node_id)
+            .unwrap_or_else(|| panic!("Node does not exist: {:?}", node_id));
+        self.terminate.is_compliant(node, self)
     }
 }
 
@@ -156,14 +163,16 @@ mod tests {
 
     #[test]
     fn stops_when_policy_returns_true() {
-        let visitor = SimpleVisitor::<_, MockGraph>::new(Terminate);
+        let visitor = SimpleVisitor::new(Terminate);
 
-        assert!(visitor.should_stop(0, &MockGraph::new()));
+        let mut graph = MockGraph::new();
+        graph.add_node(MockNode { id: 0 });
+        assert!(visitor.should_stop(0, &graph));
     }
 
     struct Terminate;
-    impl<G: Graph> Policy<G::Key, SimpleVisitor<Self, G>> for Terminate {
-        fn is_compliant(&self, _: &G::Key, __: &SimpleVisitor<Self, G>) -> bool {
+    impl<G: Graph> Policy<G::Node, SimpleVisitor<Self, G>> for Terminate {
+        fn is_compliant(&self, _: &G::Node, __: &SimpleVisitor<Self, G>) -> bool {
             true
         }
     }

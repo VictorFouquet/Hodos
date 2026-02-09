@@ -4,12 +4,17 @@ mod visitor_integration {
 
     mod with_terminate_policy {
         use super::*;
+        use hodos::preset::EmptyNode;
         use hodos::preset::policies::logic::Composite;
         use hodos::preset::policies::traversal::GoalReached;
         use hodos::preset::policies::traversal::OpeningExhausted;
 
+        pub fn node(id: u32) -> EmptyNode {
+            EmptyNode::new(id)
+        }
+
         mod simple_visitor {
-            use hodos::preset::SimpleGraph;
+            use hodos::{core::Graph, preset::SimpleGraph};
 
             use super::*;
 
@@ -18,22 +23,31 @@ mod visitor_integration {
                 let goal = 2;
                 let visitor = SimpleVisitor::new(GoalReached::new(goal));
 
-                assert!(!visitor.should_stop(0, &SimpleGraph::new()));
-                assert!(!visitor.should_stop(1, &SimpleGraph::new()));
-                assert!(visitor.should_stop(goal, &SimpleGraph::new()));
+                let mut graph = SimpleGraph::new();
+                graph.add_node(node(0));
+                graph.add_node(node(1));
+                graph.add_node(node(goal));
+
+                assert!(!visitor.should_stop(0, &graph));
+                assert!(!visitor.should_stop(1, &graph));
+                assert!(visitor.should_stop(goal, &graph));
             }
 
             #[test]
             fn stops_when_budget_opening_exhausted() {
                 let mut visitor = SimpleVisitor::new(OpeningExhausted::new(2));
+                let mut graph = SimpleGraph::new();
+                graph.add_node(node(0));
+                graph.add_node(node(1));
+                graph.add_node(node(2));
 
-                assert!(!visitor.should_stop(0, &SimpleGraph::new()));
-                visitor.visit(0, &SimpleGraph::new());
+                assert!(!visitor.should_stop(0, &graph));
+                visitor.visit(0, &graph);
 
-                assert!(!visitor.should_stop(1, &SimpleGraph::new()));
-                visitor.visit(1, &SimpleGraph::new());
+                assert!(!visitor.should_stop(1, &graph));
+                visitor.visit(1, &graph);
 
-                assert!(visitor.should_stop(2, &SimpleGraph::new()));
+                assert!(visitor.should_stop(2, &graph));
             }
 
             #[test]
@@ -43,18 +57,23 @@ mod visitor_integration {
 
                 let mut visitor = SimpleVisitor::new(policy);
 
-                assert!(!visitor.should_stop(0, &SimpleGraph::new())); // Rejects if not goal and budget respected
+                let mut graph = SimpleGraph::new();
+                graph.add_node(node(0));
+                graph.add_node(node(goal));
 
-                visitor.visit(0, &SimpleGraph::new());
+                assert!(!visitor.should_stop(0, &graph)); // Rejects if not goal and budget respected
 
-                assert!(visitor.should_stop(0, &SimpleGraph::new())); // Complies for budget exhausted
+                visitor.visit(0, &graph);
 
-                assert!(visitor.should_stop(goal, &SimpleGraph::new())); // Complies for goal reached
+                assert!(visitor.should_stop(0, &graph)); // Complies for budget exhausted
+
+                assert!(visitor.should_stop(goal, &graph)); // Complies for goal reached
             }
         }
 
         mod weighted_visitor {
             use super::*;
+            use hodos::core::Graph;
             use hodos::preset::{BaseGraph, EmptyNode, WeightedEdge};
 
             fn get_graph() -> BaseGraph<EmptyNode, WeightedEdge<u32>> {
@@ -66,22 +85,32 @@ mod visitor_integration {
                 let goal = 2;
                 let visitor = WeightedVisitor::new(GoalReached::new(goal));
 
-                assert!(!visitor.should_stop(0, &get_graph()));
-                assert!(!visitor.should_stop(1, &get_graph()));
-                assert!(visitor.should_stop(goal, &get_graph()));
+                let mut graph = get_graph();
+                graph.add_node(node(0));
+                graph.add_node(node(1));
+                graph.add_node(node(goal));
+
+                assert!(!visitor.should_stop(0, &graph));
+                assert!(!visitor.should_stop(1, &graph));
+                assert!(visitor.should_stop(goal, &graph));
             }
 
             #[test]
             fn stops_when_budget_opening_exhausted() {
                 let mut visitor = WeightedVisitor::new(OpeningExhausted::new(2));
 
-                assert!(!visitor.should_stop(0, &get_graph()));
-                visitor.visit(0, &get_graph());
+                let mut graph = get_graph();
+                graph.add_node(node(0));
+                graph.add_node(node(1));
+                graph.add_node(node(2));
 
-                assert!(!visitor.should_stop(1, &get_graph()));
-                visitor.visit(1, &get_graph());
+                assert!(!visitor.should_stop(0, &graph));
+                visitor.visit(0, &&graph);
 
-                assert!(visitor.should_stop(2, &get_graph()));
+                assert!(!visitor.should_stop(1, &graph));
+                visitor.visit(1, &graph);
+
+                assert!(visitor.should_stop(2, &graph));
             }
 
             #[test]
@@ -91,13 +120,17 @@ mod visitor_integration {
 
                 let mut visitor = WeightedVisitor::new(policy);
 
-                assert!(!visitor.should_stop(0, &get_graph())); // Rejects if not goal and budget respected
+                let mut graph = get_graph();
+                graph.add_node(node(0));
+                graph.add_node(node(goal));
 
-                visitor.visit(0, &get_graph());
+                assert!(!visitor.should_stop(0, &graph)); // Rejects if not goal and budget respected
 
-                assert!(visitor.should_stop(0, &get_graph())); // Complies for budget exhausted
+                visitor.visit(0, &graph);
 
-                assert!(visitor.should_stop(goal, &get_graph())); // Complies for goal reached
+                assert!(visitor.should_stop(0, &graph)); // Complies for budget exhausted
+
+                assert!(visitor.should_stop(goal, &graph)); // Complies for goal reached
             }
         }
 

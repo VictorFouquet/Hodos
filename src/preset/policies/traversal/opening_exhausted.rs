@@ -1,4 +1,4 @@
-use crate::core::Policy;
+use crate::core::{Node, Policy};
 use crate::preset::visitors::CountVisited;
 
 pub struct OpeningExhausted {
@@ -11,12 +11,9 @@ impl OpeningExhausted {
     }
 }
 
-impl<C> Policy<u32, C> for OpeningExhausted
-where
-    C: CountVisited,
-{
-    fn is_compliant(&self, _node_id: &u32, context: &C) -> bool {
-        context.visited_count() >= self.max_opening
+impl<N: Node, V: CountVisited> Policy<N, V> for OpeningExhausted {
+    fn is_compliant(&self, _node: &N, visitor: &V) -> bool {
+        visitor.visited_count() >= self.max_opening
     }
 }
 
@@ -35,6 +32,16 @@ mod tests {
         }
     }
 
+    struct MockNode {
+        id: u32,
+    }
+    impl Node for MockNode {
+        type Key = u32;
+        fn id(&self) -> Self::Key {
+            self.id
+        }
+    }
+
     fn new_visitor(visited: usize) -> VisitorMock {
         VisitorMock { visited }
     }
@@ -42,24 +49,24 @@ mod tests {
     #[test]
     fn returns_false_when_under_budget() {
         let policy = OpeningExhausted { max_opening: 5 };
-        assert!(!policy.is_compliant(&0, &new_visitor(4)));
+        assert!(!policy.is_compliant(&MockNode { id: 0 }, &new_visitor(4)));
     }
 
     #[test]
     fn returns_true_when_at_budget() {
         let policy = OpeningExhausted { max_opening: 3 };
-        assert!(policy.is_compliant(&0, &new_visitor(3)));
+        assert!(policy.is_compliant(&MockNode { id: 0 }, &new_visitor(3)));
     }
 
     #[test]
     fn returns_true_when_over_budget() {
         let policy = OpeningExhausted { max_opening: 2 };
-        assert!(policy.is_compliant(&0, &new_visitor(3)));
+        assert!(policy.is_compliant(&MockNode { id: 0 }, &new_visitor(3)));
     }
 
     #[test]
     fn returns_false_when_empty_and_budget_positive() {
         let policy = OpeningExhausted { max_opening: 1 };
-        assert!(!policy.is_compliant(&0, &new_visitor(0)));
+        assert!(!policy.is_compliant(&MockNode { id: 0 }, &new_visitor(0)));
     }
 }

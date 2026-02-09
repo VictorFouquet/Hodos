@@ -1,8 +1,9 @@
 use crate::core::{Edge, Graph, Node, Policy, Visitor, node::NodeKey};
 use crate::preset::structural_traits::{HasData, HasPosition};
-use crate::preset::visitors::{CostEstimator, HeuristicEstimator, TrackParent};
+use crate::preset::visitors::{CostEstimator, CountVisited, HeuristicEstimator, TrackParent};
 
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 /// State information for a visited node during heuristic search.
 ///
@@ -58,6 +59,15 @@ where
 {
     fn get_parent(&self, node_id: Ctx::Key) -> Option<Ctx::Key> {
         self.visited.get(&node_id).and_then(|v| v.parent_id)
+    }
+}
+
+impl<P, G, H, Ctx> CountVisited for HeuristicVisitor<P, G, H, Ctx>
+where
+    Ctx: Graph,
+{
+    fn visited_count(&self) -> usize {
+        self.visited.len()
     }
 }
 
@@ -125,9 +135,11 @@ where
 impl<Ctx, T, P, G, H> Visitor<Ctx> for HeuristicVisitor<P, G, H, Ctx>
 where
     Ctx: Graph,
+    Ctx::Key: Debug,
     T: HasPosition + Clone + Copy,
     Ctx::Node: Node + HasData<Data = T>,
-    P: Policy<Ctx::Node, Ctx>,
+    Self: CountVisited + TrackParent<Ctx::Key>,
+    P: Policy<Ctx::Node, Self>,
     G: CostEstimator<Ctx>,
     H: HeuristicEstimator<Ctx>,
 {
@@ -169,8 +181,10 @@ where
     }
 
     fn should_stop(&self, node_id: Ctx::Key, context: &Ctx) -> bool {
-        let node = context.get_node(node_id).unwrap();
-        self.terminate.is_compliant(node, context)
+        let node = context
+            .get_node(node_id)
+            .unwrap_or_else(|| panic!("Node does not exist: {:?}", node_id));
+        self.terminate.is_compliant(node, self)
     }
 }
 
@@ -517,8 +531,9 @@ mod tests {
         stop_at: Option<K>,
     }
 
-    impl<Ctx: Graph> Policy<Ctx::Node, Ctx> for MockPolicy<Ctx::Key> {
-        fn is_compliant(&self, node: &Ctx::Node, _: &Ctx) -> bool {
+    type MockGraph = BaseGraph<MockNode, MockEdge<u32>>;
+    impl<V> Policy<<MockGraph as Graph>::Node, V> for MockPolicy<u32> {
+        fn is_compliant(&self, node: &MockNode, _: &V) -> bool {
             match self.stop_at {
                 Some(id) => node.id() == id,
                 None => false,
