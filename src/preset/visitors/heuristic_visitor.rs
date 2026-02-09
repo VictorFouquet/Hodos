@@ -13,6 +13,7 @@ use std::fmt::Debug;
 pub struct VisitState<K: NodeKey> {
     pub parent_id: Option<K>,
     pub cost: f64,
+    pub closed: bool,
 }
 
 /// A visitor for heuristic-based graph traversal (A*, Dijkstra, etc.).
@@ -101,7 +102,14 @@ where
     /// * `node_id` - ID of the node being visited
     /// * `cost` - Cumulative cost to reach this node
     pub fn insert_visited(&mut self, parent_id: Option<Ctx::Key>, node_id: Ctx::Key, cost: f64) {
-        self.visited.insert(node_id, VisitState { parent_id, cost });
+        self.visited.insert(
+            node_id,
+            VisitState {
+                parent_id,
+                cost,
+                closed: false,
+            },
+        );
     }
 
     /// Computes the actual cost g(n) to reach a node via an edge.
@@ -165,7 +173,7 @@ where
                     self.insert_visited(Some(from), to, g);
                     to_explore.push((to, g + self.compute_h_cost(to, context)));
                 }
-                Some(&current) if g < current.cost => {
+                Some(&current) if !current.closed && g < current.cost => {
                     self.insert_visited(Some(from), to, g);
                     to_explore.push((to, self.compute_h_cost(to, context)));
                 }
@@ -177,7 +185,18 @@ where
     }
 
     fn visit(&mut self, node_id: Ctx::Key, context: &Ctx) {
-        self.insert_visited(None, node_id, self.init_cost(node_id, context));
+        let cost = self.init_cost(node_id, context);
+
+        self.visited
+            .entry(node_id)
+            .and_modify(|state| {
+                state.closed = true;
+            })
+            .or_insert_with(|| VisitState {
+                parent_id: None,
+                cost,
+                closed: true,
+            });
     }
 
     fn should_stop(&self, node_id: Ctx::Key, context: &Ctx) -> bool {
