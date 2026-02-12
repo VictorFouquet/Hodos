@@ -175,7 +175,7 @@ where
                 }
                 Some(&current) if !current.closed && g < current.cost => {
                     self.insert_visited(Some(from), to, g);
-                    to_explore.push((to, self.compute_h_cost(to, context)));
+                    to_explore.push((to, g + self.compute_h_cost(to, context)));
                 }
                 _ => {}
             }

@@ -54,12 +54,12 @@ mod tests {
     use std::collections::VecDeque;
 
     use crate::{
-        FindPathError,
+        Bfs, FindPathError,
         a_star::Astar,
         core::{Graph, Node},
         preset::{
             BaseGraph, DataNode, EmptyNode, HasPosition, WeightedEdge,
-            visitors::{ManhattanDistance, ZeroHeuristic},
+            visitors::{EuclideanDistance, ManhattanDistance, ZeroHeuristic},
         },
     };
 
@@ -281,6 +281,59 @@ mod tests {
     }
 
     #[test]
+    fn solves_shortest_path() {
+        let grid_size = 100;
+        let mut graph = BaseGraph::new();
+
+        // Add all nodes
+        for y in 0..grid_size {
+            for x in 0..grid_size {
+                let id = y * grid_size + x;
+                graph.add_node(node(id, x as f64, y as f64));
+            }
+        }
+
+        // Add edges (4-connected grid)
+        for y in 0..grid_size {
+            for x in 0..grid_size {
+                let id = y * grid_size + x;
+
+                if x < grid_size - 1 {
+                    graph.add_edge(WeightedEdge::new(id, id + 1, 1.0));
+                }
+                if y < grid_size - 1 {
+                    graph.add_edge(WeightedEdge::new(id, id + grid_size, 1.0));
+                }
+                if x > 0 {
+                    graph.add_edge(WeightedEdge::new(id, id - 1, 1.0));
+                }
+                if y > 0 {
+                    graph.add_edge(WeightedEdge::new(id, id - grid_size, 1.0));
+                }
+            }
+        }
+
+        let start = 0;
+        let goal = grid_size * grid_size - 1;
+
+        let astar_path = Astar::execute(
+            &graph,
+            start,
+            goal,
+            ManhattanDistance::new((grid_size - 1) as f64, (grid_size - 1) as f64),
+        )
+        .expect("A* should find a path");
+
+        let bfs_path = Bfs::execute(&graph, start, goal).expect("BFS should find a path");
+
+        // BFS path should be minimal in steps for uniform cost
+        assert_eq!(bfs_path.len(), (grid_size * 2 - 1) as usize);
+
+        // A* should find the same path length in this simple uniform grid
+        assert_eq!(astar_path.len(), bfs_path.len());
+    }
+
+    #[test]
     fn finds_optimal_path_with_euclidean_heuristic() {
         // Grid graph where A* with heuristic should find optimal path
         //
@@ -327,8 +380,6 @@ mod tests {
         // Diagonal shortcuts (weight sqrt(2) ≈ 1.414, but we'll use 1.0 for simplicity)
         graph.add_edge(WeightedEdge::new(0, 4, 1.0));
         graph.add_edge(WeightedEdge::new(4, 8, 1.0));
-
-        use crate::preset::visitors::EuclideanDistance;
 
         // A* should find the diagonal path 0->4->8
         match Astar::execute(&graph, 0, 8, EuclideanDistance::new(2.0, 2.0)) {
@@ -388,7 +439,7 @@ mod tests {
         println!("Graph setup took: {:?}", setup_duration);
 
         let start = 0; // Top-left corner (0, 0)
-        let goal = grid_size * grid_size - 1; // Bottom-right corner (49, 49)
+        let goal = grid_size * grid_size - 1; // Bottom-right corner (999, 999)
 
         let search_start = Instant::now();
 
