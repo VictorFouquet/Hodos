@@ -89,9 +89,9 @@ where
         let from_dist = self.distances.get(&from).unwrap_or(&0.0);
 
         let edge_weight = context
-            .get_edges()
+            .get_edges_from(from)
             .iter()
-            .find(|e| e.from() == from && e.to() == to)
+            .find(|e| e.to() == to)
             .map(|e| e.weight())
             .unwrap_or(0.0);
 
