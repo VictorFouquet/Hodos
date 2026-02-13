@@ -10,7 +10,7 @@ Graph traversal can be decomposed into four orthogonal concerns: the **data** be
 NodeKey / Node / Edge / Graph   →   the data
 Frontier                        →   the order of exploration
 Visitor                         →   the behavior during exploration
-Policy                          →   the permission to explore
+Policy                          →   the framework's permission system
 ```
 ---
 
