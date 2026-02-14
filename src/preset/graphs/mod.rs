@@ -12,7 +12,9 @@ pub type WeightedDataGraph<T> = BaseGraph<DataNode<T>, WeightedEdge<<DataNode<T>
 #[derive(Default, Debug)]
 pub struct BaseGraph<N: Node, E: Edge<N::Key>> {
     nodes: HashMap<N::Key, N>,
-    edges: HashMap<N::Key, Vec<E>>,
+    edges: HashMap<EdgeId, E>,
+    incoming: HashMap<N::Key, Vec<EdgeId>>,
+    outgoing: HashMap<N::Key, Vec<EdgeId>>,
 }
 
 impl<N: Node, E: Edge<N::Key>> BaseGraph<N, E> {
@@ -21,6 +23,8 @@ impl<N: Node, E: Edge<N::Key>> BaseGraph<N, E> {
         BaseGraph {
             nodes: HashMap::new(),
             edges: HashMap::new(),
+            incoming: HashMap::new(),
+            outgoing: HashMap::new(),
         }
     }
 }
@@ -47,17 +51,52 @@ where
     }
 
     fn add_edge(&mut self, edge: E) {
-        let from = edge.from();
-
-        self.edges.entry(from).or_default().push(edge);
+        self.outgoing
+            .entry(edge.from())
+            .or_default()
+            .push(edge.id());
+        self.incoming.entry(edge.to()).or_default().push(edge.id());
+        self.edges.insert(edge.id(), edge);
     }
 
-    fn get_edges_from(&self, id: N::Key) -> &[E] {
-        self.edges.get(&id).map(Vec::as_slice).unwrap_or(&[])
+    fn get_edges_from(&self, id: N::Key) -> Vec<&Self::Edge> {
+        self.outgoing
+            .get(&id)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[])
+            .iter()
+            .filter_map(|edge_id| self.edges.get(edge_id))
+            .collect()
+    }
+
+    fn get_edges_to(&self, id: <Self::Node as Node>::Key) -> Vec<&Self::Edge> {
+        self.incoming
+            .get(&id)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[])
+            .iter()
+            .filter_map(|edge_id| self.edges.get(edge_id))
+            .collect()
+    }
+
+    fn get_edges_between(
+        &self,
+        id1: <Self::Node as Node>::Key,
+        id2: <Self::Node as Node>::Key,
+    ) -> Vec<&Self::Edge> {
+        self.get_edges_from(id1)
+            .into_iter()
+            .filter(|e| e.to() == id2)
+            .chain(
+                self.get_edges_from(id2)
+                    .into_iter()
+                    .filter(|e| e.to() == id1),
+            )
+            .collect()
     }
 
     fn get_edges(&self) -> Vec<&E> {
-        self.edges.values().flatten().collect()
+        self.edges.values().collect()
     }
 }
 
@@ -105,12 +144,12 @@ mod tests {
 
         let edges_from_1 = graph.get_edges_from(1);
         assert_eq!(edges_from_1.len(), 2);
-        assert!(edges_from_1.contains(&edge1));
-        assert!(edges_from_1.contains(&edge2));
+        assert!(edges_from_1.iter().any(|e| *e == &edge1));
+        assert!(edges_from_1.iter().any(|e| *e == &edge2));
 
         let edges_from_2 = graph.get_edges_from(2);
         assert_eq!(edges_from_2.len(), 1);
-        assert!(edges_from_2.contains(&edge3));
+        assert!(edges_from_2.iter().any(|e| *e == &edge2));
 
         let edges_from_42 = graph.get_edges_from(42);
         assert!(edges_from_42.is_empty());

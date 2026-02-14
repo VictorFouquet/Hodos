@@ -2,6 +2,7 @@ use crate::core::Edge;
 use crate::core::Node;
 
 use super::NodeKey;
+use super::edge::EdgeId;
 
 /// A graph data structure storing nodes and directed edges.
 ///
@@ -63,8 +64,39 @@ pub trait Graph {
     ///
     /// # Returns
     ///
-    /// * `edges` - A slice containing the outgoing edges from the requested node
-    fn get_edges_from(&self, id: <Self::Node as Node>::Key) -> &[Self::Edge];
+    /// * `edges` - A vector containing the outgoing edges from the requested node
+    fn get_edges_from(&self, id: <Self::Node as Node>::Key) -> Vec<&Self::Edge>;
+
+    /// Gets a node's incoming edges.
+    ///
+    /// If node has no incoming edge, an empty vec is returned.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The id of the node to get edges from
+    ///
+    /// # Returns
+    ///
+    /// * `edges` - A vector containing the incoming edges from the requested node
+    fn get_edges_to(&self, id: <Self::Node as Node>::Key) -> Vec<&Self::Edge>;
+
+    /// Gets all edges linking two given nodes, both directions included.
+    ///
+    /// If no node exists between the two nodes, and empty vec is returned.
+    ///
+    /// # Arguments
+    ///
+    /// * `id1` - The id of the first node
+    /// * `id2` - The id of the second node
+    ///
+    /// # Returns
+    ///
+    /// * `edges` - A vector containing the edges linking the two nodes
+    fn get_edges_between(
+        &self,
+        id1: <Self::Node as Node>::Key,
+        id2: <Self::Node as Node>::Key,
+    ) -> Vec<&Self::Edge>;
 
     /// Gets all edges of the graph.
     ///
