@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use ahash::AHashMap;
 
 use crate::core::{Edge, Graph, Node, edge::EdgeId};
 
@@ -11,20 +11,20 @@ pub type WeightedDataGraph<T> = BaseGraph<DataNode<T>, WeightedEdge<<DataNode<T>
 
 #[derive(Default, Debug)]
 pub struct BaseGraph<N: Node, E: Edge<N::Key>> {
-    nodes: HashMap<N::Key, N>,
-    edges: HashMap<EdgeId, E>,
-    incoming: HashMap<N::Key, Vec<EdgeId>>,
-    outgoing: HashMap<N::Key, Vec<EdgeId>>,
+    nodes: AHashMap<N::Key, N>,
+    edges: AHashMap<EdgeId, E>,
+    incoming: AHashMap<N::Key, Vec<EdgeId>>,
+    outgoing: AHashMap<N::Key, Vec<EdgeId>>,
 }
 
 impl<N: Node, E: Edge<N::Key>> BaseGraph<N, E> {
     /// Creates a new empty graph.
     pub fn new() -> Self {
         BaseGraph {
-            nodes: HashMap::new(),
-            edges: HashMap::new(),
-            incoming: HashMap::new(),
-            outgoing: HashMap::new(),
+            nodes: AHashMap::new(),
+            edges: AHashMap::new(),
+            incoming: AHashMap::new(),
+            outgoing: AHashMap::new(),
         }
     }
 }

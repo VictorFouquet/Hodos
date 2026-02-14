@@ -29,7 +29,7 @@ pub struct UnweightedEdge<K: NodeKey> {
 impl<K: NodeKey> UnweightedEdge<K> {
     pub fn new(from: K, to: K) -> Self {
         UnweightedEdge {
-            id: EdgeIdProvider::unique(),
+            id: EdgeIdProvider::next(),
             from,
             to,
         }
