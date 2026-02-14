@@ -40,7 +40,7 @@ where
 mod tests {
     use super::*;
     use crate::{
-        core::{Node, node::NodeKey},
+        core::{Node, edge::EdgeId, node::NodeKey},
         preset::BaseGraph,
     };
 
@@ -48,6 +48,7 @@ mod tests {
         id: u32,
     }
     pub struct MockEdge<K: NodeKey> {
+        id: EdgeId,
         from: K,
         to: K,
     }
@@ -61,6 +62,9 @@ mod tests {
     }
 
     impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
         fn from(&self) -> K {
             self.from
         }

@@ -38,6 +38,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::core::edge::EdgeId;
     use crate::core::{Edge, Node, node::NodeKey};
     use crate::preset::BaseGraph;
     use crate::preset::visitors::HeuristicEstimator;
@@ -53,11 +54,15 @@ mod tests {
     }
 
     struct MockEdge<K: NodeKey> {
+        id: EdgeId,
         from: K,
         to: K,
     }
 
     impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
         fn from(&self) -> K {
             self.from
         }

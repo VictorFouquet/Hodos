@@ -1,9 +1,12 @@
+use crate::core::edge::EdgeId;
 use crate::core::{Edge, node::NodeKey};
+use crate::preset::EdgeIdProvider;
 use crate::preset::structural_traits::HasWeight;
 
 /// A weighted edge connecting two nodes.
 ///
 /// Represents a directional connection between nodes with a given weight.
+/// Requests a unique id when creating an edge.
 /// Suitable for algorithms like Dijkstra and A* when weight influences priority.
 ///
 /// # Examples
@@ -20,6 +23,7 @@ use crate::preset::structural_traits::HasWeight;
 /// ```
 #[derive(Copy, Clone, Debug, Default)]
 pub struct WeightedEdge<K: NodeKey> {
+    id: EdgeId,
     to: K,
     from: K,
     weight: f64,
@@ -27,13 +31,24 @@ pub struct WeightedEdge<K: NodeKey> {
 
 impl<K: NodeKey> WeightedEdge<K> {
     pub fn new(from: K, to: K, weight: f64) -> Self {
-        WeightedEdge { from, to, weight }
+        WeightedEdge {
+            id: EdgeIdProvider::unique(),
+            from,
+            to,
+            weight,
+        }
     }
 }
+
 impl<K: NodeKey> Edge<K> for WeightedEdge<K> {
+    fn id(&self) -> EdgeId {
+        self.id
+    }
+
     fn to(&self) -> K {
         self.to
     }
+
     fn from(&self) -> K {
         self.from
     }

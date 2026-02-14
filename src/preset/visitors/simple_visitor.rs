@@ -108,8 +108,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, Node},
-        preset::BaseGraph,
+        core::{Edge, Node, edge::EdgeId},
+        preset::{BaseGraph, EdgeIdProvider},
     };
 
     use super::*;
@@ -142,7 +142,11 @@ mod tests {
         let mut graph = MockGraph::new();
         graph.add_node(MockNode { id: 0 });
         graph.add_node(MockNode { id: 1 });
-        graph.add_edge(MockEdge { from: 0, to: 1 });
+        graph.add_edge(MockEdge {
+            id: EdgeIdProvider::random(),
+            from: 0,
+            to: 1,
+        });
 
         assert_eq!(visitor.next_to_explore(0, &graph)[0].0, 1);
     }
@@ -154,7 +158,11 @@ mod tests {
         let mut graph = MockGraph::new();
         graph.add_node(MockNode { id: 0 });
         graph.add_node(MockNode { id: 1 });
-        graph.add_edge(MockEdge { from: 0, to: 1 });
+        graph.add_edge(MockEdge {
+            id: EdgeIdProvider::random(),
+            from: 0,
+            to: 1,
+        });
 
         visitor.visit(1, &MockGraph::new());
 
@@ -188,10 +196,14 @@ mod tests {
     }
 
     struct MockEdge {
+        id: EdgeId,
         from: u32,
         to: u32,
     }
     impl Edge<u32> for MockEdge {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
         fn from(&self) -> u32 {
             self.from
         }

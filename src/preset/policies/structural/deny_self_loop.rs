@@ -27,8 +27,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Node, node::NodeKey},
-        preset::BaseGraph,
+        core::{Node, edge::EdgeId, node::NodeKey},
+        preset::{BaseGraph, EdgeIdProvider},
     };
 
     use super::*;
@@ -46,17 +46,25 @@ mod tests {
 
     #[derive(Clone)]
     pub struct MockEdge<K: NodeKey> {
+        id: EdgeId,
         to: K,
         from: K,
     }
 
     impl<K: NodeKey> MockEdge<K> {
         fn new(from: K, to: K) -> Self {
-            MockEdge { from: from, to: to }
+            MockEdge {
+                id: EdgeIdProvider::random(),
+                from: from,
+                to: to,
+            }
         }
     }
 
     impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
         fn to(&self) -> K {
             self.to
         }

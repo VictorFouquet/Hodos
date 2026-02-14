@@ -30,7 +30,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{core::edge::Edge, core::node::NodeKey, preset::BaseGraph};
+    use crate::{
+        core::{
+            edge::{Edge, EdgeId},
+            node::NodeKey,
+        },
+        preset::BaseGraph,
+    };
 
     use super::*;
 
@@ -49,11 +55,16 @@ mod tests {
 
     #[derive(Clone)]
     pub struct MockEdge<K: NodeKey> {
+        id: EdgeId,
         from: K,
         to: K,
     }
 
     impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
+
         fn from(&self) -> K {
             self.from
         }

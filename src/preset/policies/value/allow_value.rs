@@ -70,6 +70,7 @@ where
 mod tests {
     use super::*;
     use crate::core::Edge;
+    use crate::core::edge::EdgeId;
     use crate::core::node::NodeKey;
     use crate::preset::BaseGraph;
     use crate::preset::structural_traits::HasData;
@@ -141,10 +142,14 @@ mod tests {
 
     #[derive(Default)]
     pub struct MockEdge<K: NodeKey> {
+        id: EdgeId,
         from: K,
         to: K,
     }
     impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
         fn from(&self) -> K {
             self.from
         }

@@ -55,9 +55,9 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, Graph, Node, node::NodeKey},
+        core::{Edge, Graph, Node, edge::EdgeId, node::NodeKey},
         preset::{
-            BaseGraph,
+            BaseGraph, EdgeIdProvider,
             structural_traits::HasWeight,
             visitors::{CostEstimator, WeightedCost},
         },
@@ -76,6 +76,7 @@ mod tests {
     }
 
     struct MockEdge<K: NodeKey> {
+        id: EdgeId,
         from: K,
         to: K,
         weight: f64,
@@ -83,11 +84,20 @@ mod tests {
 
     impl<K: NodeKey> MockEdge<K> {
         pub fn new(from: K, to: K, weight: f64) -> Self {
-            MockEdge { from, to, weight }
+            MockEdge {
+                id: EdgeIdProvider::random(),
+                from,
+                to,
+                weight,
+            }
         }
     }
 
     impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
+
         fn from(&self) -> K {
             self.from
         }

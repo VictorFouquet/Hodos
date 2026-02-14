@@ -1,4 +1,5 @@
 use super::node::NodeKey;
+pub type EdgeId = u128;
 
 /// Represents an edge connecting two nodes in a graph.
 ///
@@ -11,6 +12,9 @@ use super::node::NodeKey;
 ///
 /// * `K` - NodeKey (id) of the associated nodes
 pub trait Edge<K: NodeKey> {
+    // Returns the edge ID.
+    fn id(&self) -> EdgeId;
+
     /// Returns the destination node ID.
     fn to(&self) -> K;
 

@@ -162,8 +162,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Node, NodeKey},
-        preset::{BaseGraph, structural_traits::HasWeight},
+        core::{Node, NodeKey, edge::EdgeId},
+        preset::{BaseGraph, EdgeIdProvider, structural_traits::HasWeight},
     };
 
     use super::*;
@@ -195,6 +195,7 @@ mod tests {
         let mut graph = BaseGraph::<MockNode, _>::new();
 
         graph.add_edge(MockWeightedEdge {
+            id: EdgeIdProvider::random(),
             from: 0,
             to: 1,
             weight: 1.0,
@@ -342,6 +343,7 @@ mod tests {
 
     #[derive(Default)]
     struct MockWeightedEdge<K: NodeKey> {
+        pub id: EdgeId,
         pub from: K,
         pub to: K,
         pub weight: f64,
@@ -349,11 +351,19 @@ mod tests {
 
     impl<K: NodeKey> MockWeightedEdge<K> {
         pub fn new(from: K, to: K, weight: f64) -> Self {
-            MockWeightedEdge { from, to, weight }
+            MockWeightedEdge {
+                id: EdgeIdProvider::random(),
+                from,
+                to,
+                weight,
+            }
         }
     }
 
     impl<K: NodeKey> Edge<K> for MockWeightedEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
         fn to(&self) -> K {
             self.to
         }

@@ -1,8 +1,12 @@
-use crate::core::{Edge, node::NodeKey};
+use crate::{
+    core::{Edge, edge::EdgeId, node::NodeKey},
+    preset::EdgeIdProvider,
+};
 
 /// An unweighted edge connecting two nodes.
 ///
 /// Represents a directional connection between nodes.
+/// Requests a unique id when creating an edge.
 /// Suitable for algorithms like BFS and DFS where edge weights are irrelevant.
 ///
 /// # Examples
@@ -17,17 +21,25 @@ use crate::core::{Edge, node::NodeKey};
 /// ```
 #[derive(Copy, Clone, Debug, Default)]
 pub struct UnweightedEdge<K: NodeKey> {
+    id: EdgeId,
     to: K,
     from: K,
 }
 
 impl<K: NodeKey> UnweightedEdge<K> {
     pub fn new(from: K, to: K) -> Self {
-        UnweightedEdge { from, to }
+        UnweightedEdge {
+            id: EdgeIdProvider::unique(),
+            from,
+            to,
+        }
     }
 }
 
 impl<K: NodeKey> Edge<K> for UnweightedEdge<K> {
+    fn id(&self) -> EdgeId {
+        self.id
+    }
     fn to(&self) -> K {
         self.to
     }

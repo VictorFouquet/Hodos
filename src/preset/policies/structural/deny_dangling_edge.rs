@@ -19,7 +19,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{core::node::NodeKey, preset::BaseGraph};
+    use crate::{
+        core::{edge::EdgeId, node::NodeKey},
+        preset::{BaseGraph, EdgeIdProvider},
+    };
 
     use super::*;
 
@@ -35,17 +38,25 @@ mod tests {
     }
 
     struct MockEdge<K: NodeKey> {
+        id: EdgeId,
         from: K,
         to: K,
     }
 
     impl<K: NodeKey> MockEdge<K> {
         fn new(from: K, to: K) -> Self {
-            MockEdge { from, to }
+            MockEdge {
+                id: EdgeIdProvider::random(),
+                from,
+                to,
+            }
         }
     }
 
     impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
         fn from(&self) -> K {
             self.from
         }

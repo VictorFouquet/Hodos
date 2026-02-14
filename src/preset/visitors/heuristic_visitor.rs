@@ -210,8 +210,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, node::NodeKey},
-        preset::{BaseGraph, HasWeight},
+        core::{Edge, edge::EdgeId, node::NodeKey},
+        preset::{BaseGraph, EdgeIdProvider, HasWeight},
     };
 
     use super::*;
@@ -308,6 +308,7 @@ mod tests {
         });
 
         graph.add_edge(MockEdge {
+            id: EdgeIdProvider::random(),
             from: 0,
             to: 1,
             weight: 1.0,
@@ -351,16 +352,19 @@ mod tests {
         });
 
         graph.add_edge(MockEdge {
+            id: EdgeIdProvider::random(),
             from: 0,
             to: 1,
             weight: 1.0,
         });
         graph.add_edge(MockEdge {
+            id: EdgeIdProvider::random(),
             from: 0,
             to: 2,
             weight: 1.0,
         });
         graph.add_edge(MockEdge {
+            id: EdgeIdProvider::random(),
             from: 1,
             to: 2,
             weight: 1.0,
@@ -477,11 +481,15 @@ mod tests {
     }
 
     struct MockEdge<K: NodeKey> {
+        id: EdgeId,
         from: K,
         to: K,
         weight: f64,
     }
     impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
         fn from(&self) -> K {
             self.from
         }

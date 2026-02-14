@@ -68,7 +68,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, node::NodeKey},
+        core::{Edge, edge::EdgeId, node::NodeKey},
         preset::BaseGraph,
     };
 
@@ -136,11 +136,15 @@ mod tests {
     }
 
     pub struct MockEdge<K: NodeKey> {
+        id: EdgeId,
         from: K,
         to: K,
     }
 
     impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
         fn from(&self) -> K {
             self.from
         }

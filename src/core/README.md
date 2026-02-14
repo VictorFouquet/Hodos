@@ -47,12 +47,19 @@ Node
 
 ---
 
+### `EdgeId`
+
+A type alias over u128 edge identifier. This id should be unique in the graph, ideally globally unique.
+
+---
+
 ### `Edge`
 
-Owns connectivity. An edge knows its source and destination. Weight, label, and metadata are pushed down to concrete types. The directed nature is encoded structurally through the asymmetry of `from()` and `to()`.
+Owns connectivity. An edge knows its source and destination. Weight, label, and metadata are pushed down to concrete types. The directed nature is encoded structurally through the asymmetry of `from()` and `to()`. Parallel edges are supported by default with the edge's identifier.
 
 ```
 Edge
+ ├── id()   → EdgeId
  ├── from() → NodeKey
  └── to()   → NodeKey
 ```

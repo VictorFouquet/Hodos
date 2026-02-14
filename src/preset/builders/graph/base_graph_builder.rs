@@ -164,7 +164,9 @@ mod tests {
     use crate::core::Edge;
     use crate::core::Node;
     use crate::core::Sampler;
+    use crate::core::edge::EdgeId;
     use crate::core::node::NodeKey;
+    use crate::preset::EdgeIdProvider;
 
     #[test]
     fn builder_should_stop_when_sampler_returns_none() {
@@ -221,6 +223,7 @@ mod tests {
     }
 
     pub struct MockEdge<K: NodeKey> {
+        id: EdgeId,
         to: K,
         from: K,
     }
@@ -228,6 +231,9 @@ mod tests {
     impl<K: NodeKey> MockEdge<K> {}
 
     impl<K: NodeKey> Edge<K> for MockEdge<K> {
+        fn id(&self) -> EdgeId {
+            self.id
+        }
         fn to(&self) -> K {
             self.to
         }
@@ -249,6 +255,7 @@ mod tests {
         type BuiltEdge = MockEdge<K>;
         fn build_edge(&self, sample: (K, K)) -> Self::BuiltEdge {
             MockEdge {
+                id: EdgeIdProvider::random(),
                 from: sample.0,
                 to: sample.1,
             }
