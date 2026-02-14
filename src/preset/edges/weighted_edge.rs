@@ -1,7 +1,7 @@
 use crate::core::edge::EdgeId;
 use crate::core::{Edge, node::NodeKey};
-use crate::preset::EdgeIdProvider;
 use crate::preset::structural_traits::HasWeight;
+use crate::preset::{EdgeIdProvider, IsFlippable};
 
 /// A weighted edge connecting two nodes.
 ///
@@ -61,5 +61,11 @@ impl<K: NodeKey> HasWeight for WeightedEdge<K> {
 
     fn set_weight(&mut self, weight: f64) {
         self.weight = weight;
+    }
+}
+
+impl<K: NodeKey> IsFlippable for WeightedEdge<K> {
+    fn flipped(&self) -> Self {
+        Self::new(self.to, self.from, self.weight)
     }
 }

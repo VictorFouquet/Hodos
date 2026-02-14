@@ -1,6 +1,6 @@
 use crate::{
     core::{Edge, edge::EdgeId, node::NodeKey},
-    preset::EdgeIdProvider,
+    preset::{EdgeIdProvider, IsFlippable},
 };
 
 /// An unweighted edge connecting two nodes.
@@ -45,5 +45,11 @@ impl<K: NodeKey> Edge<K> for UnweightedEdge<K> {
     }
     fn from(&self) -> K {
         self.from
+    }
+}
+
+impl<K: NodeKey> IsFlippable for UnweightedEdge<K> {
+    fn flipped(&self) -> Self {
+        Self::new(self.to, self.from)
     }
 }
