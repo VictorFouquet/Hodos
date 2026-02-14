@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::core::{Edge, Graph, Node};
+use crate::core::{Edge, Graph, Node, edge::EdgeId};
 
 use super::{DataNode, EmptyNode, UnweightedEdge, WeightedEdge};
 
@@ -139,6 +139,9 @@ mod tests {
     }
 
     impl Edge<u32> for MockEdge {
+        fn id(&self) -> EdgeId {
+            0
+        }
         fn from(&self) -> u32 {
             self.from
         }
