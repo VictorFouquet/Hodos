@@ -98,6 +98,31 @@ where
     fn get_edges(&self) -> Vec<&E> {
         self.edges.values().collect()
     }
+
+    fn delete_edge(&mut self, id: EdgeId) {
+        if let Some(edge) = self.edges.get(&id) {
+            self.incoming.remove(&edge.to());
+            self.outgoing.remove(&edge.from());
+        }
+        self.edges.remove(&id);
+    }
+
+    fn delete_edges(&mut self, ids: Vec<EdgeId>) {
+        for id in ids {
+            self.delete_edge(id);
+        }
+    }
+
+    fn delete_edges_where<F: Fn(&Self::Edge) -> bool>(&mut self, predicate: F) {
+        let to_delete = self
+            .edges
+            .values()
+            .filter(|e| (predicate)(e))
+            .map(|e| e.id())
+            .collect();
+
+        self.delete_edges(to_delete);
+    }
 }
 
 #[cfg(test)]
@@ -134,9 +159,21 @@ mod tests {
     #[test]
     fn add_and_get_edges() {
         let mut graph: BaseGraph<MockNode, MockEdge> = BaseGraph::new();
-        let edge1 = MockEdge { from: 1, to: 2 };
-        let edge2 = MockEdge { from: 1, to: 3 };
-        let edge3 = MockEdge { from: 2, to: 1 };
+        let edge1 = MockEdge {
+            id: 0,
+            from: 1,
+            to: 2,
+        };
+        let edge2 = MockEdge {
+            id: 1,
+            from: 1,
+            to: 3,
+        };
+        let edge3 = MockEdge {
+            id: 2,
+            from: 2,
+            to: 1,
+        };
 
         graph.add_edge(edge1.clone());
         graph.add_edge(edge2.clone());
@@ -144,12 +181,12 @@ mod tests {
 
         let edges_from_1 = graph.get_edges_from(1);
         assert_eq!(edges_from_1.len(), 2);
-        assert!(edges_from_1.iter().any(|e| *e == &edge1));
-        assert!(edges_from_1.iter().any(|e| *e == &edge2));
+        assert!(edges_from_1.iter().any(|e| e.id == edge1.id));
+        assert!(edges_from_1.iter().any(|e| e.id == edge2.id));
 
         let edges_from_2 = graph.get_edges_from(2);
         assert_eq!(edges_from_2.len(), 1);
-        assert!(edges_from_2.iter().any(|e| *e == &edge2));
+        assert!(edges_from_2.iter().any(|e| e.id == edge3.id));
 
         let edges_from_42 = graph.get_edges_from(42);
         assert!(edges_from_42.is_empty());
@@ -173,13 +210,14 @@ mod tests {
 
     #[derive(Debug, PartialEq, Eq, Clone)]
     struct MockEdge {
+        id: EdgeId,
         from: u32,
         to: u32,
     }
 
     impl Edge<u32> for MockEdge {
         fn id(&self) -> EdgeId {
-            0
+            self.id
         }
         fn from(&self) -> u32 {
             self.from

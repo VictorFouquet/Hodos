@@ -104,4 +104,21 @@ pub trait Graph {
     ///
     /// * `edges` - All the graph's edges
     fn get_edges(&self) -> Vec<&Self::Edge>;
+
+    /// Deletes an edge by edge id
+    fn delete_edge(&mut self, id: EdgeId);
+
+    /// Batch deletes edges by edges id
+    ///
+    /// # Arguments
+    ///
+    /// * `ids` - Vector containing the ids of the edges to delete
+    fn delete_edges(&mut self, ids: Vec<EdgeId>);
+
+    /// Deletes edges with a predicate
+    ///
+    /// # Arguments
+    ///
+    /// * `predicate` - Callback used to filter the edges to delete
+    fn delete_edges_where<F: Fn(&Self::Edge) -> bool>(&mut self, predicate: F);
 }

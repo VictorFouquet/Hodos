@@ -65,10 +65,10 @@ mod policy_integration {
                 let edge = UnweightedEdge::new(0, 1);
 
                 assert!(policy.is_compliant(&edge, &graph)); // Unique
-                graph.add_edge(edge);
+                graph.add_edge(UnweightedEdge::new(0, 1));
 
                 assert!(policy.is_compliant(&edge, &graph)); // Duplicate but under budget
-                graph.add_edge(edge);
+                graph.add_edge(UnweightedEdge::new(0, 1));
 
                 assert!(!policy.is_compliant(&edge, &graph)); // Duplicate and budget exhausted
             }
