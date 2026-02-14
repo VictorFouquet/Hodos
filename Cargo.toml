@@ -3,6 +3,10 @@ name = "hodos"
 version = "0.1.0"
 edition = "2024"
 authors = ["Victor Fouquet <victor.fouquet@gmail.com>"]
-description = "A crate for building dynamic and policy driven graph traversals"
+description = "Hodos – a modular, composable graph traversal framework for Rust. Build graphs, control exploration order, and define traversal logic with reusable visitors, frontiers, and policies. From BFS/DFS to weighted or iterative searches, Hodos makes algorithms emergent from primitives, not hardcoded methods."
 license = "MIT"
 repository = "https://github.com/VictorFouquet/Hodos"
+
+[dependencies]
+uuid = { version = "1.3", features = ["v4"] }
+rand = "0.10"

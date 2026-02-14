@@ -1,5 +1,6 @@
 pub mod builders;
 pub mod edges;
+pub mod externals;
 pub mod frontiers;
 pub mod graphs;
 pub mod nodes;
@@ -12,6 +13,7 @@ pub mod visitors;
 pub use builders::*;
 pub use edges::unweighted_edge::UnweightedEdge;
 pub use edges::weighted_edge::WeightedEdge;
+pub use externals::*;
 pub use frontiers::*;
 pub use graphs::*;
 pub use nodes::data_node::DataNode;
