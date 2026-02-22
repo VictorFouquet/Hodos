@@ -1,4 +1,6 @@
+pub mod builder;
 pub mod edge;
+pub mod expander;
 pub mod frontier;
 pub mod graph;
 pub mod node;
@@ -7,11 +9,13 @@ pub mod sampler;
 pub mod traverse;
 pub mod visitor;
 
-pub use edge::Edge;
-pub use frontier::Frontier;
+pub use builder::*;
+pub use edge::*;
+pub use expander::*;
+pub use frontier::*;
 pub use graph::*;
 pub use node::*;
 pub use policy::*;
-pub use sampler::Sampler;
+pub use sampler::*;
 pub use traverse::*;
-pub use visitor::Visitor;
+pub use visitor::*;
