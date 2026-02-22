@@ -13,7 +13,7 @@ Preset usage naturally falls into two phases that mirror how a graph problem is 
 **Construction** — turning external data into a graph:
 
 ```
-Source data → Sampler → Builders → GraphBuilder (+ Policies) → BaseGraph
+Source data → NodeSampler → Builders → GraphBuilder (+ Policies) → BaseGraph
 ```
 
 **Traversal** — exploring a graph to produce a result:

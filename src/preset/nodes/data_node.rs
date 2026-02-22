@@ -24,7 +24,7 @@ use crate::preset::structural_traits::HasData;
 /// assert_eq!(node.data().x, 1);
 /// assert_eq!(node.data().y, 2);
 /// ```
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct DataNode<T> {
     id: u32,
     data: T,
