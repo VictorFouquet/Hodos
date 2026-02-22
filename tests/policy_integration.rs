@@ -8,8 +8,44 @@ mod policy_integration {
         use super::*;
         use hodos::core::Policy;
 
+        mod composite_for_hybrid {
+            use super::*;
+            use hodos::core::Mutation;
+            use hodos::preset::BaseGraph;
+            use hodos::preset::edges::WeightedEdge;
+            use hodos::preset::policies::value::{AllowWhenEdge, AllowWhenNode};
+            use hodos::preset::{HasData, HasWeight};
+
+            type DataWeightedGraph = BaseGraph<DataNode<bool>, WeightedEdge<u32>>;
+            #[test]
+            fn rejects_nodes_when_budget_exhausted_despite_allowed_value() {
+                let policy = Composite::And(
+                    AllowWhenNode::new(|n: &DataNode<bool>| *n.data()),
+                    AllowWhenEdge::new(|e: &WeightedEdge<u32>| e.weight() < 0.3),
+                );
+
+                assert!(policy.is_compliant(
+                    &Mutation::<DataWeightedGraph>::AddNode(DataNode::new(0, true)),
+                    &()
+                ));
+                assert!(!policy.is_compliant(
+                    &Mutation::<DataWeightedGraph>::AddNode(DataNode::new(0, false)),
+                    &()
+                ));
+                assert!(policy.is_compliant(
+                    &Mutation::<DataWeightedGraph>::AddEdge(WeightedEdge::new(0, 0, 0.2)),
+                    &()
+                ));
+                assert!(!policy.is_compliant(
+                    &Mutation::<DataWeightedGraph>::AddEdge(WeightedEdge::new(0, 0, 0.4)),
+                    &()
+                ));
+            }
+        }
+
         mod composite_for_nodes {
             use super::*;
+            use hodos::core::Mutation;
             use hodos::preset::BaseGraph;
             use hodos::preset::policies::mutation::DenyNodeOverride;
             use hodos::preset::policies::value::AllowValue;
@@ -22,10 +58,10 @@ mod policy_integration {
                 let node1 = DataNode::new(0, true);
                 let node2 = DataNode::new(1, true);
 
-                assert!(policy.is_compliant(&node1, &graph)); // allowed + under budget
+                assert!(policy.is_compliant(&Mutation::AddNode(node1), &graph)); // allowed + under budget
                 graph.add_node(node1);
 
-                assert!(!policy.is_compliant(&node2, &graph)); // allowed but budget exhausted
+                assert!(!policy.is_compliant(&Mutation::AddNode(node2), &graph)); // allowed but budget exhausted
             }
 
             #[test]
@@ -37,23 +73,24 @@ mod policy_integration {
                 let whitelisted_dup = DataNode::new(0, 999);
                 let forbidden_dup = DataNode::new(0, 1);
 
-                assert!(policy.is_compliant(&unique, &graph)); // unique
+                assert!(policy.is_compliant(&Mutation::AddNode(unique), &graph)); // unique
                 graph.add_node(unique);
 
-                assert!(policy.is_compliant(&whitelisted_dup, &graph)); // whitelisted (duplicate OK)
+                assert!(policy.is_compliant(&Mutation::AddNode(whitelisted_dup), &graph)); // whitelisted (duplicate OK)
                 graph.add_node(whitelisted_dup);
 
-                assert!(!policy.is_compliant(&forbidden_dup, &graph)); // duplicate + not whitelisted
+                assert!(!policy.is_compliant(&Mutation::AddNode(forbidden_dup), &graph)); // duplicate + not whitelisted
             }
         }
 
         mod composite_for_edges {
             use super::*;
+            use hodos::core::Mutation;
             use hodos::preset::BaseGraph;
             use hodos::preset::UnweightedEdge;
             use hodos::preset::WeightedEdge;
             use hodos::preset::policies::structural::DenyParallelEdge;
-            use hodos::preset::policies::value::AllowWhen;
+            use hodos::preset::policies::value::AllowWhenEdge;
             use hodos::preset::structural_traits::HasWeight;
 
             #[test]
@@ -64,13 +101,13 @@ mod policy_integration {
 
                 let edge = UnweightedEdge::new(0, 1);
 
-                assert!(policy.is_compliant(&edge, &graph)); // Unique
+                assert!(policy.is_compliant(&Mutation::AddEdge(edge), &graph)); // Unique
                 graph.add_edge(UnweightedEdge::new(0, 1));
 
-                assert!(policy.is_compliant(&edge, &graph)); // Duplicate but under budget
+                assert!(policy.is_compliant(&Mutation::AddEdge(edge), &graph)); // Duplicate but under budget
                 graph.add_edge(UnweightedEdge::new(0, 1));
 
-                assert!(!policy.is_compliant(&edge, &graph)); // Duplicate and budget exhausted
+                assert!(!policy.is_compliant(&Mutation::AddEdge(edge), &graph)); // Duplicate and budget exhausted
             }
 
             #[test]
@@ -78,7 +115,7 @@ mod policy_integration {
                 let policy = Composite::And(
                     Composite::And(
                         DenyParallelEdge,
-                        AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() < 5.0),
+                        AllowWhenEdge::new(|e: &WeightedEdge<u32>| e.weight() < 5.0),
                     ),
                     EdgeBudget::new(2),
                 );
@@ -95,17 +132,21 @@ mod policy_integration {
 
                 let budget_exhausted = WeightedEdge::new(2, 3, 2.0);
 
-                assert!(!policy.is_compliant(&too_heavy, &graph)); // ✗ too heavy
+                assert!(!policy.is_compliant(&Mutation::AddEdge(too_heavy), &graph)); // ✗ too heavy
 
-                assert!(policy.is_compliant(&unique_light_under_budget_1, &graph)); // ✓ unique, light, under budget
+                assert!(
+                    policy.is_compliant(&Mutation::AddEdge(unique_light_under_budget_1), &graph)
+                ); // ✓ unique, light, under budget
                 graph.add_edge(unique_light_under_budget_1);
 
-                assert!(!policy.is_compliant(&duplicate, &graph)); // ✗ duplicate
+                assert!(!policy.is_compliant(&Mutation::AddEdge(duplicate), &graph)); // ✗ duplicate
 
-                assert!(policy.is_compliant(&unique_light_under_budget_2, &graph)); // ✓ unique, light, under budget
+                assert!(
+                    policy.is_compliant(&Mutation::AddEdge(unique_light_under_budget_2), &graph)
+                ); // ✓ unique, light, under budget
                 graph.add_edge(unique_light_under_budget_2);
 
-                assert!(!policy.is_compliant(&budget_exhausted, &graph)); // ✗ budget exhausted
+                assert!(!policy.is_compliant(&Mutation::AddEdge(budget_exhausted), &graph)); // ✗ budget exhausted
             }
 
             #[test]
@@ -113,7 +154,7 @@ mod policy_integration {
                 let mut graph = BaseGraph::<EmptyNode, WeightedEdge<u32>>::new();
 
                 let policy = Composite::Or(
-                    AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() < 3.0),
+                    AllowWhenEdge::new(|e: &WeightedEdge<u32>| e.weight() < 3.0),
                     EdgeBudget::new(2),
                 );
 
@@ -122,14 +163,14 @@ mod policy_integration {
                 let heavy_exhausted_budget = WeightedEdge::new(2, 3, 15.0);
                 let light_exhausted_budget = WeightedEdge::new(2, 3, 1.0);
 
-                assert!(policy.is_compliant(&heavy_under_budget_1, &graph)); // Heavy but under budget
+                assert!(policy.is_compliant(&Mutation::AddEdge(heavy_under_budget_1), &graph)); // Heavy but under budget
                 graph.add_edge(heavy_under_budget_1);
 
-                assert!(policy.is_compliant(&heavy_under_budget_2, &graph)); // Heavy but under budget
+                assert!(policy.is_compliant(&Mutation::AddEdge(heavy_under_budget_2), &graph)); // Heavy but under budget
                 graph.add_edge(heavy_under_budget_2);
 
-                assert!(!policy.is_compliant(&heavy_exhausted_budget, &graph)); // Heavy and budget exhausted
-                assert!(policy.is_compliant(&light_exhausted_budget, &graph)); // Light (OR satisfied)
+                assert!(!policy.is_compliant(&Mutation::AddEdge(heavy_exhausted_budget), &graph)); // Heavy and budget exhausted
+                assert!(policy.is_compliant(&Mutation::AddEdge(light_exhausted_budget), &graph)); // Light (OR satisfied)
             }
 
             #[test]
@@ -137,8 +178,8 @@ mod policy_integration {
                 let mut graph = BaseGraph::<EmptyNode, WeightedEdge<u32>>::new();
 
                 let policy = Composite::And(
-                    AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() > 5.0),
-                    AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() < 10.0),
+                    AllowWhenEdge::new(|e: &WeightedEdge<u32>| e.weight() > 5.0),
+                    AllowWhenEdge::new(|e: &WeightedEdge<u32>| e.weight() < 10.0),
                 )
                 .and(DenyParallelEdge);
 
@@ -148,15 +189,15 @@ mod policy_integration {
                 let unique_above_range = WeightedEdge::new(2, 3, 20.0);
                 let unique_below_range = WeightedEdge::new(3, 4, 1.0);
 
-                assert!(policy.is_compliant(&in_range_unique_1, &graph)); // In range and unique
+                assert!(policy.is_compliant(&Mutation::AddEdge(in_range_unique_1), &graph)); // In range and unique
                 graph.add_edge(in_range_unique_1);
 
-                assert!(policy.is_compliant(&in_range_unique_2, &graph)); // In range and unique
+                assert!(policy.is_compliant(&Mutation::AddEdge(in_range_unique_2), &graph)); // In range and unique
                 graph.add_edge(in_range_unique_2);
 
-                assert!(!policy.is_compliant(&in_range_duplicate, &graph)); // In range but duplicate
-                assert!(!policy.is_compliant(&unique_above_range, &graph)); // Unique but above range
-                assert!(!policy.is_compliant(&unique_below_range, &graph)); // Unique but below range
+                assert!(!policy.is_compliant(&Mutation::AddEdge(in_range_duplicate), &graph)); // In range but duplicate
+                assert!(!policy.is_compliant(&Mutation::AddEdge(unique_above_range), &graph)); // Unique but above range
+                assert!(!policy.is_compliant(&Mutation::AddEdge(unique_below_range), &graph)); // Unique but below range
             }
         }
     }
