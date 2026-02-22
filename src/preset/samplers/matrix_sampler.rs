@@ -1,7 +1,7 @@
 use core::f64;
 use std::marker::PhantomData;
 
-use crate::core::Sampler;
+use crate::core::NodeSampler;
 use crate::preset::EmptyNode;
 use crate::preset::{UnweightedEdge, WeightedEdge};
 
@@ -48,54 +48,39 @@ impl<N, E> Default for MatrixSampler<N, E> {
     }
 }
 
-impl Sampler<BinaryMatrix> for BinaryMatrixSampler {
+impl NodeSampler<BinaryMatrix> for BinaryMatrixSampler {
     type NodeCandidate = u32;
-    type EdgeCandidate = (u32, u32);
 
-    fn next(&mut self, context: &BinaryMatrix) -> Option<(Vec<u32>, Vec<(u32, u32)>)> {
+    fn next(&mut self, context: &BinaryMatrix) -> Option<Vec<u32>> {
         let i = self.current_id as usize;
 
         if i >= context.len() {
             return None;
         }
 
-        let edges: Vec<_> = context[i]
-            .iter()
-            .enumerate()
-            .filter(|(_, v)| **v)
-            .map(|(j, _)| (self.current_id, j as u32))
-            .collect();
-
         let nodes = vec![self.current_id];
 
         self.current_id += 1;
 
-        Some((nodes, edges))
+        Some(nodes)
     }
 }
 
-impl Sampler<WeightedMatrix> for WeightedMatrixSampler {
+impl NodeSampler<WeightedMatrix> for WeightedMatrixSampler {
     type NodeCandidate = u32;
-    type EdgeCandidate = (u32, u32, f64);
 
-    fn next(&mut self, context: &WeightedMatrix) -> Option<(Vec<u32>, Vec<(u32, u32, f64)>)> {
+    fn next(&mut self, context: &WeightedMatrix) -> Option<Vec<u32>> {
         let i = self.current_id as usize;
 
         if i >= context.len() {
             return None;
         }
 
-        let edges: Vec<_> = context[i]
-            .iter()
-            .enumerate()
-            .filter_map(|(j, w)| w.map(|weight| (self.current_id, j as u32, weight)))
-            .collect();
-
         let nodes = vec![self.current_id];
 
         self.current_id += 1;
 
-        Some((nodes, edges))
+        Some(nodes)
     }
 }
 
@@ -118,10 +103,10 @@ mod tests {
                 let mut sampler = <$sampler_type>::default();
                 let context = $context;
 
-                let (nodes1, _) = sampler.next(&context).unwrap();
+                let nodes1 = sampler.next(&context).unwrap();
                 assert_eq!(nodes1[0], 0);
 
-                let (nodes2, _) = sampler.next(&context).unwrap();
+                let nodes2 = sampler.next(&context).unwrap();
                 assert_eq!(nodes2[0], 1);
             }
 
@@ -151,30 +136,6 @@ mod tests {
         }
 
         test_sampler_common!(BinaryMatrixSampler, BinaryMatrix, test_context());
-
-        #[test]
-        fn maps_edges_correctly() {
-            let mut sampler = BinaryMatrixSampler::default();
-            let context = test_context();
-
-            let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges.len(), 1);
-            assert_eq!(edges[0].0, 0);
-            assert_eq!(edges[0].1, 1);
-
-            let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges.len(), 2);
-            assert_eq!(edges[0].0, 1);
-            assert_eq!(edges[0].1, 0);
-
-            assert_eq!(edges[0].0, 1);
-            assert_eq!(edges[1].1, 2);
-
-            let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges.len(), 1);
-            assert_eq!(edges[0].0, 2);
-            assert_eq!(edges[0].1, 1);
-        }
     }
 
     // ==================== Weighted Matrix ====================
@@ -191,21 +152,5 @@ mod tests {
         }
 
         test_sampler_common!(WeightedMatrixSampler, WeightedMatrix, test_context());
-
-        #[test]
-        fn maps_edges_with_weights() {
-            let mut sampler = WeightedMatrixSampler::default();
-            let context = test_context();
-
-            let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges[0].2, 0.0);
-
-            let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges[0].2, 4.0);
-            assert_eq!(edges[1].2, 2.0);
-
-            let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges[0].2, -1.0);
-        }
     }
 }

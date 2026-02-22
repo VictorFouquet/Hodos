@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::core::Sampler;
+use crate::core::NodeSampler;
 
 pub type Grid2D<T> = Vec<Vec<T>>;
 
@@ -21,7 +21,6 @@ pub type Grid2D<T> = Vec<Vec<T>>;
 pub struct Grid2DSampler<T> {
     current_x: i32,
     current_y: i32,
-    cell_neighbors: Vec<(i32, i32)>,
     _phantom: PhantomData<T>,
 }
 
@@ -81,11 +80,10 @@ impl<T> Grid2DSampler<T> {
     /// # Returns
     ///
     /// A `Grid2DSampler` configured with the specified neighbor offsets.
-    fn with_connect(neighbors: Vec<(i32, i32)>) -> Self {
+    fn with_connect(_neighbors: Vec<(i32, i32)>) -> Self {
         Grid2DSampler {
             current_x: 0,
             current_y: 0,
-            cell_neighbors: neighbors,
             _phantom: PhantomData,
         }
     }
@@ -97,14 +95,13 @@ impl<T> Default for Grid2DSampler<T> {
     }
 }
 
-impl<T> Sampler<Grid2D<T>> for Grid2DSampler<T>
+impl<T> NodeSampler<Grid2D<T>> for Grid2DSampler<T>
 where
     T: Clone + Copy,
 {
     type NodeCandidate = (u32, T);
-    type EdgeCandidate = (u32, u32);
 
-    fn next(&mut self, context: &Grid2D<T>) -> Option<(Vec<(u32, T)>, Vec<(u32, u32)>)> {
+    fn next(&mut self, context: &Grid2D<T>) -> Option<Vec<(u32, T)>> {
         let i = self.current_y as usize;
 
         if i >= context.len() {
@@ -115,24 +112,6 @@ where
 
         let current_id = self.current_y * (context[i].len() as i32) + self.current_x;
 
-        let edges: Vec<_> = self
-            .cell_neighbors
-            .iter()
-            .filter(|&v| {
-                v.0 + self.current_y >= 0
-                    && v.0 + self.current_y < (context.len() as i32)
-                    && v.1 + self.current_x >= 0
-                    && v.1 + self.current_x < (context[i].len() as i32)
-            })
-            .map(|&v| {
-                (
-                    current_id as u32,
-                    ((v.0 + self.current_y) * (context[i].len() as i32) + (v.1 + self.current_x))
-                        as u32,
-                )
-            })
-            .collect();
-
         let nodes = vec![(current_id as u32, context[i][j])];
 
         self.current_x += 1;
@@ -141,7 +120,7 @@ where
             self.current_y += 1;
         }
 
-        Some((nodes, edges))
+        Some(nodes)
     }
 }
 
@@ -165,20 +144,14 @@ mod tests {
     }
 
     #[test]
-    fn default_uses_connect_four() {
-        let sampler = Grid2DSampler::<char>::default();
-        assert_eq!(sampler.cell_neighbors.len(), 4);
-    }
-
-    #[test]
     fn maps_sequential_node_ids() {
         let mut sampler = Grid2DSampler::<char>::default();
         let context = test_context();
 
-        let (nodes1, _) = sampler.next(&context).unwrap();
+        let nodes1 = sampler.next(&context).unwrap();
         assert_eq!(nodes1[0].0, 0);
 
-        let (nodes2, _) = sampler.next(&context).unwrap();
+        let nodes2 = sampler.next(&context).unwrap();
         assert_eq!(nodes2[0].0, 1);
     }
 
@@ -193,62 +166,6 @@ mod tests {
     }
 
     #[test]
-    fn maps_edges_correctly() {
-        let expected = vec![
-            vec![1, 3],
-            vec![2, 4, 0],
-            vec![5, 1],
-            vec![0, 4, 6],
-            vec![1, 5, 7, 3],
-            vec![2, 8, 4],
-            vec![3, 7],
-            vec![4, 8, 6],
-            vec![5, 7],
-        ];
-
-        let mut sampler = Grid2DSampler::<char>::default();
-        let context = test_context();
-
-        for i in 0..expected.len() {
-            let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges.len(), expected[i].len());
-
-            for j in 0..expected[i].len() {
-                assert_eq!(edges[j].0, i as u32);
-                assert_eq!(edges[j].1, expected[i][j]);
-            }
-        }
-    }
-
-    #[test]
-    fn maps_edges_correctly_with_connect_eight() {
-        let expected = vec![
-            vec![1, 4, 3],
-            vec![2, 5, 4, 3, 0],
-            vec![5, 4, 1],
-            vec![0, 1, 4, 7, 6],
-            vec![1, 2, 5, 8, 7, 6, 3, 0],
-            vec![2, 8, 7, 4, 1],
-            vec![3, 4, 7],
-            vec![4, 5, 8, 6, 3],
-            vec![5, 7, 4],
-        ];
-
-        let mut sampler = Grid2DSampler::<char>::with_connect_eight();
-        let context = test_context();
-
-        for i in 0..expected.len() {
-            let (_, edges) = sampler.next(&context).unwrap();
-            assert_eq!(edges.len(), expected[i].len());
-
-            for j in 0..expected[i].len() {
-                assert_eq!(edges[j].0, i as u32);
-                assert_eq!(edges[j].1, expected[i][j]);
-            }
-        }
-    }
-
-    #[test]
     fn maps_nodes_correctly() {
         let expected = test_context();
 
@@ -257,7 +174,7 @@ mod tests {
 
         for row in expected {
             for cell in row {
-                let (nodes, _) = sampler.next(&context).unwrap();
+                let nodes = sampler.next(&context).unwrap();
                 assert_eq!(nodes.len(), 1);
                 assert_eq!(nodes[0].1, cell);
             }
