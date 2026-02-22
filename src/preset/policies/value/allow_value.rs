@@ -1,5 +1,5 @@
-use crate::core::Policy;
 use crate::core::{Graph, Node};
+use crate::core::{Mutation, Policy};
 use crate::preset::structural_traits::HasData;
 use std::{collections::HashSet, hash::Hash};
 
@@ -45,7 +45,7 @@ where
     }
 }
 
-impl<G> Policy<G::Node, G> for AllowValue<<G::Node as HasData>::Data>
+impl<G, Ctx> Policy<Mutation<G>, Ctx> for AllowValue<<G::Node as HasData>::Data>
 where
     G: Graph,
     G::Node: Node + HasData,
@@ -61,8 +61,11 @@ where
     /// # Returns
     ///
     /// `true` if the entity's data is in the whitelist, `false` otherwise.
-    fn is_compliant(&self, entity: &G::Node, _context: &G) -> bool {
-        self.allowed_values.contains(entity.data())
+    fn is_compliant(&self, mutation: &Mutation<G>, _context: &Ctx) -> bool {
+        match mutation {
+            Mutation::AddNode(node) => self.allowed_values.contains(node.data()),
+            _ => true,
+        }
     }
 }
 
@@ -78,20 +81,17 @@ mod tests {
     #[test]
     fn allows_none_when_whitelist_is_empty() {
         let policy = AllowValue::<bool>::default();
-        let graph = BaseGraph::<MockValueNode, MockEdge<u32>>::new();
         assert_eq!(policy.allowed_values.len(), 0);
 
         let node = make_node();
         assert_eq!(node.data(), &true);
 
-        assert!(!policy.is_compliant(&node, &graph));
+        assert!(!policy.is_compliant(&Mutation::<MockGraph>::AddNode(node), &()));
     }
 
     #[test]
     fn allows_values_in_whitelist() {
         let mut policy = AllowValue::<bool>::default();
-
-        let graph = BaseGraph::<MockValueNode, MockEdge<u32>>::new();
 
         policy.add_allowed_value(true);
         assert_eq!(policy.allowed_values.len(), 1);
@@ -99,14 +99,12 @@ mod tests {
         let node = make_node();
         assert_eq!(node.data(), &true);
 
-        assert!(policy.is_compliant(&node, &graph));
+        assert!(policy.is_compliant(&Mutation::<MockGraph>::AddNode(node), &()));
     }
 
     #[test]
     fn denies_when_value_not_in_whitelist() {
         let mut policy = AllowValue::<bool>::default();
-
-        let graph = BaseGraph::<MockValueNode, MockEdge<u32>>::new();
 
         policy.add_allowed_value(false);
         assert_eq!(policy.allowed_values.len(), 1);
@@ -114,7 +112,7 @@ mod tests {
         let node = make_node();
         assert_eq!(node.data(), &true);
 
-        assert!(!policy.is_compliant(&node, &graph));
+        assert!(!policy.is_compliant(&Mutation::<MockGraph>::AddNode(node), &()));
     }
 
     #[derive(Default)]
@@ -157,4 +155,6 @@ mod tests {
             self.to
         }
     }
+
+    type MockGraph = BaseGraph<MockValueNode, MockEdge<<MockValueNode as Node>::Key>>;
 }

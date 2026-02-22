@@ -27,12 +27,15 @@ impl NodeBudget {
     }
 }
 
-impl<V, G> Policy<V, G> for NodeBudget
+impl<G> Policy<Mutation<G>, G> for NodeBudget
 where
     G: Graph,
 {
-    fn is_compliant(&self, _entity: &V, context: &G) -> bool {
-        context.get_nodes().len() < self.budget
+    fn is_compliant(&self, mutation: &Mutation<G>, graph: &G) -> bool {
+        match mutation {
+            Mutation::AddNode(_) => graph.get_nodes().len() < self.budget,
+            _ => true,
+        }
     }
 }
 
@@ -82,17 +85,20 @@ mod tests {
     fn rejects_once_budget_exhausted() {
         let policy = NodeBudget::new(2);
         let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
-        let mut node = MockNode { id: 0 };
 
-        assert!(policy.is_compliant(&node, &graph));
+        let mut node = MockNode { id: 0 };
+        let mut mutation = Mutation::AddNode(MockNode { id: 0 });
+
+        assert!(policy.is_compliant(&mutation, &graph));
         graph.add_node(node);
 
         node = MockNode { id: 1 };
-        assert!(policy.is_compliant(&node, &graph));
+        mutation = Mutation::AddNode(MockNode { id: 1 });
+        assert!(policy.is_compliant(&mutation, &graph));
         graph.add_node(node);
 
-        node = MockNode { id: 2 };
-        assert!(!policy.is_compliant(&node, &graph));
+        mutation = Mutation::AddNode(MockNode { id: 2 });
+        assert!(!policy.is_compliant(&mutation, &graph));
     }
 
     #[test]
@@ -100,6 +106,6 @@ mod tests {
         let policy = NodeBudget::new(0);
         let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
 
-        assert!(!policy.is_compliant(&create_node(), &graph));
+        assert!(!policy.is_compliant(&Mutation::AddNode(create_node()), &graph));
     }
 }

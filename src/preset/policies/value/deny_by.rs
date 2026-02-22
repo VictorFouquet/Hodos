@@ -1,4 +1,5 @@
-use crate::core::Policy;
+use crate::core::{Graph, Mutation, Node, Policy};
+use crate::preset::HasData;
 use std::collections::HashSet;
 use std::hash::Hash;
 
@@ -65,21 +66,27 @@ where
     }
 }
 
-impl<Entity, Ctx, F, E> Policy<Entity, Ctx> for DenyBy<F, E>
+impl<G, Ctx, F, E> Policy<Mutation<G>, Ctx> for DenyBy<F, E>
 where
+    G: Graph,
+    G::Node: Node + HasData,
     F: Eq + Hash,
-    E: Fn(&Entity) -> F,
+    E: Fn(&G::Node) -> F,
 {
     /// Denies an entity if its extracted value is in the blacklist.
-    fn is_compliant(&self, entity: &Entity, _context: &Ctx) -> bool {
-        !self.denied_values.contains(&(self.extractor)(entity))
+    fn is_compliant(&self, mutation: &Mutation<G>, _context: &Ctx) -> bool {
+        match mutation {
+            Mutation::AddNode(node) => !self.denied_values.contains(&(self.extractor)(node)),
+            _ => true,
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::Node;
+    use crate::core::{Edge, Node};
+    use crate::preset::BaseGraph;
     use crate::preset::structural_traits::HasData;
 
     #[derive(Default, Clone, Copy)]
@@ -88,7 +95,7 @@ mod tests {
         y: u32,
     }
 
-    #[derive(Default)]
+    #[derive(Default, Clone, Copy)]
     pub struct MockValueNode {
         data: Point,
     }
@@ -115,6 +122,22 @@ mod tests {
         }
     }
 
+    #[derive(Default)]
+    pub struct MockEdge;
+    impl Edge<<MockValueNode as Node>::Key> for MockEdge {
+        fn id(&self) -> crate::core::EdgeId {
+            0
+        }
+        fn from(&self) -> <MockValueNode as Node>::Key {
+            0
+        }
+        fn to(&self) -> <MockValueNode as Node>::Key {
+            0
+        }
+    }
+
+    type MockGraph = BaseGraph<MockValueNode, MockEdge>;
+
     #[test]
     fn adds_denied_value_to_internal_state() {
         let mut policy = DenyBy::new(vec![], |n: &MockValueNode| n.data().x);
@@ -132,16 +155,28 @@ mod tests {
 
         assert_eq!(policy.denied_values.len(), 0);
 
-        assert!(policy.is_compliant(&MockValueNode::new(0, Point { x: 0, y: 0 }), &()));
-        assert!(policy.is_compliant(&MockValueNode::new(0, Point { x: 1, y: 0 }), &()));
+        assert!(policy.is_compliant(
+            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, Point { x: 0, y: 0 })),
+            &()
+        ));
+        assert!(policy.is_compliant(
+            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, Point { x: 1, y: 0 })),
+            &()
+        ));
     }
 
     #[test]
     fn extractor_accepts_node_when_field_value_not_in_blacklist() {
         let policy = DenyBy::new(vec![2], |n: &MockValueNode| n.data().x);
 
-        assert!(policy.is_compliant(&MockValueNode::new(0, Point { x: 1, y: 0 }), &()));
-        assert!(policy.is_compliant(&MockValueNode::new(0, Point { x: 3, y: 0 }), &()));
+        assert!(policy.is_compliant(
+            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, Point { x: 1, y: 0 })),
+            &()
+        ));
+        assert!(policy.is_compliant(
+            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, Point { x: 3, y: 0 })),
+            &()
+        ));
     }
 
     #[test]
@@ -151,7 +186,7 @@ mod tests {
 
         let node = MockValueNode::new(0, Point { x: 0, y: 1 });
 
-        assert!(!policy_x.is_compliant(&node, &()));
-        assert!(!policy_y.is_compliant(&node, &()));
+        assert!(!policy_x.is_compliant(&Mutation::<MockGraph>::AddNode(node.clone()), &()));
+        assert!(!policy_y.is_compliant(&Mutation::<MockGraph>::AddNode(node.clone()), &()));
     }
 }

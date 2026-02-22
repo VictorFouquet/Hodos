@@ -7,13 +7,13 @@ use crate::core::{Graph, Mutation, Policy};
 /// # Examples
 ///
 /// ```
-/// use hodos::core::Edge;
-/// use hodos::preset::edges::WeightedEdge;
+/// use hodos::core::Node;
+/// use hodos::preset::DataNode;
 /// use hodos::preset::policies::value::DenyWhenNode;
-/// use hodos::preset::structural_traits::HasWeight;
+/// use hodos::preset::structural_traits::HasData;
 ///
-/// let policy = DenyWhenNode::new(|edge: &WeightedEdge<u32>| {
-///     edge.weight() < 5.0 || edge.from() == 0
+/// let policy = DenyWhenNode::new(|node: &DataNode<bool>| {
+///     *node.data()
 /// });
 /// ```
 #[derive(Debug)]

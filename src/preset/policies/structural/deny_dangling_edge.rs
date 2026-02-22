@@ -8,12 +8,17 @@ use crate::core::*;
 #[derive(Debug)]
 pub struct DenyDanglingEdge;
 
-impl<G> Policy<G::Edge, G> for DenyDanglingEdge
+impl<G> Policy<Mutation<G>, G> for DenyDanglingEdge
 where
     G: Graph,
 {
-    fn is_compliant(&self, entity: &G::Edge, context: &G) -> bool {
-        context.get_node(entity.from()).is_some() && context.get_node(entity.to()).is_some()
+    fn is_compliant(&self, mutation: &Mutation<G>, graph: &G) -> bool {
+        match mutation {
+            Mutation::AddEdge(edge) => {
+                graph.get_node(edge.from()).is_some() && graph.get_node(edge.to()).is_some()
+            }
+            _ => true,
+        }
     }
 }
 
@@ -79,7 +84,7 @@ mod tests {
         let policy = DenyDanglingEdge;
         let edge = MockEdge::new(0, 1);
 
-        assert!(policy.is_compliant(&edge, &graph));
+        assert!(policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }
 
     #[test]
@@ -88,7 +93,7 @@ mod tests {
         let policy = DenyDanglingEdge;
         let edge = MockEdge::new(0, 1);
 
-        assert!(!policy.is_compliant(&edge, &graph));
+        assert!(!policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }
 
     #[test]
@@ -97,7 +102,7 @@ mod tests {
         let policy = DenyDanglingEdge;
         let edge = MockEdge::new(0, 1);
 
-        assert!(!policy.is_compliant(&edge, &graph));
+        assert!(!policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }
 
     #[test]
@@ -106,6 +111,6 @@ mod tests {
         let policy = DenyDanglingEdge;
         let edge = MockEdge::new(0, 1);
 
-        assert!(!policy.is_compliant(&edge, &graph));
+        assert!(!policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }
 }

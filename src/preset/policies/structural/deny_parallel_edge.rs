@@ -1,5 +1,5 @@
-use crate::core::Policy;
 use crate::core::{Edge, Graph};
+use crate::core::{Mutation, Policy};
 
 /// Authorization policy that ensures each edge is added only once.
 ///
@@ -7,7 +7,7 @@ use crate::core::{Edge, Graph};
 #[derive(Debug)]
 pub struct DenyParallelEdge;
 
-impl<G> Policy<G::Edge, G> for DenyParallelEdge
+impl<G> Policy<Mutation<G>, G> for DenyParallelEdge
 where
     G: Graph,
 {
@@ -21,11 +21,14 @@ where
     /// # Returns
     ///
     /// `true` if this is the first time seeing this edge pair, `false` otherwise
-    fn is_compliant(&self, entity: &G::Edge, context: &G) -> bool {
-        !context
-            .get_edges()
-            .into_iter()
-            .any(|e| e.from() == entity.from() && e.to() == entity.to())
+    fn is_compliant(&self, mutation: &Mutation<G>, graph: &G) -> bool {
+        match mutation {
+            Mutation::AddEdge(edge) => !graph
+                .get_edges_from(edge.from())
+                .into_iter()
+                .any(|e| e.to() == edge.to()),
+            _ => true,
+        }
     }
 }
 
@@ -83,11 +86,11 @@ mod tests {
         let mut graph = BaseGraph::<MockNode, _>::new();
         let edge = MockEdge::new(0, 1);
 
-        assert!(policy.is_compliant(&edge, &graph));
+        assert!(policy.is_compliant(&Mutation::AddEdge(edge.clone()), &graph));
 
         graph.add_edge(edge.clone());
 
-        assert!(!policy.is_compliant(&edge, &graph));
+        assert!(!policy.is_compliant(&Mutation::AddEdge(edge.clone()), &graph));
     }
 
     #[test]
@@ -99,10 +102,10 @@ mod tests {
         let forward = MockEdge::new(0, 1);
         let reverse = MockEdge::new(1, 0);
 
-        assert!(policy.is_compliant(&forward, &graph));
+        assert!(policy.is_compliant(&Mutation::AddEdge(forward.clone()), &graph));
 
         graph.add_edge(forward);
 
-        assert!(policy.is_compliant(&reverse, &graph)); // Different (from, to) pair
+        assert!(policy.is_compliant(&Mutation::AddEdge(reverse), &graph)); // Different (from, to) pair
     }
 }

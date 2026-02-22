@@ -1,5 +1,4 @@
-use crate::core::Policy;
-use crate::core::*;
+use crate::core::{Graph, Mutation, Policy};
 
 /// Authorization policy that limits the total count of edges.
 ///
@@ -27,11 +26,14 @@ impl EdgeBudget {
     }
 }
 
-impl<V, G> Policy<V, G> for EdgeBudget
+impl<G> Policy<Mutation<G>, G> for EdgeBudget
 where
     G: Graph,
 {
-    fn is_compliant(&self, _entity: &V, context: &G) -> bool {
-        context.get_edges().len() < self.budget
+    fn is_compliant(&self, mutation: &Mutation<G>, graph: &G) -> bool {
+        match mutation {
+            Mutation::AddEdge(_) => graph.get_edges().len() < self.budget,
+            _ => true,
+        }
     }
 }

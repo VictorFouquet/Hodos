@@ -50,16 +50,16 @@ See [Composition](#composition) for what this enables.
 
 ### Structural — graph invariant enforcement
 
-These policies take a `Graph` as context and enforce rules about topology. Use them when adding nodes or edges to constrain the shape of the graph being built.
+These policies take a `Mutation` as entity and a `Graph` as context to enforce rules about topology. Use them when adding nodes or edges to constrain the shape of the graph being built.
 
 | Policy | Entity | Enforces |
 |---|---|---|
-| `NodeBudget` | any | graph has fewer than N nodes |
-| `EdgeBudget` | any | graph has fewer than N edges |
-| `DenyNodeOverride` | `Node` | no two nodes share the same ID |
-| `DenyDanglingEdge` | `Edge` | both endpoints exist in the graph |
-| `DenyParallelEdge` | `Edge` | no duplicate `(from, to)` pairs |
-| `DenySelfLoop` | `Edge` | `from` and `to` are different nodes |
+| `NodeBudget` | `Mutation<G>` | graph has fewer than N nodes |
+| `EdgeBudget` | `Mutation<G>` | graph has fewer than N edges |
+| `DenyNodeOverride` | `Mutation<G>` | no two nodes share the same ID |
+| `DenyDanglingEdge` | `Mutation<G>` | both endpoints exist in the graph |
+| `DenyParallelEdge` | `Mutation<G>` | no duplicate `(from, to)` pairs |
+| `DenySelfLoop` | `Mutation<G>` | `from` and `to` are different nodes |
 
 These can be freely mixed and composed. A policy that enforces "simple directed graph" semantics is just:
 
@@ -82,8 +82,10 @@ These policies operate on the *content* of entities, not the graph structure. Co
 | `DenyValue<T>` | blacklist on entity data directly |
 | `AllowBy<F, E>` | whitelist on an extracted field |
 | `DenyBy<F, E>` | blacklist on an extracted field |
-| `AllowWhen<P>` | arbitrary predicate, allow if true |
-| `DenyWhen<P>` | arbitrary predicate, deny if true |
+| `AllowWhenNode<P>` | arbitrary predicate for nodes, allow if true |
+| `DenyWhenNode<P>` | arbitrary predicate for nodes, deny if true |
+| `AllowWhenEdge<P>` | arbitrary predicate for edges, allow if true |
+| `DenyWhenEdge<P>` | arbitrary predicate for edges, deny if true |
 
 `AllowBy` and `DenyBy` cover the common case of filtering on a single field without requiring a full custom implementation:
 
@@ -92,10 +94,11 @@ These policies operate on the *content* of entities, not the graph structure. Co
 DenyBy::new(vec!['#', '~'], |node: &DataNode<GridCell>| node.data().terrain)
 ```
 
-`AllowWhen` and `DenyWhen` are the escape hatches — any logic that doesn't fit a named policy becomes a closure:
+`AllowWhenNode`, `DenyWhenNode`, `AllowWhenEdge` and `DenyWhenEdge` are the escape hatches — any logic that doesn't fit a named policy becomes a closure:
 
 ```rust
-AllowWhen::new(|edge: &WeightedEdge<u32>| edge.weight() > 0.0 && edge.weight() <= 5.0)
+AllowNodeWhen::new(|node: &DataNode<Point>| node.data().x() > 0.0 && node.data().y() < 1.0);
+AllowEdgeWhen::new(|edge: &WeightedEdge<u32>| edge.weight() > 0.0 && edge.weight() <= 5.0);
 ```
 
 ---
@@ -140,4 +143,4 @@ The result is a small, closed algebra: a handful of primitives that compose into
 
 **Context is open.** Nothing forces the context to be a `Graph`. `OpeningExhausted` proves this — its context is a visitor. Any type can serve as context, which means policies can be evaluated against any runtime state the user can provide.
 
-**The escape hatches are first-class.** `AllowWhen` and `DenyWhen` are not afterthoughts — they are full members of the policy library. Custom logic belongs in a closure until it recurs enough to deserve a named type.
+**The escape hatches are first-class.** `AllowWhen` and `DenyWhenNode` are not afterthoughts — they are full members of the policy library. Custom logic belongs in a closure until it recurs enough to deserve a named type.

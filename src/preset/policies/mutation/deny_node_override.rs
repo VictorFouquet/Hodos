@@ -1,12 +1,12 @@
-use crate::core::Policy;
 use crate::core::{Graph, Node};
+use crate::core::{Mutation, Policy};
 
 /// Authorization policy that ensures a node doesn't override
 /// a previously added node with same id.
 #[derive(Debug, Default)]
 pub struct DenyNodeOverride;
 
-impl<G> Policy<G::Node, G> for DenyNodeOverride
+impl<G> Policy<Mutation<G>, G> for DenyNodeOverride
 where
     G: Graph,
 {
@@ -20,11 +20,11 @@ where
     /// # Returns
     ///
     /// `true` if this is the first time seeing this node ID, `false` otherwise
-    fn is_compliant(&self, entity: &G::Node, context: &G) -> bool {
-        !context
-            .get_nodes()
-            .into_iter()
-            .any(|n| n.id() == entity.id())
+    fn is_compliant(&self, mutation: &Mutation<G>, graph: &G) -> bool {
+        match mutation {
+            Mutation::AddNode(node) => graph.get_node(node.id()).is_none(),
+            _ => true,
+        }
     }
 }
 
@@ -80,30 +80,34 @@ mod tests {
 
         let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
         let mut node = MockNode { id: 0 };
+        let mut mutation = Mutation::AddNode(MockNode { id: 0 });
 
-        assert!(policy.is_compliant(&node, &graph));
+        assert!(policy.is_compliant(&mutation, &graph));
 
         graph.add_node(node.clone());
         node = MockNode { id: 1 };
+        mutation = Mutation::AddNode(MockNode { id: 1 });
 
-        assert!(policy.is_compliant(&node, &graph));
+        assert!(policy.is_compliant(&mutation, &graph));
 
         graph.add_node(node.clone());
-        node = MockNode { id: 2 };
+        mutation = Mutation::AddNode(MockNode { id: 2 });
 
-        assert!(policy.is_compliant(&node, &graph));
+        assert!(policy.is_compliant(&mutation, &graph));
     }
 
     #[test]
     fn denies_override_by_id() {
         let policy = DenyNodeOverride;
         let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+
         let node = MockNode { id: 0 };
+        let mutation = Mutation::AddNode(MockNode { id: 0 });
 
-        assert!(policy.is_compliant(&node, &graph));
+        assert!(policy.is_compliant(&mutation, &graph));
 
-        graph.add_node(node.clone());
+        graph.add_node(node);
 
-        assert!(!policy.is_compliant(&node, &graph));
+        assert!(!policy.is_compliant(&mutation, &graph));
     }
 }

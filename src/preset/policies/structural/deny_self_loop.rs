@@ -1,11 +1,11 @@
-use crate::core::Policy;
 use crate::core::{Edge, Graph};
+use crate::core::{Mutation, Policy};
 
 /// Authorization policy that forbids self looping edges.
 #[derive(Debug)]
 pub struct DenySelfLoop;
 
-impl<G> Policy<G::Edge, G> for DenySelfLoop
+impl<G> Policy<Mutation<G>, G> for DenySelfLoop
 where
     G: Graph,
 {
@@ -19,8 +19,11 @@ where
     /// # Returns
     ///
     /// `true` from is different than to, `false` otherwise
-    fn is_compliant(&self, entity: &G::Edge, _context: &G) -> bool {
-        entity.from() != entity.to()
+    fn is_compliant(&self, mutation: &Mutation<G>, _graph: &G) -> bool {
+        match mutation {
+            Mutation::AddEdge(edge) => edge.from() != edge.to(),
+            _ => true,
+        }
     }
 }
 
@@ -74,11 +77,20 @@ mod tests {
     }
 
     #[test]
+    fn allows_non_self_looping_edges() {
+        let policy = DenySelfLoop;
+        let graph = BaseGraph::<MockNode, _>::new();
+        let edge = MockEdge::new(0, 1);
+
+        assert!(policy.is_compliant(&Mutation::AddEdge(edge), &graph));
+    }
+
+    #[test]
     fn denies_self_looping_edges() {
         let policy = DenySelfLoop;
         let graph = BaseGraph::<MockNode, _>::new();
         let edge = MockEdge::new(0, 0);
 
-        assert!(!policy.is_compliant(&edge, &graph));
+        assert!(!policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }
 }
