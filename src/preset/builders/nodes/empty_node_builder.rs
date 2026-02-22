@@ -1,11 +1,11 @@
-use crate::preset::{EmptyNode, NodeBuilder};
+use crate::{core::BuildNode, preset::EmptyNode};
 
 pub struct EmptyNodeBuilder;
 
-impl NodeBuilder<u32> for EmptyNodeBuilder {
+impl BuildNode<u32> for EmptyNodeBuilder {
     type BuiltNode = EmptyNode;
 
-    fn build_node(&self, reference: u32) -> Self::BuiltNode {
-        EmptyNode::new(reference)
+    fn build(&self, reference: &u32) -> Self::BuiltNode {
+        EmptyNode::new(*reference)
     }
 }
