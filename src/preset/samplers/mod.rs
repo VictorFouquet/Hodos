@@ -1,7 +1,7 @@
-pub mod adjacency_sampler;
-pub mod grid_sampler;
-pub mod matrix_sampler;
+pub mod edge_samplers;
+pub mod input_types;
+pub mod node_samplers;
 
-pub use adjacency_sampler::*;
-pub use grid_sampler::{Grid2D, Grid2DSampler};
-pub use matrix_sampler::{BinaryMatrixSampler, WeightedMatrixSampler};
+pub use edge_samplers::*;
+pub use input_types::*;
+pub use node_samplers::*;
