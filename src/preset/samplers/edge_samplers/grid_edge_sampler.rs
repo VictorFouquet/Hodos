@@ -1,17 +1,21 @@
-use std::{marker::PhantomData, u32};
+use std::marker::PhantomData;
 
 use crate::{
     core::{EdgeSampler, Node},
     preset::{HasData, HasPosition, samplers::Grid2D},
 };
 
-pub type UniformGridEdgeSampler<T> = GridEdgeSampler<((u32, u32), (u32, u32)), T>;
-pub type WeightedGridEdgeSampler<T> = GridEdgeSampler<((u32, u32), (u32, u32), f64), T>;
+pub type UniformGridCandidate = ((u32, u32), (u32, u32));
+pub type UniformGridEdgeSampler<T> = GridEdgeSampler<UniformGridCandidate, T>;
+
+pub type WeightedGridCandidate = ((u32, u32), (u32, u32), f64);
+pub type WeightClosure<T> = fn((u32, u32), (u32, u32), &Grid2D<T>) -> f64;
+pub type WeightedGridEdgeSampler<T> = GridEdgeSampler<WeightedGridCandidate, T>;
 
 #[derive(Debug)]
 pub struct GridEdgeSampler<C, T> {
     connections: Vec<(i32, i32)>,
-    weight_fn: fn((u32, u32), (u32, u32), &Grid2D<T>) -> f64,
+    weight_fn: WeightClosure<T>,
     _phantom: PhantomData<C>,
 }
 
@@ -22,10 +26,7 @@ impl<C, T> Default for GridEdgeSampler<C, T> {
 }
 
 impl<C, T> GridEdgeSampler<C, T> {
-    pub fn new(
-        connections: Vec<(i32, i32)>,
-        weight_fn: fn((u32, u32), (u32, u32), &Grid2D<T>) -> f64,
-    ) -> Self {
+    pub fn new(connections: Vec<(i32, i32)>, weight_fn: WeightClosure<T>) -> Self {
         GridEdgeSampler {
             connections,
             weight_fn,
@@ -45,7 +46,7 @@ impl<C, T> GridEdgeSampler<C, T> {
         )
     }
 
-    pub fn connect_eight(weight_fn: fn((u32, u32), (u32, u32), &Grid2D<T>) -> f64) -> Self {
+    pub fn connect_eight(weight_fn: WeightClosure<T>) -> Self {
         Self::new(
             vec![
                 (1, 0),   // E

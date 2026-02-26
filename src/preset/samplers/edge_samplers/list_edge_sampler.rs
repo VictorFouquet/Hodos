@@ -17,7 +17,7 @@ where
             return vec![];
         }
 
-        return context[node.id() as usize].iter().copied().collect();
+        context[node.id() as usize].to_vec()
     }
 }
 
@@ -32,7 +32,7 @@ where
             return vec![];
         }
 
-        return context[node.id() as usize].iter().copied().collect();
+        context[node.id() as usize].to_vec()
     }
 }
 

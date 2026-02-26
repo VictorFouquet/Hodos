@@ -17,13 +17,13 @@ where
             return vec![];
         }
 
-        return context[node.id() as usize]
+        context[node.id() as usize]
             .iter()
             .copied()
             .enumerate()
             .filter(|(_, v)| *v)
             .map(|(i, _)| i as u32)
-            .collect();
+            .collect()
     }
 }
 
@@ -38,13 +38,13 @@ where
             return vec![];
         }
 
-        return context[node.id() as usize]
+        context[node.id() as usize]
             .iter()
             .copied()
             .enumerate()
             .filter(|(_, v)| v.is_some())
             .map(|(i, v)| (i as u32, v.unwrap()))
-            .collect();
+            .collect()
     }
 }
 
