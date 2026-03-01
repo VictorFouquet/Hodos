@@ -82,7 +82,7 @@ mod tests {
     fn builder_should_stop_when_sampler_returns_none() {
         let mut builder = IncrementalGraphBuilder::new(
             MockSampler::default(),
-            MockNodeBuilder::new(|s: &u32| mock_node(*s)),
+            MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
             mock_expander(),
             AcceptAllPolicy,
         );
@@ -96,7 +96,7 @@ mod tests {
     fn builder_should_respect_node_policy_rejection() {
         let mut builder = IncrementalGraphBuilder::new(
             MockSampler::default(),
-            MockNodeBuilder::new(|s: &u32| mock_node(*s)),
+            MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
             mock_expander(),
             RejectAllNodePolicy,
         );
@@ -110,7 +110,7 @@ mod tests {
     fn builder_should_respect_edge_policy_rejection() {
         let mut builder = IncrementalGraphBuilder::new(
             MockSampler::default(),
-            MockNodeBuilder::new(|s: &u32| mock_node(*s)),
+            MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
             mock_expander(),
             RejectAllEdgePolicy,
         );

@@ -1,20 +1,26 @@
+use std::marker::PhantomData;
+
 use crate::core::{BuildNode, Node};
 
 pub struct MockNodeBuilder<K, N> {
-    mock_build: Box<dyn Fn(&K) -> N>,
+    current: usize,
+    script: Vec<N>,
+    _phantom: PhantomData<K>,
 }
 
-impl<K, N: Node> MockNodeBuilder<K, N> {
-    pub fn new<F: 'static + Fn(&K) -> N>(mock_build: F) -> Self {
+impl<K, N: Node + Clone> MockNodeBuilder<K, N> {
+    pub fn new(script: Vec<N>) -> Self {
         MockNodeBuilder {
-            mock_build: Box::new(mock_build),
+            current: 0,
+            script,
+            _phantom: PhantomData,
         }
     }
 }
 
-impl<K, N: Node> BuildNode<K> for MockNodeBuilder<K, N> {
+impl<K, N: Node + Clone> BuildNode<K> for MockNodeBuilder<K, N> {
     type BuiltNode = N;
-    fn build(&self, sample: &K) -> Self::BuiltNode {
-        (self.mock_build)(sample)
+    fn build(&self, _: &K) -> Self::BuiltNode {
+        self.script[self.current].clone()
     }
 }
