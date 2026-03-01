@@ -21,6 +21,10 @@ impl<K, N: Node + Clone> MockNodeBuilder<K, N> {
 impl<K, N: Node + Clone> BuildNode<K> for MockNodeBuilder<K, N> {
     type BuiltNode = N;
     fn build(&mut self, _: &K) -> Self::BuiltNode {
+        if self.current >= self.script.len() {
+            panic!("MockNodeBuilder script is exhausted")
+        }
+
         let step = self.script[self.current].clone();
         self.current += 1;
         step

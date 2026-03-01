@@ -69,9 +69,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::Node;
     use crate::preset::BaseGraph;
     use crate::testing::MockEdge;
+    use crate::testing::MockExpander;
     use crate::testing::MockNode;
     use crate::testing::MockNodeBuilder;
     use crate::testing::MockNodeSampler;
@@ -81,76 +81,55 @@ mod tests {
     #[test]
     fn builder_should_stop_when_sampler_returns_none() {
         let mut builder = GraphBuilder::new(
-            MockNodeSampler::new(vec![Some(vec![0]), Some(vec![1]), Some(vec![2]), None]),
-            MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
-            mock_expander(),
+            MockNodeSampler::new(vec![None]),
+            MockNodeBuilder::new(vec![]),
+            MockExpander::new(vec![vec![
+                Mutation::AddNode(mock_node(0)),
+                Mutation::AddEdge(mock_edge(0, 0, 0)),
+            ]]),
             AcceptAllPolicy,
         );
 
-        let graph = builder.build(&vec![0, 1, 2]);
-        assert_eq!(graph.get_nodes().len(), 3);
-        assert_eq!(graph.get_edges().len(), 3);
+        let graph = builder.build(&vec![0]);
+        assert_eq!(graph.get_nodes().len(), 0);
+        assert_eq!(graph.get_edges().len(), 0);
     }
 
     #[test]
     fn builder_should_respect_node_policy_rejection() {
         let mut builder = GraphBuilder::new(
-            MockNodeSampler::new(vec![Some(vec![0]), Some(vec![1]), Some(vec![2]), None]),
-            MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
-            mock_expander(),
+            MockNodeSampler::new(vec![Some(vec![0]), None]),
+            MockNodeBuilder::new(vec![mock_node(0)]),
+            MockExpander::new(vec![vec![
+                Mutation::AddNode(mock_node(0)),
+                Mutation::AddEdge(mock_edge(0, 0, 0)),
+            ]]),
             RejectAllNodePolicy,
         );
 
-        let graph = builder.build(&vec![0, 1, 2]);
+        let graph = builder.build(&vec![0]);
         assert_eq!(graph.get_nodes().len(), 0);
-        assert_eq!(graph.get_edges().len(), 3);
+        assert_eq!(graph.get_edges().len(), 1);
     }
 
     #[test]
     fn builder_should_respect_edge_policy_rejection() {
         let mut builder = GraphBuilder::new(
-            MockNodeSampler::new(vec![Some(vec![0]), Some(vec![1]), Some(vec![2]), None]),
+            MockNodeSampler::new(vec![Some(vec![0]), None]),
             MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
-            mock_expander(),
+            MockExpander::new(vec![vec![
+                Mutation::AddNode(mock_node(0)),
+                Mutation::AddEdge(mock_edge(0, 0, 0)),
+            ]]),
             RejectAllEdgePolicy,
         );
 
-        let graph: MockGraph = builder.build(&vec![0, 1, 2]);
-        assert_eq!(graph.get_nodes().len(), 3);
+        let graph: MockGraph = builder.build(&vec![0]);
+        assert_eq!(graph.get_nodes().len(), 1);
         assert_eq!(graph.get_edges().len(), 0);
     }
 
-    struct MockExpander<G: Graph, F: Fn(G::Node) -> Vec<Mutation<G>>> {
-        factory: F,
-        _phantom: PhantomData<G>,
-    }
-
     type MockGraph = BaseGraph<MockNode<u32, ()>, MockEdge<u32>>;
-    impl<Ctx, F: Fn(<MockGraph as Graph>::Node) -> Vec<Mutation<MockGraph>>>
-        Expander<MockGraph, Ctx> for MockExpander<MockGraph, F>
-    {
-        fn get_mutations(
-            &mut self,
-            _context: &Ctx,
-            node: <MockGraph as Graph>::Node,
-        ) -> Vec<Mutation<MockGraph>> {
-            (self.factory)(node)
-        }
-    }
-
-    fn mock_expander()
-    -> MockExpander<MockGraph, impl Fn(MockNode<u32, ()>) -> Vec<Mutation<MockGraph>>> {
-        MockExpander {
-            factory: |node: MockNode<u32, ()>| {
-                let id = node.id();
-                vec![
-                    Mutation::AddNode(node),
-                    Mutation::AddEdge(mock_edge(id as u128, 0, 0)),
-                ]
-            },
-            _phantom: PhantomData,
-        }
-    }
 
     #[derive(Default)]
     struct AcceptAllPolicy;

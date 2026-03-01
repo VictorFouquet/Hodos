@@ -16,6 +16,9 @@ impl<S: Clone> NodeSampler<Vec<S>> for MockNodeSampler<S> {
     type NodeCandidate = S;
 
     fn next(&mut self, _: &Vec<S>) -> Option<Vec<S>> {
+        if self.current >= self.script.len() {
+            return None;
+        }
         let step = self.script[self.current].clone();
         self.current += 1;
         step

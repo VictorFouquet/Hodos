@@ -68,109 +68,84 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use super::*;
-    use crate::core::Node;
-    use crate::core::NodeSampler;
     use crate::preset::BaseGraph;
     use crate::testing::MockEdge;
+    use crate::testing::MockExpander;
     use crate::testing::MockNode;
     use crate::testing::MockNodeBuilder;
+    use crate::testing::MockNodeSampler;
     use crate::testing::mock_edge;
     use crate::testing::mock_node;
 
     #[test]
     fn builder_should_stop_when_sampler_returns_none() {
         let mut builder = IncrementalGraphBuilder::new(
-            MockSampler::default(),
-            MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
-            mock_expander(),
+            MockNodeSampler::new(vec![Some(vec![0]), Some(vec![1]), None]),
+            MockNodeBuilder::new(vec![mock_node(0), mock_node(1)]),
+            MockExpander::new(vec![
+                vec![
+                    Mutation::AddNode(mock_node(0)),
+                    Mutation::AddEdge(mock_edge(0, 0, 1)),
+                ],
+                vec![
+                    Mutation::AddNode(mock_node(1)),
+                    Mutation::AddEdge(mock_edge(1, 1, 0)),
+                ],
+                // Should be skiped as sampler will be exhausted after two loop cycles
+                vec![
+                    Mutation::AddNode(mock_node(42)),
+                    Mutation::AddEdge(mock_edge(2, 0, 42)),
+                ],
+            ]),
             AcceptAllPolicy,
         );
 
-        let graph = builder.build(&vec![0, 1, 2]);
-        assert_eq!(graph.get_nodes().len(), 3);
-        assert_eq!(graph.get_edges().len(), 3);
+        let graph = builder.build(&vec![0, 1]);
+        assert_eq!(graph.get_nodes().len(), 2);
+        assert_eq!(graph.get_edges().len(), 2);
     }
 
     #[test]
     fn builder_should_respect_node_policy_rejection() {
         let mut builder = IncrementalGraphBuilder::new(
-            MockSampler::default(),
-            MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
-            mock_expander(),
+            MockNodeSampler::new(vec![Some(vec![0]), None]),
+            MockNodeBuilder::new(vec![mock_node(0)]),
+            MockExpander::new(vec![vec![
+                Mutation::AddNode(mock_node(0)),
+                Mutation::AddEdge(mock_edge(0, 0, 0)),
+            ]]),
             RejectAllNodePolicy,
         );
 
-        let graph = builder.build(&vec![0, 1, 2]);
+        let graph = builder.build(&vec![0, 1]);
         assert_eq!(graph.get_nodes().len(), 0);
-        assert_eq!(graph.get_edges().len(), 3);
+        assert_eq!(graph.get_edges().len(), 1);
     }
 
     #[test]
     fn builder_should_respect_edge_policy_rejection() {
         let mut builder = IncrementalGraphBuilder::new(
-            MockSampler::default(),
-            MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
-            mock_expander(),
+            MockNodeSampler::new(vec![Some(vec![0]), None]),
+            MockNodeBuilder::new(vec![mock_node(0)]),
+            MockExpander::new(vec![vec![
+                Mutation::AddNode(mock_node(0)),
+                Mutation::AddEdge(mock_edge(0, 0, 1)),
+                Mutation::AddEdge(mock_edge(1, 1, 2)),
+            ]]),
             RejectAllEdgePolicy,
         );
 
-        let graph = builder.build(&vec![0, 1, 2]);
-        assert_eq!(graph.get_nodes().len(), 3);
+        let graph = builder.build(&vec![0]);
+        assert_eq!(graph.get_nodes().len(), 1);
         assert_eq!(graph.get_edges().len(), 0);
     }
 
     type TestNode = MockNode<u32, ()>;
     type TestEdge = MockEdge<u32>;
     type TestGraph = BaseGraph<TestNode, TestEdge>;
-
-    #[derive(Default)]
-    pub struct MockSampler {
-        count: u32,
-    }
-
-    impl NodeSampler<Vec<u32>> for MockSampler {
-        type NodeCandidate = u32;
-
-        fn next(&mut self, context: &Vec<u32>) -> Option<Vec<u32>> {
-            if self.count as usize >= context.len() || self.count >= 3 {
-                return None;
-            }
-            let res = Some(vec![self.count]);
-            self.count += 1;
-            res
-        }
-    }
-
-    struct MockExpander<G: Graph, F: Fn(G::Node) -> Vec<Mutation<G>>> {
-        factory: F,
-        _phantom: PhantomData<G>,
-    }
-
-    impl<Ctx, F: Fn(<TestGraph as Graph>::Node) -> Vec<Mutation<TestGraph>>>
-        Expander<TestGraph, Ctx> for MockExpander<TestGraph, F>
-    {
-        fn get_mutations(
-            &mut self,
-            _context: &Ctx,
-            node: <TestGraph as Graph>::Node,
-        ) -> Vec<Mutation<TestGraph>> {
-            (self.factory)(node)
-        }
-    }
-
-    fn mock_expander() -> MockExpander<TestGraph, impl Fn(TestNode) -> Vec<Mutation<TestGraph>>> {
-        MockExpander {
-            factory: |node: TestNode| {
-                let id = node.id();
-                vec![
-                    Mutation::AddNode(node),
-                    Mutation::AddEdge(mock_edge(id as u128, 0, 0)),
-                ]
-            },
-            _phantom: PhantomData,
-        }
-    }
 
     #[derive(Default)]
     struct AcceptAllPolicy;
