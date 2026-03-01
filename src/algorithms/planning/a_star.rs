@@ -78,14 +78,16 @@ mod tests {
         }
     }
 
-    fn node(id: u32, x: f64, y: f64) -> DataNode<Point> {
+    type GridDataNode = DataNode<Point, u32>;
+
+    fn node(id: u32, x: f64, y: f64) -> GridDataNode {
         DataNode::new(id, Point { x, y })
     }
 
     #[test]
     fn returns_error_when_start_does_not_exist() {
         let goal = 1;
-        let mut graph = BaseGraph::<DataNode<Point>, WeightedEdge<u32>>::new();
+        let mut graph = BaseGraph::<GridDataNode, WeightedEdge<u32>>::new();
         graph.add_node(node(goal, 0.0, 0.0));
 
         let result = Astar::execute(&graph, 0, goal, ZeroHeuristic);
