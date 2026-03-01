@@ -10,11 +10,11 @@ where
 pub trait BuildNode<C> {
     type BuiltNode: Node;
 
-    fn build(&self, candidate: &C) -> Self::BuiltNode;
+    fn build(&mut self, candidate: &C) -> Self::BuiltNode;
 }
 
 pub trait BuildEdge<K: NodeKey, C> {
     type BuiltEdge: Edge<K>;
 
-    fn build(&self, candidate: &C) -> Self::BuiltEdge;
+    fn build(&mut self, candidate: &C) -> Self::BuiltEdge;
 }

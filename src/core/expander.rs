@@ -4,7 +4,7 @@ pub trait Expander<G, Ctx>
 where
     G: Graph,
 {
-    fn get_mutations(&self, context: &Ctx, node: G::Node) -> Vec<Mutation<G>>;
+    fn get_mutations(&mut self, context: &Ctx, node: G::Node) -> Vec<Mutation<G>>;
 }
 
 #[derive(Clone)]
