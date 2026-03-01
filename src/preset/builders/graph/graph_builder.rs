@@ -70,18 +70,18 @@ where
 mod tests {
     use super::*;
     use crate::core::Node;
-    use crate::core::NodeSampler;
     use crate::preset::BaseGraph;
     use crate::testing::MockEdge;
     use crate::testing::MockNode;
     use crate::testing::MockNodeBuilder;
+    use crate::testing::MockNodeSampler;
     use crate::testing::mock_edge;
     use crate::testing::mock_node;
 
     #[test]
     fn builder_should_stop_when_sampler_returns_none() {
         let mut builder = GraphBuilder::new(
-            MockSampler::default(),
+            MockNodeSampler::new(vec![Some(vec![0]), Some(vec![1]), Some(vec![2]), None]),
             MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
             mock_expander(),
             AcceptAllPolicy,
@@ -95,7 +95,7 @@ mod tests {
     #[test]
     fn builder_should_respect_node_policy_rejection() {
         let mut builder = GraphBuilder::new(
-            MockSampler::default(),
+            MockNodeSampler::new(vec![Some(vec![0]), Some(vec![1]), Some(vec![2]), None]),
             MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
             mock_expander(),
             RejectAllNodePolicy,
@@ -109,7 +109,7 @@ mod tests {
     #[test]
     fn builder_should_respect_edge_policy_rejection() {
         let mut builder = GraphBuilder::new(
-            MockSampler::default(),
+            MockNodeSampler::new(vec![Some(vec![0]), Some(vec![1]), Some(vec![2]), None]),
             MockNodeBuilder::new(vec![mock_node(0), mock_node(1), mock_node(2)]),
             mock_expander(),
             RejectAllEdgePolicy,
@@ -118,24 +118,6 @@ mod tests {
         let graph: MockGraph = builder.build(&vec![0, 1, 2]);
         assert_eq!(graph.get_nodes().len(), 3);
         assert_eq!(graph.get_edges().len(), 0);
-    }
-
-    #[derive(Default)]
-    pub struct MockSampler {
-        count: u32,
-    }
-
-    impl NodeSampler<Vec<u32>> for MockSampler {
-        type NodeCandidate = u32;
-
-        fn next(&mut self, context: &Vec<u32>) -> Option<Vec<u32>> {
-            if self.count as usize >= context.len() || self.count >= 3 {
-                return None;
-            }
-            let res = Some(vec![self.count]);
-            self.count += 1;
-            res
-        }
     }
 
     struct MockExpander<G: Graph, F: Fn(G::Node) -> Vec<Mutation<G>>> {
@@ -148,7 +130,7 @@ mod tests {
         Expander<MockGraph, Ctx> for MockExpander<MockGraph, F>
     {
         fn get_mutations(
-            &self,
+            &mut self,
             _context: &Ctx,
             node: <MockGraph as Graph>::Node,
         ) -> Vec<Mutation<MockGraph>> {

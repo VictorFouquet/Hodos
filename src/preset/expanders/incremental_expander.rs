@@ -20,7 +20,7 @@ where
     ES: EdgeSampler<G::Node, G>,
     EB: BuildEdge<G::Key, ES::EdgeCandidate, BuiltEdge = G::Edge>,
 {
-    fn get_mutations(&self, graph: &G, node: G::Node) -> Vec<Mutation<G>> {
+    fn get_mutations(&mut self, graph: &G, node: G::Node) -> Vec<Mutation<G>> {
         let mut mutations = Vec::new();
 
         for sample in self.edge_sampler.with_node(&node, graph) {

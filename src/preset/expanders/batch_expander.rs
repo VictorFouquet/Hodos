@@ -22,7 +22,7 @@ where
     ES: EdgeSampler<G::Node, Ctx>,
     EB: BuildEdge<G::Key, ES::EdgeCandidate, BuiltEdge = G::Edge>,
 {
-    fn get_mutations(&self, domain: &Ctx, node: G::Node) -> Vec<Mutation<G>> {
+    fn get_mutations(&mut self, domain: &Ctx, node: G::Node) -> Vec<Mutation<G>> {
         let mut mutations = VecDeque::new();
 
         let edge_samples = self.edge_sampler.with_node(&node, domain);

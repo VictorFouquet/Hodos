@@ -13,7 +13,7 @@ where
 {
     type BuiltNode = DataNode<T, K>;
 
-    fn build(&self, reference: &(K, T)) -> Self::BuiltNode {
+    fn build(&mut self, reference: &(K, T)) -> Self::BuiltNode {
         DataNode::new(reference.0, reference.1)
     }
 }

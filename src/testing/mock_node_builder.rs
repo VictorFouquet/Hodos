@@ -20,7 +20,9 @@ impl<K, N: Node + Clone> MockNodeBuilder<K, N> {
 
 impl<K, N: Node + Clone> BuildNode<K> for MockNodeBuilder<K, N> {
     type BuiltNode = N;
-    fn build(&self, _: &K) -> Self::BuiltNode {
-        self.script[self.current].clone()
+    fn build(&mut self, _: &K) -> Self::BuiltNode {
+        let step = self.script[self.current].clone();
+        self.current += 1;
+        step
     }
 }

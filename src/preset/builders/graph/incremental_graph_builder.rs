@@ -151,7 +151,7 @@ mod tests {
         Expander<TestGraph, Ctx> for MockExpander<TestGraph, F>
     {
         fn get_mutations(
-            &self,
+            &mut self,
             _context: &Ctx,
             node: <TestGraph as Graph>::Node,
         ) -> Vec<Mutation<TestGraph>> {
