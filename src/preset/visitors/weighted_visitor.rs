@@ -162,8 +162,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Node, NodeKey, edge::EdgeId},
-        preset::{BaseGraph, EdgeIdProvider, structural_traits::HasWeight},
+        preset::{BaseGraph, EdgeIdProvider},
+        testing::{MockEdge, MockNode, mock_node, mock_weighted_edge},
     };
 
     use super::*;
@@ -174,14 +174,14 @@ mod tests {
 
     #[test]
     fn defaults_with_empty_distances() {
-        let visitor = WeightedVisitor::<_, MockGraph>::new(Terminate);
+        let visitor = WeightedVisitor::<_, TestGraph>::new(Terminate);
         assert_eq!(visitor.distances.len(), 0);
     }
 
     #[test]
     fn visit_initializes_start_node_to_zero() {
         let mut visitor = WeightedVisitor::new(Terminate);
-        let graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
+        let graph = TestGraph::new();
         assert_eq!(visitor.distances.len(), 0);
 
         visitor.visit(0, &graph);
@@ -192,14 +192,9 @@ mod tests {
 
     #[test]
     fn explores_unvisited_node() {
-        let mut graph = BaseGraph::<MockNode, _>::new();
+        let mut graph = TestGraph::new();
 
-        graph.add_edge(MockWeightedEdge {
-            id: EdgeIdProvider::random(),
-            from: 0,
-            to: 1,
-            weight: 1.0,
-        });
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 1, 1.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
 
@@ -212,8 +207,8 @@ mod tests {
 
     #[test]
     fn explores_when_lower_cost_found() {
-        let mut graph = BaseGraph::<MockNode, _>::new();
-        graph.add_edge(MockWeightedEdge::new(0, 1, 5.0));
+        let mut graph = TestGraph::new();
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 1, 5.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.distances.insert(1, 10.0);
@@ -226,8 +221,8 @@ mod tests {
 
     #[test]
     fn updates_distance_when_lower_cost_found() {
-        let mut graph = BaseGraph::<MockNode, _>::new();
-        graph.add_edge(MockWeightedEdge::new(0, 1, 5.0));
+        let mut graph = TestGraph::new();
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 1, 5.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.distances.insert(1, 10.0);
@@ -238,8 +233,8 @@ mod tests {
 
     #[test]
     fn does_not_revisit_with_equal_or_higher_cost() {
-        let mut graph = BaseGraph::<MockNode, _>::new();
-        graph.add_edge(MockWeightedEdge::new(0, 1, 5.0));
+        let mut graph = TestGraph::new();
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 1, 5.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.distances.insert(1, 5.0);
@@ -258,8 +253,8 @@ mod tests {
 
     #[test]
     fn exploration_cost_sums_distance_and_weight() {
-        let mut graph = BaseGraph::<MockNode, _>::new();
-        graph.add_edge(MockWeightedEdge::new(0, 1, 3.0));
+        let mut graph = TestGraph::new();
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 1, 3.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.distances.insert(0, 5.0);
@@ -269,9 +264,9 @@ mod tests {
 
     #[test]
     fn propagates_cumulative_distances_through_path() {
-        let mut graph = BaseGraph::<MockNode, _>::new();
-        graph.add_edge(MockWeightedEdge::new(0, 1, 2.0));
-        graph.add_edge(MockWeightedEdge::new(1, 2, 3.0));
+        let mut graph = TestGraph::new();
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 1, 2.0));
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 1, 2, 3.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.visit(0, &graph);
@@ -285,10 +280,10 @@ mod tests {
 
     #[test]
     fn chooses_shortest_path_among_alternatives() {
-        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
-        graph.add_edge(MockWeightedEdge::new(0, 2, 10.0));
-        graph.add_edge(MockWeightedEdge::new(0, 1, 2.0));
-        graph.add_edge(MockWeightedEdge::new(1, 2, 3.0));
+        let mut graph = TestGraph::new();
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 2, 10.0));
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 1, 2.0));
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 1, 2, 3.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.visit(0, &graph);
@@ -303,8 +298,8 @@ mod tests {
 
     #[test]
     fn exploration_cost_uses_current_distances() {
-        let mut graph = BaseGraph::<MockNode, MockWeightedEdge<u32>>::new();
-        graph.add_edge(MockWeightedEdge::new(1, 2, 4.0));
+        let mut graph = TestGraph::new();
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 1, 2, 4.0));
 
         let mut visitor = WeightedVisitor::new(Terminate);
         visitor.distances.insert(1, 7.0);
@@ -315,67 +310,22 @@ mod tests {
 
     #[test]
     fn uses_embedded_policy_to_stop() {
-        let mut graph = MockGraph::new();
-        graph.add_node(MockNode { id: 0 });
+        let mut graph = TestGraph::new();
+        graph.add_node(mock_node(0));
 
         let visitor = WeightedVisitor::new(Terminate);
 
         assert!(visitor.should_stop(0, &graph));
     }
 
-    type MockGraph = BaseGraph<MockNode, MockWeightedEdge<<MockNode as Node>::Key>>;
-    struct MockNode {
-        id: u32,
-    }
-    impl Node for MockNode {
-        type Key = u32;
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
+    type TestNode = MockNode<u32, ()>;
+    type TestEdge = MockEdge<u32>;
+    type TestGraph = BaseGraph<TestNode, TestEdge>;
 
     struct Terminate;
-    impl<V> Policy<<MockGraph as Graph>::Node, V> for Terminate {
-        fn is_compliant(&self, _: &<MockGraph as Graph>::Node, __: &V) -> bool {
+    impl<V> Policy<<TestGraph as Graph>::Node, V> for Terminate {
+        fn is_compliant(&self, _: &<TestGraph as Graph>::Node, __: &V) -> bool {
             true
         }
-    }
-
-    #[derive(Default)]
-    struct MockWeightedEdge<K: NodeKey> {
-        pub id: EdgeId,
-        pub from: K,
-        pub to: K,
-        pub weight: f64,
-    }
-
-    impl<K: NodeKey> MockWeightedEdge<K> {
-        pub fn new(from: K, to: K, weight: f64) -> Self {
-            MockWeightedEdge {
-                id: EdgeIdProvider::random(),
-                from,
-                to,
-                weight,
-            }
-        }
-    }
-
-    impl<K: NodeKey> Edge<K> for MockWeightedEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn to(&self) -> K {
-            self.to
-        }
-        fn from(&self) -> K {
-            self.from
-        }
-    }
-
-    impl<K: NodeKey> HasWeight for MockWeightedEdge<K> {
-        fn weight(&self) -> f64 {
-            self.weight
-        }
-        fn set_weight(&mut self, _weight: f64) {}
     }
 }

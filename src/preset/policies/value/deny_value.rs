@@ -71,8 +71,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, edge::EdgeId, node::NodeKey},
         preset::BaseGraph,
+        testing::{MockEdge, MockNode, mock_data_node},
     };
 
     use super::*;
@@ -83,11 +83,11 @@ mod tests {
         assert_eq!(policy.denied_values.len(), 0);
 
         assert!(policy.is_compliant(
-            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, true)),
+            &Mutation::<TestGraph>::AddNode(mock_data_node(0, true)),
             &()
         ));
         assert!(policy.is_compliant(
-            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, false)),
+            &Mutation::<TestGraph>::AddNode(mock_data_node(0, false)),
             &()
         ));
     }
@@ -100,7 +100,7 @@ mod tests {
         assert_eq!(policy.denied_values.len(), 1);
 
         assert!(policy.is_compliant(
-            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, false)),
+            &Mutation::<TestGraph>::AddNode(mock_data_node(0, false)),
             &()
         ));
     }
@@ -113,55 +113,12 @@ mod tests {
         assert_eq!(policy.denied_values.len(), 1);
 
         assert!(!policy.is_compliant(
-            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, true)),
+            &Mutation::<TestGraph>::AddNode(mock_data_node(0, true)),
             &()
         ));
     }
 
-    #[derive(Default)]
-    pub struct MockValueNode {
-        data: bool,
-    }
-
-    impl MockValueNode {
-        pub fn new(_id: u32, data: bool) -> Self {
-            MockValueNode { data }
-        }
-    }
-
-    impl HasData for MockValueNode {
-        type Data = bool;
-
-        fn data(&self) -> &Self::Data {
-            &self.data
-        }
-    }
-
-    impl Node for MockValueNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            0
-        }
-    }
-
-    pub struct MockEdge<K: NodeKey> {
-        id: EdgeId,
-        from: K,
-        to: K,
-    }
-
-    impl<K: NodeKey> Edge<K> for MockEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn from(&self) -> K {
-            self.from
-        }
-        fn to(&self) -> K {
-            self.to
-        }
-    }
-
-    type MockGraph = BaseGraph<MockValueNode, MockEdge<u32>>;
+    type TestNode = MockNode<u32, bool>;
+    type TestEdge = MockEdge<u32>;
+    type TestGraph = BaseGraph<TestNode, TestEdge>;
 }

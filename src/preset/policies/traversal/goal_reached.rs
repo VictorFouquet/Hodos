@@ -19,28 +19,21 @@ impl<N: Node, Ctx> Policy<N, Ctx> for GoalReached<N> {
 
 #[cfg(test)]
 mod tests {
+    use crate::testing::mock_node;
+
     use super::*;
 
-    struct MockNode {
-        id: u32,
-    }
-    impl Node for MockNode {
-        type Key = u32;
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
     #[test]
     fn returns_true_when_goal_reached() {
-        let policy = GoalReached::new(42);
-        assert!(policy.is_compliant(&MockNode { id: 42 }, &()));
+        let policy: GoalReached<mock_node::MockNode<u32, ()>> = GoalReached::new(42);
+        assert!(policy.is_compliant(&mock_node(42), &()));
     }
 
     #[test]
     fn returns_false_when_goal_not_reached() {
-        let policy = GoalReached::new(42);
-        assert!(!policy.is_compliant(&MockNode { id: 0 }, &()));
-        assert!(!policy.is_compliant(&MockNode { id: 41 }, &()));
-        assert!(!policy.is_compliant(&MockNode { id: 43 }, &()));
+        let policy: GoalReached<mock_node::MockNode<u32, ()>> = GoalReached::new(42);
+        assert!(!policy.is_compliant(&mock_node(0), &()));
+        assert!(!policy.is_compliant(&mock_node(41), &()));
+        assert!(!policy.is_compliant(&mock_node(43), &()));
     }
 }

@@ -30,57 +30,19 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Node, edge::EdgeId, node::NodeKey},
-        preset::{BaseGraph, EdgeIdProvider},
+        preset::BaseGraph,
+        testing::{MockEdge, MockNode, mock_edge},
     };
 
     use super::*;
 
-    #[derive(Clone)]
-    pub struct MockNode {}
-
-    impl Node for MockNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            0
-        }
-    }
-
-    #[derive(Clone)]
-    pub struct MockEdge<K: NodeKey> {
-        id: EdgeId,
-        to: K,
-        from: K,
-    }
-
-    impl<K: NodeKey> MockEdge<K> {
-        fn new(from: K, to: K) -> Self {
-            MockEdge {
-                id: EdgeIdProvider::random(),
-                from: from,
-                to: to,
-            }
-        }
-    }
-
-    impl<K: NodeKey> Edge<K> for MockEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn to(&self) -> K {
-            self.to
-        }
-        fn from(&self) -> K {
-            self.from
-        }
-    }
+    type TestGraph = BaseGraph<MockNode<u32, ()>, MockEdge<u32>>;
 
     #[test]
     fn allows_non_self_looping_edges() {
         let policy = DenySelfLoop;
-        let graph = BaseGraph::<MockNode, _>::new();
-        let edge = MockEdge::new(0, 1);
+        let graph = TestGraph::new();
+        let edge = mock_edge(0, 0, 1);
 
         assert!(policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }
@@ -88,8 +50,8 @@ mod tests {
     #[test]
     fn denies_self_looping_edges() {
         let policy = DenySelfLoop;
-        let graph = BaseGraph::<MockNode, _>::new();
-        let edge = MockEdge::new(0, 0);
+        let graph = TestGraph::new();
+        let edge = mock_edge(0, 0, 0);
 
         assert!(!policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }

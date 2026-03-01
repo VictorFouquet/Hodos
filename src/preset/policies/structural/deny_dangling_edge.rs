@@ -24,56 +24,18 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::{
-        core::{edge::EdgeId, node::NodeKey},
-        preset::{BaseGraph, EdgeIdProvider},
+        preset::BaseGraph,
+        testing::{MockEdge, MockNode, mock_edge, mock_node},
     };
 
-    use super::*;
+    type TestGraph = BaseGraph<MockNode<u32, ()>, MockEdge<u32>>;
 
-    struct MockNode {
-        id: u32,
-    }
-
-    impl Node for MockNode {
-        type Key = u32;
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
-
-    struct MockEdge<K: NodeKey> {
-        id: EdgeId,
-        from: K,
-        to: K,
-    }
-
-    impl<K: NodeKey> MockEdge<K> {
-        fn new(from: K, to: K) -> Self {
-            MockEdge {
-                id: EdgeIdProvider::random(),
-                from,
-                to,
-            }
-        }
-    }
-
-    impl<K: NodeKey> Edge<K> for MockEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn from(&self) -> K {
-            self.from
-        }
-        fn to(&self) -> K {
-            self.to
-        }
-    }
-
-    fn create_graph_with_nodes(node_ids: Vec<u32>) -> BaseGraph<MockNode, MockEdge<u32>> {
-        let mut graph = BaseGraph::<MockNode, _>::new();
+    fn create_graph_with_nodes(node_ids: Vec<u32>) -> TestGraph {
+        let mut graph = TestGraph::new();
         for id in node_ids {
-            graph.add_node(MockNode { id });
+            graph.add_node(mock_node(id));
         }
         graph
     }
@@ -82,7 +44,7 @@ mod tests {
     fn compliant_when_both_endpoints_exist() {
         let graph = create_graph_with_nodes(vec![0, 1]);
         let policy = DenyDanglingEdge;
-        let edge = MockEdge::new(0, 1);
+        let edge = mock_edge(0, 0, 1);
 
         assert!(policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }
@@ -91,7 +53,7 @@ mod tests {
     fn non_compliant_when_from_node_missing() {
         let graph = create_graph_with_nodes(vec![1]);
         let policy = DenyDanglingEdge;
-        let edge = MockEdge::new(0, 1);
+        let edge = mock_edge(0, 0, 1);
 
         assert!(!policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }
@@ -100,16 +62,16 @@ mod tests {
     fn non_compliant_when_to_node_missing() {
         let graph = create_graph_with_nodes(vec![0]);
         let policy = DenyDanglingEdge;
-        let edge = MockEdge::new(0, 1);
+        let edge = mock_edge(0, 0, 1);
 
         assert!(!policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }
 
     #[test]
     fn non_compliant_when_both_nodes_missing() {
-        let graph = BaseGraph::<MockNode, _>::new();
+        let graph = TestGraph::new();
         let policy = DenyDanglingEdge;
-        let edge = MockEdge::new(0, 1);
+        let edge = mock_edge(0, 0, 1);
 
         assert!(!policy.is_compliant(&Mutation::AddEdge(edge), &graph));
     }

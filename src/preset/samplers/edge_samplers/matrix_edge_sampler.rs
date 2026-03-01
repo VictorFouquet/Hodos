@@ -50,7 +50,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::core::{EdgeSampler, Node};
+    use crate::{
+        core::{EdgeSampler, Node},
+        testing::mock_node,
+    };
 
     use super::MatrixEdgeSampler;
 
@@ -63,17 +66,17 @@ mod tests {
             vec![false, true, false], // 2->1
         ];
 
-        let mut candidates = sampler.with_node(&node(0), &domain);
+        let mut candidates = sampler.with_node(&mock_node::<u32, ()>(0), &domain);
         assert_eq!(1, candidates.len());
         assert_eq!(0, candidates[0].0);
         assert_eq!(1, candidates[0].1);
 
-        candidates = sampler.with_node(&node(1), &domain);
+        candidates = sampler.with_node(&mock_node::<u32, ()>(1), &domain);
         assert_eq!(2, candidates.len());
         assert!(candidates.iter().any(|c| c.0 == 1 && c.1 == 0));
         assert!(candidates.iter().any(|c| c.0 == 1 && c.1 == 2));
 
-        candidates = sampler.with_node(&node(2), &domain);
+        candidates = sampler.with_node(&mock_node::<u32, ()>(2), &domain);
         assert_eq!(1, candidates.len());
         assert_eq!(2, candidates[0].0);
         assert_eq!(1, candidates[0].1);
@@ -88,13 +91,13 @@ mod tests {
             vec![None, Some(-1.0), None],     // 2->1 -1.0
         ];
 
-        let mut candidates = sampler.with_node(&node(0), &domain);
+        let mut candidates = sampler.with_node(&mock_node::<u32, ()>(0), &domain);
         assert_eq!(1, candidates.len());
         assert_eq!(0, candidates[0].0);
         assert_eq!(1, candidates[0].1);
         assert_eq!(0.0, candidates[0].2);
 
-        candidates = sampler.with_node(&node(1), &domain);
+        candidates = sampler.with_node(&mock_node::<u32, ()>(1), &domain);
         assert_eq!(2, candidates.len());
         assert!(
             candidates
@@ -107,24 +110,10 @@ mod tests {
                 .any(|c| c.0 == 1 && c.1 == 2 && c.2 == 2.0)
         );
 
-        candidates = sampler.with_node(&node(2), &domain);
+        candidates = sampler.with_node(&mock_node::<u32, ()>(2), &domain);
         assert_eq!(1, candidates.len());
         assert_eq!(2, candidates[0].0);
         assert_eq!(1, candidates[0].1);
         assert_eq!(-1.0, candidates[0].2);
-    }
-
-    fn node(id: u32) -> MockNode {
-        MockNode { id }
-    }
-    struct MockNode {
-        id: u32,
-    }
-
-    impl Node for MockNode {
-        type Key = u32;
-        fn id(&self) -> Self::Key {
-            self.id
-        }
     }
 }

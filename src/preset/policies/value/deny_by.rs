@@ -85,9 +85,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{Edge, Node};
     use crate::preset::BaseGraph;
     use crate::preset::structural_traits::HasData;
+    use crate::testing::{MockEdge, MockNode, mock_data_node};
 
     #[derive(Default, Clone, Copy)]
     pub struct Point {
@@ -95,52 +95,12 @@ mod tests {
         y: u32,
     }
 
-    #[derive(Default, Clone, Copy)]
-    pub struct MockValueNode {
-        data: Point,
-    }
-
-    impl MockValueNode {
-        pub fn new(_id: u32, data: Point) -> Self {
-            MockValueNode { data }
-        }
-    }
-
-    impl HasData for MockValueNode {
-        type Data = Point;
-
-        fn data(&self) -> &Self::Data {
-            &self.data
-        }
-    }
-
-    impl Node for MockValueNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            0
-        }
-    }
-
-    #[derive(Default)]
-    pub struct MockEdge;
-    impl Edge<<MockValueNode as Node>::Key> for MockEdge {
-        fn id(&self) -> crate::core::EdgeId {
-            0
-        }
-        fn from(&self) -> <MockValueNode as Node>::Key {
-            0
-        }
-        fn to(&self) -> <MockValueNode as Node>::Key {
-            0
-        }
-    }
-
-    type MockGraph = BaseGraph<MockValueNode, MockEdge>;
+    type TestNode = MockNode<u32, Point>;
+    type TestGraph = BaseGraph<TestNode, MockEdge<u32>>;
 
     #[test]
     fn adds_denied_value_to_internal_state() {
-        let mut policy = DenyBy::new(vec![], |n: &MockValueNode| n.data().x);
+        let mut policy = DenyBy::new(vec![], |n: &TestNode| n.data().x);
 
         assert_eq!(policy.denied_values.len(), 0);
 
@@ -151,42 +111,42 @@ mod tests {
 
     #[test]
     fn accepts_any_node_when_blacklist_is_empty() {
-        let policy = DenyBy::new(vec![], |n: &MockValueNode| n.data().x);
+        let policy = DenyBy::new(vec![], |n: &TestNode| n.data().x);
 
         assert_eq!(policy.denied_values.len(), 0);
 
         assert!(policy.is_compliant(
-            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, Point { x: 0, y: 0 })),
+            &Mutation::<TestGraph>::AddNode(mock_data_node(0, Point { x: 0, y: 0 })),
             &()
         ));
         assert!(policy.is_compliant(
-            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, Point { x: 1, y: 0 })),
+            &Mutation::<TestGraph>::AddNode(mock_data_node(0, Point { x: 1, y: 0 })),
             &()
         ));
     }
 
     #[test]
     fn extractor_accepts_node_when_field_value_not_in_blacklist() {
-        let policy = DenyBy::new(vec![2], |n: &MockValueNode| n.data().x);
+        let policy = DenyBy::new(vec![2], |n: &TestNode| n.data().x);
 
         assert!(policy.is_compliant(
-            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, Point { x: 1, y: 0 })),
+            &Mutation::<TestGraph>::AddNode(mock_data_node(0, Point { x: 1, y: 0 })),
             &()
         ));
         assert!(policy.is_compliant(
-            &Mutation::<MockGraph>::AddNode(MockValueNode::new(0, Point { x: 3, y: 0 })),
+            &Mutation::<TestGraph>::AddNode(mock_data_node(0, Point { x: 3, y: 0 })),
             &()
         ));
     }
 
     #[test]
     fn extractor_denies_by_field_value() {
-        let policy_x = DenyBy::new(vec![0], |n: &MockValueNode| n.data().x);
-        let policy_y = DenyBy::new(vec![1], |n: &MockValueNode| n.data().y);
+        let policy_x = DenyBy::new(vec![0], |n: &TestNode| n.data().x);
+        let policy_y = DenyBy::new(vec![1], |n: &TestNode| n.data().y);
 
-        let node = MockValueNode::new(0, Point { x: 0, y: 1 });
+        let node = mock_data_node(0, Point { x: 0, y: 1 });
 
-        assert!(!policy_x.is_compliant(&Mutation::<MockGraph>::AddNode(node.clone()), &()));
-        assert!(!policy_y.is_compliant(&Mutation::<MockGraph>::AddNode(node.clone()), &()));
+        assert!(!policy_x.is_compliant(&Mutation::<TestGraph>::AddNode(node.clone()), &()));
+        assert!(!policy_y.is_compliant(&Mutation::<TestGraph>::AddNode(node.clone()), &()));
     }
 }

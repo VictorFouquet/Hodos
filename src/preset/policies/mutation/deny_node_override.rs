@@ -31,67 +31,34 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{
-            edge::{Edge, EdgeId},
-            node::NodeKey,
-        },
         preset::BaseGraph,
+        testing::{MockEdge, MockNode, mock_node},
     };
 
     use super::*;
 
-    #[derive(Clone)]
-    pub struct MockNode {
-        id: u32,
-    }
-
-    impl Node for MockNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
-
-    #[derive(Clone)]
-    pub struct MockEdge<K: NodeKey> {
-        id: EdgeId,
-        from: K,
-        to: K,
-    }
-
-    impl<K: NodeKey> Edge<K> for MockEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-
-        fn from(&self) -> K {
-            self.from
-        }
-
-        fn to(&self) -> K {
-            self.to
-        }
-    }
+    type TestNode = MockNode<u32, ()>;
+    type TestEdge = MockEdge<u32>;
+    type TestGraph = BaseGraph<TestNode, TestEdge>;
 
     #[test]
     fn allows_unique_values() {
         let policy = DenyNodeOverride;
 
-        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
-        let mut node = MockNode { id: 0 };
-        let mut mutation = Mutation::AddNode(MockNode { id: 0 });
+        let mut graph = TestGraph::new();
+        let mut node = mock_node(0);
+        let mut mutation = Mutation::AddNode(mock_node(0));
 
         assert!(policy.is_compliant(&mutation, &graph));
 
         graph.add_node(node.clone());
-        node = MockNode { id: 1 };
-        mutation = Mutation::AddNode(MockNode { id: 1 });
+        node = mock_node(1);
+        mutation = Mutation::AddNode(mock_node(1));
 
         assert!(policy.is_compliant(&mutation, &graph));
 
         graph.add_node(node.clone());
-        mutation = Mutation::AddNode(MockNode { id: 2 });
+        mutation = Mutation::AddNode(mock_node(2));
 
         assert!(policy.is_compliant(&mutation, &graph));
     }
@@ -99,10 +66,10 @@ mod tests {
     #[test]
     fn denies_override_by_id() {
         let policy = DenyNodeOverride;
-        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = TestGraph::new();
 
-        let node = MockNode { id: 0 };
-        let mutation = Mutation::AddNode(MockNode { id: 0 });
+        let node = mock_node(0);
+        let mutation = Mutation::AddNode(mock_node(0));
 
         assert!(policy.is_compliant(&mutation, &graph));
 

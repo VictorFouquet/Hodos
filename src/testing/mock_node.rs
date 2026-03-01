@@ -11,7 +11,7 @@ pub fn mock_data_node<K: NodeKey, D: Clone>(id: K, data: D) -> MockNode<K, D> {
     mock_node(id).with_data(data)
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct MockNode<K, D> {
     id: K,
     data: Option<D>,

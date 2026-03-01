@@ -210,15 +210,16 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, edge::EdgeId, node::NodeKey},
-        preset::{BaseGraph, EdgeIdProvider, HasWeight},
+        core::node::NodeKey,
+        preset::{BaseGraph, EdgeIdProvider},
+        testing::{MockEdge, MockNode, mock_data_node, mock_weighted_edge},
     };
 
     use super::*;
 
     #[test]
     fn inserts_visited_states() {
-        let mut visitor = HeuristicVisitor::<_, _, _, BaseGraph<MockNode, MockEdge<u32>>>::new(
+        let mut visitor = HeuristicVisitor::<_, _, _, BaseGraph<TestNode, MockEdge<u32>>>::new(
             MockPolicy::<u32> { stop_at: None },
             MockCostEstimator::<u32>::new(),
             MockHeuristicEstimator::<u32>::new(),
@@ -238,7 +239,7 @@ mod tests {
 
     #[test]
     fn computes_g_cost_using_cost_estimator() {
-        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<TestNode, MockEdge<u32>>::new();
 
         let mut g_estimator = MockCostEstimator::<u32>::new();
         g_estimator.set_cost(0, 1, 3.0);
@@ -258,7 +259,7 @@ mod tests {
 
     #[test]
     fn computes_h_cost_using_heuristic_estimator() {
-        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<TestNode, MockEdge<u32>>::new();
 
         let mut h_estimator = MockHeuristicEstimator::<u32>::new();
         h_estimator.set_estimate(1, 7.0);
@@ -276,7 +277,7 @@ mod tests {
 
     #[test]
     fn exploration_cost_sums_g_and_h() {
-        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<TestNode, MockEdge<u32>>::new();
 
         let mut g_estimator = MockCostEstimator::new();
         g_estimator.set_cost(0, 1, 3.0);
@@ -297,22 +298,10 @@ mod tests {
     #[test]
     fn should_explore_unvisited_node() {
         let mut graph = BaseGraph::new();
-        graph.add_node(MockNode {
-            id: 0,
-            data: Point { x: 0.0, y: 0.0 },
-        });
+        graph.add_node(mock_data_node(0, Point { x: 0.0, y: 0.0 }));
+        graph.add_node(mock_data_node(1, Point { x: 1.0, y: 1.0 }));
 
-        graph.add_node(MockNode {
-            id: 1,
-            data: Point { x: 1.0, y: 1.0 },
-        });
-
-        graph.add_edge(MockEdge {
-            id: EdgeIdProvider::random(),
-            from: 0,
-            to: 1,
-            weight: 1.0,
-        });
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 1, 1.0));
 
         let mut g_estimator = MockCostEstimator::new();
         g_estimator.set_cost(0, 1, 1.0);
@@ -336,39 +325,13 @@ mod tests {
     fn relaxes_path_when_lower_cost_found() {
         let mut graph = BaseGraph::new();
 
-        graph.add_node(MockNode {
-            id: 0,
-            data: Point { x: 0.0, y: 0.0 },
-        });
+        graph.add_node(mock_data_node(0, Point { x: 0.0, y: 0.0 }));
+        graph.add_node(mock_data_node(1, Point { x: 1.0, y: 1.0 }));
+        graph.add_node(mock_data_node(2, Point { x: 1.0, y: 2.0 }));
 
-        graph.add_node(MockNode {
-            id: 1,
-            data: Point { x: 1.0, y: 1.0 },
-        });
-
-        graph.add_node(MockNode {
-            id: 2,
-            data: Point { x: 1.0, y: 2.0 },
-        });
-
-        graph.add_edge(MockEdge {
-            id: EdgeIdProvider::random(),
-            from: 0,
-            to: 1,
-            weight: 1.0,
-        });
-        graph.add_edge(MockEdge {
-            id: EdgeIdProvider::random(),
-            from: 0,
-            to: 2,
-            weight: 1.0,
-        });
-        graph.add_edge(MockEdge {
-            id: EdgeIdProvider::random(),
-            from: 1,
-            to: 2,
-            weight: 1.0,
-        });
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 1, 1.0));
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 0, 2, 1.0));
+        graph.add_edge(mock_weighted_edge(EdgeIdProvider::random(), 1, 2, 1.0));
 
         let mut g_estimator = MockCostEstimator::new();
         g_estimator.set_cost(0, 2, 1.0); // Direct path
@@ -405,7 +368,7 @@ mod tests {
 
     #[test]
     fn does_not_explore_when_higher_cost() {
-        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<TestNode, MockEdge<u32>>::new();
 
         let mut g_estimator = MockCostEstimator::new();
         g_estimator.set_cost(0, 1, 10.0);
@@ -433,14 +396,8 @@ mod tests {
         );
 
         let mut graph = BaseGraph::<_, MockEdge<u32>>::new();
-        graph.add_node(MockNode {
-            id: 3,
-            data: Point { x: 1.0, y: 0.0 },
-        });
-        graph.add_node(MockNode {
-            id: 5,
-            data: Point { x: 1.0, y: 0.0 },
-        });
+        graph.add_node(mock_data_node(3, Point { x: 1.0, y: 0.0 }));
+        graph.add_node(mock_data_node(5, Point { x: 1.0, y: 0.0 }));
 
         assert!(!visitor.should_stop(3, &graph));
         assert!(visitor.should_stop(5, &graph));
@@ -461,50 +418,7 @@ mod tests {
         }
     }
 
-    struct MockNode {
-        id: u32,
-        data: Point,
-    }
-    impl Node for MockNode {
-        type Key = u32;
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
-
-    impl HasData for MockNode {
-        type Data = Point;
-
-        fn data(&self) -> &Self::Data {
-            &self.data
-        }
-    }
-
-    struct MockEdge<K: NodeKey> {
-        id: EdgeId,
-        from: K,
-        to: K,
-        weight: f64,
-    }
-    impl<K: NodeKey> Edge<K> for MockEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn from(&self) -> K {
-            self.from
-        }
-        fn to(&self) -> K {
-            self.to
-        }
-    }
-
-    impl<K: NodeKey> HasWeight for MockEdge<K> {
-        fn weight(&self) -> f64 {
-            self.weight
-        }
-    }
-
-    // Mock CostEstimator (retourne des coûts prédictibles)
+    // Mock CostEstimator
     struct MockCostEstimator<K: NodeKey> {
         costs: HashMap<(K, K), f64>,
     }
@@ -530,7 +444,7 @@ mod tests {
         }
     }
 
-    // Mock HeuristicEstimator (retourne des heuristiques prédictibles)
+    // Mock HeuristicEstimator
     struct MockHeuristicEstimator<K: NodeKey> {
         estimates: HashMap<K, f64>,
     }
@@ -558,9 +472,12 @@ mod tests {
         stop_at: Option<K>,
     }
 
-    type MockGraph = BaseGraph<MockNode, MockEdge<u32>>;
-    impl<V> Policy<<MockGraph as Graph>::Node, V> for MockPolicy<u32> {
-        fn is_compliant(&self, node: &MockNode, _: &V) -> bool {
+    type TestNode = MockNode<u32, Point>;
+    type TestEdge = MockEdge<u32>;
+    type TestGraph = BaseGraph<TestNode, TestEdge>;
+
+    impl<V> Policy<<TestGraph as Graph>::Node, V> for MockPolicy<u32> {
+        fn is_compliant(&self, node: &TestNode, _: &V) -> bool {
             match self.stop_at {
                 Some(id) => node.id() == id,
                 None => false,

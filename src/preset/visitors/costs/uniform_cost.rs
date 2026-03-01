@@ -42,45 +42,18 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, Node, edge::EdgeId, node::NodeKey},
         preset::{
             BaseGraph,
             visitors::{CostEstimator, UniformCost},
         },
+        testing::{MockEdge, MockNode},
     };
 
     #[test]
     fn cost_returns_one() {
-        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let graph = BaseGraph::<MockNode<u32, ()>, MockEdge<u32>>::new();
         let estimator = UniformCost;
         assert_eq!(estimator.cost(0, 0, &graph), 1.0);
         assert_eq!(estimator.cost(10, 10, &graph), 1.0);
-    }
-
-    struct MockEdge<K: NodeKey> {
-        id: EdgeId,
-        from: K,
-        to: K,
-    }
-
-    impl<K: NodeKey> Edge<K> for MockEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn from(&self) -> K {
-            self.from
-        }
-        fn to(&self) -> K {
-            self.to
-        }
-    }
-
-    struct MockNode;
-    impl Node for MockNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            0
-        }
     }
 }

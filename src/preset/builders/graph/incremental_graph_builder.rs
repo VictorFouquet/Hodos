@@ -69,12 +69,13 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::Edge;
     use crate::core::Node;
     use crate::core::NodeSampler;
-    use crate::core::edge::EdgeId;
-    use crate::core::node::NodeKey;
     use crate::preset::BaseGraph;
+    use crate::testing::MockEdge;
+    use crate::testing::MockNode;
+    use crate::testing::mock_edge;
+    use crate::testing::mock_node;
 
     #[test]
     fn builder_should_stop_when_sampler_returns_none() {
@@ -118,45 +119,15 @@ mod tests {
         assert_eq!(graph.get_edges().len(), 0);
     }
 
-    #[derive(Debug, Default)]
-    pub struct MockNode {
-        id: u32,
-    }
-
-    impl Node for MockNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
-
-    #[derive(Debug, Default)]
-    pub struct MockEdge<K: NodeKey> {
-        id: EdgeId,
-        to: K,
-        from: K,
-    }
-
-    impl<K: NodeKey> MockEdge<K> {}
-
-    impl<K: NodeKey> Edge<K> for MockEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn to(&self) -> K {
-            self.to
-        }
-        fn from(&self) -> K {
-            self.from
-        }
-    }
+    type TestNode = MockNode<u32, ()>;
+    type TestEdge = MockEdge<u32>;
+    type TestGraph = BaseGraph<TestNode, TestEdge>;
 
     struct MockNodeBuilder;
     impl BuildNode<u32> for MockNodeBuilder {
-        type BuiltNode = MockNode;
+        type BuiltNode = TestNode;
         fn build(&self, sample: &u32) -> Self::BuiltNode {
-            MockNode { id: *sample }
+            mock_node(*sample)
         }
     }
 
@@ -183,30 +154,25 @@ mod tests {
         _phantom: PhantomData<G>,
     }
 
-    type MockGraph = BaseGraph<MockNode, MockEdge<<MockNode as Node>::Key>>;
-    impl<Ctx, F: Fn(<MockGraph as Graph>::Node) -> Vec<Mutation<MockGraph>>>
-        Expander<MockGraph, Ctx> for MockExpander<MockGraph, F>
+    impl<Ctx, F: Fn(<TestGraph as Graph>::Node) -> Vec<Mutation<TestGraph>>>
+        Expander<TestGraph, Ctx> for MockExpander<TestGraph, F>
     {
         fn get_mutations(
             &self,
             _context: &Ctx,
-            node: <MockGraph as Graph>::Node,
-        ) -> Vec<Mutation<MockGraph>> {
+            node: <TestGraph as Graph>::Node,
+        ) -> Vec<Mutation<TestGraph>> {
             (self.factory)(node)
         }
     }
 
-    fn mock_expander() -> MockExpander<MockGraph, impl Fn(MockNode) -> Vec<Mutation<MockGraph>>> {
+    fn mock_expander() -> MockExpander<TestGraph, impl Fn(TestNode) -> Vec<Mutation<TestGraph>>> {
         MockExpander {
-            factory: |node: MockNode| {
+            factory: |node: TestNode| {
                 let id = node.id();
                 vec![
                     Mutation::AddNode(node),
-                    Mutation::AddEdge(MockEdge {
-                        id: id as u128,
-                        from: 0,
-                        to: 0,
-                    }),
+                    Mutation::AddEdge(mock_edge(id as u128, 0, 0)),
                 ]
             },
             _phantom: PhantomData,
@@ -215,16 +181,16 @@ mod tests {
 
     #[derive(Default)]
     struct AcceptAllPolicy;
-    impl Policy<Mutation<MockGraph>, MockGraph> for AcceptAllPolicy {
-        fn is_compliant(&self, _: &Mutation<MockGraph>, _: &MockGraph) -> bool {
+    impl Policy<Mutation<TestGraph>, TestGraph> for AcceptAllPolicy {
+        fn is_compliant(&self, _: &Mutation<TestGraph>, _: &TestGraph) -> bool {
             true
         }
     }
 
     #[derive(Default)]
     struct RejectAllNodePolicy;
-    impl Policy<Mutation<MockGraph>, MockGraph> for RejectAllNodePolicy {
-        fn is_compliant(&self, mutation: &Mutation<MockGraph>, _: &MockGraph) -> bool {
+    impl Policy<Mutation<TestGraph>, TestGraph> for RejectAllNodePolicy {
+        fn is_compliant(&self, mutation: &Mutation<TestGraph>, _: &TestGraph) -> bool {
             match mutation {
                 Mutation::AddNode(_) => false,
                 _ => true,
@@ -234,8 +200,8 @@ mod tests {
 
     #[derive(Default)]
     struct RejectAllEdgePolicy;
-    impl Policy<Mutation<MockGraph>, MockGraph> for RejectAllEdgePolicy {
-        fn is_compliant(&self, mutation: &Mutation<MockGraph>, _: &MockGraph) -> bool {
+    impl Policy<Mutation<TestGraph>, TestGraph> for RejectAllEdgePolicy {
+        fn is_compliant(&self, mutation: &Mutation<TestGraph>, _: &TestGraph) -> bool {
             match mutation {
                 Mutation::AddEdge(_) => false,
                 _ => true,

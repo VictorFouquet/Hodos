@@ -43,69 +43,39 @@ where
 mod tests {
     use super::*;
     use crate::{
-        core::{Node, edge::EdgeId, node::NodeKey},
         preset::BaseGraph,
+        testing::{MockEdge, MockNode, mock_node},
     };
 
-    pub struct MockNode {
-        id: u32,
-    }
-    pub struct MockEdge<K: NodeKey> {
-        id: EdgeId,
-        from: K,
-        to: K,
-    }
-
-    impl Node for MockNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
-
-    impl<K: NodeKey> Edge<K> for MockEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn from(&self) -> K {
-            self.from
-        }
-
-        fn to(&self) -> K {
-            self.to
-        }
-    }
-
-    fn create_node() -> MockNode {
-        MockNode { id: 0 }
-    }
+    type TestNode = MockNode<u32, ()>;
+    type TestEdge = MockEdge<u32>;
+    type TestGraph = BaseGraph<TestNode, TestEdge>;
 
     #[test]
     fn rejects_once_budget_exhausted() {
         let policy = NodeBudget::new(2);
-        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = TestGraph::new();
 
-        let mut node = MockNode { id: 0 };
-        let mut mutation = Mutation::AddNode(MockNode { id: 0 });
+        let mut node = mock_node(0);
+        let mut mutation = Mutation::AddNode(mock_node(0));
 
         assert!(policy.is_compliant(&mutation, &graph));
         graph.add_node(node);
 
-        node = MockNode { id: 1 };
-        mutation = Mutation::AddNode(MockNode { id: 1 });
+        node = mock_node(1);
+        mutation = Mutation::AddNode(mock_node(1));
         assert!(policy.is_compliant(&mutation, &graph));
         graph.add_node(node);
 
-        mutation = Mutation::AddNode(MockNode { id: 2 });
+        mutation = Mutation::AddNode(mock_node(2));
         assert!(!policy.is_compliant(&mutation, &graph));
     }
 
     #[test]
     fn zero_budget_rejects_all() {
         let policy = NodeBudget::new(0);
-        let graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let graph = TestGraph::new();
 
-        assert!(!policy.is_compliant(&Mutation::AddNode(create_node()), &graph));
+        assert!(!policy.is_compliant(&Mutation::AddNode(mock_node(0)), &graph));
     }
 }

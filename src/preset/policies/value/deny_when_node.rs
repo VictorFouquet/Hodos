@@ -49,43 +49,48 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{Edge, Node};
     use crate::preset::BaseGraph;
     use crate::preset::structural_traits::HasData;
+    use crate::testing::{MockEdge, MockNode, mock_data_node};
 
     #[test]
     fn denies_according_to_simple_boolean() {
-        let node = &MockValueNode::new(0, Point { x: 5, y: 5 });
-        assert!(
-            DenyWhenNode::new(|_n: &MockValueNode| false)
-                .is_compliant(&Mutation::<MockGraph>::AddNode(node.clone()), &())
-        );
-        assert!(
-            !DenyWhenNode::new(|_n: &MockValueNode| true)
-                .is_compliant(&Mutation::<MockGraph>::AddNode(node.clone()), &())
-        );
+        assert!(DenyWhenNode::new(|_n: &TestNode| false).is_compliant(
+            &Mutation::<TestGraph>::AddNode(mock_data_node(0, Point { x: 5, y: 5 })),
+            &()
+        ));
+        assert!(!DenyWhenNode::new(|_n: &TestNode| true).is_compliant(
+            &Mutation::<TestGraph>::AddNode(mock_data_node(0, Point { x: 5, y: 5 })),
+            &()
+        ));
     }
 
     #[test]
     fn denies_with_predicate() {
-        let node = &MockValueNode::new(0, Point { x: 5, y: 5 });
+        assert!(
+            !DenyWhenNode::new(|n: &TestNode| n.data().x > 4).is_compliant(
+                &Mutation::<TestGraph>::AddNode(mock_data_node(0, Point { x: 5, y: 5 })),
+                &()
+            )
+        );
+        assert!(
+            !DenyWhenNode::new(|n: &TestNode| n.data().x < 6).is_compliant(
+                &Mutation::<TestGraph>::AddNode(mock_data_node(0, Point { x: 5, y: 5 })),
+                &()
+            )
+        );
 
         assert!(
-            !DenyWhenNode::new(|n: &MockValueNode| n.data().x > 4)
-                .is_compliant(&Mutation::<MockGraph>::AddNode(node.clone()), &())
+            DenyWhenNode::new(|n: &TestNode| n.data().y < 4).is_compliant(
+                &Mutation::<TestGraph>::AddNode(mock_data_node(0, Point { x: 5, y: 5 })),
+                &()
+            )
         );
         assert!(
-            !DenyWhenNode::new(|n: &MockValueNode| n.data().x < 6)
-                .is_compliant(&Mutation::<MockGraph>::AddNode(node.clone()), &())
-        );
-
-        assert!(
-            DenyWhenNode::new(|n: &MockValueNode| n.data().y < 4)
-                .is_compliant(&Mutation::<MockGraph>::AddNode(node.clone()), &())
-        );
-        assert!(
-            DenyWhenNode::new(|n: &MockValueNode| n.data().y > 6)
-                .is_compliant(&Mutation::<MockGraph>::AddNode(node.clone()), &())
+            DenyWhenNode::new(|n: &TestNode| n.data().y > 6).is_compliant(
+                &Mutation::<TestGraph>::AddNode(mock_data_node(0, Point { x: 5, y: 5 })),
+                &()
+            )
         );
     }
 
@@ -95,47 +100,6 @@ mod tests {
         y: u32,
     }
 
-    #[derive(Default, Clone, Copy)]
-    pub struct MockValueNode {
-        data: Point,
-    }
-
-    impl MockValueNode {
-        pub fn new(_id: u32, data: Point) -> Self {
-            MockValueNode { data }
-        }
-    }
-
-    impl HasData for MockValueNode {
-        type Data = Point;
-
-        fn data(&self) -> &Self::Data {
-            &self.data
-        }
-    }
-
-    impl Node for MockValueNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            0
-        }
-    }
-
-    #[derive(Default, Clone, Copy)]
-    struct MockEdge;
-
-    impl Edge<<MockValueNode as Node>::Key> for MockEdge {
-        fn id(&self) -> crate::core::EdgeId {
-            0
-        }
-        fn from(&self) -> <MockValueNode as Node>::Key {
-            0
-        }
-        fn to(&self) -> <MockValueNode as Node>::Key {
-            0
-        }
-    }
-
-    type MockGraph = BaseGraph<MockValueNode, MockEdge>;
+    type TestNode = MockNode<u32, Point>;
+    type TestGraph = BaseGraph<TestNode, MockEdge<u32>>;
 }

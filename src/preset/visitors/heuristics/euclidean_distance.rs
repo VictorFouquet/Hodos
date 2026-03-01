@@ -62,39 +62,29 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, Graph, Node, edge::EdgeId, node::NodeKey},
+        core::Graph,
         preset::{
             BaseGraph,
-            structural_traits::{HasData, HasPosition},
+            structural_traits::HasPosition,
             visitors::{EuclideanDistance, HeuristicEstimator},
         },
+        testing::{MockEdge, MockNode, mock_data_node},
     };
+
+    type TestNode = MockNode<u32, Point>;
+    type TestEdge = MockEdge<u32>;
+    type TestGraph = BaseGraph<TestNode, TestEdge>;
 
     #[test]
     fn computes_euclidean_distance() {
-        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = TestGraph::new();
         let estimator = EuclideanDistance::new(2.0, 2.0);
 
-        graph.add_node(MockNode {
-            id: 0,
-            data: Point { x: 0.0, y: 0.0 },
-        });
-        graph.add_node(MockNode {
-            id: 1,
-            data: Point { x: 0.0, y: 1.0 },
-        });
-        graph.add_node(MockNode {
-            id: 2,
-            data: Point { x: 1.0, y: 1.0 },
-        });
-        graph.add_node(MockNode {
-            id: 3,
-            data: Point { x: 1.0, y: 2.0 },
-        });
-        graph.add_node(MockNode {
-            id: 4,
-            data: Point { x: 2.0, y: 2.0 },
-        });
+        graph.add_node(mock_data_node(0, Point { x: 0.0, y: 0.0 }));
+        graph.add_node(mock_data_node(1, Point { x: 0.0, y: 1.0 }));
+        graph.add_node(mock_data_node(2, Point { x: 1.0, y: 1.0 }));
+        graph.add_node(mock_data_node(3, Point { x: 1.0, y: 2.0 }));
+        graph.add_node(mock_data_node(4, Point { x: 2.0, y: 2.0 }));
 
         assert_eq!(round2(estimator.heuristic(0, &graph)), 2.82);
         assert_eq!(round2(estimator.heuristic(1, &graph)), 2.23);
@@ -105,29 +95,14 @@ mod tests {
 
     #[test]
     fn euclidean_distance_handles_negative_coordinates() {
-        let mut graph = BaseGraph::<MockNode, MockEdge<u32>>::new();
+        let mut graph = TestGraph::new();
         let estimator = EuclideanDistance::new(0.0, 0.0);
 
-        graph.add_node(MockNode {
-            id: 0,
-            data: Point { x: 0.0, y: 0.0 },
-        });
-        graph.add_node(MockNode {
-            id: 1,
-            data: Point { x: 0.0, y: -1.0 },
-        });
-        graph.add_node(MockNode {
-            id: 2,
-            data: Point { x: -1.0, y: 0.0 },
-        });
-        graph.add_node(MockNode {
-            id: 3,
-            data: Point { x: -1.0, y: -1.0 },
-        });
-        graph.add_node(MockNode {
-            id: 4,
-            data: Point { x: -2.0, y: -2.0 },
-        });
+        graph.add_node(mock_data_node(0, Point { x: 0.0, y: 0.0 }));
+        graph.add_node(mock_data_node(1, Point { x: 0.0, y: -1.0 }));
+        graph.add_node(mock_data_node(2, Point { x: -1.0, y: 0.0 }));
+        graph.add_node(mock_data_node(3, Point { x: -1.0, y: -1.0 }));
+        graph.add_node(mock_data_node(4, Point { x: -2.0, y: -2.0 }));
 
         assert_eq!(round2(estimator.heuristic(0, &graph)), 0.0);
         assert_eq!(round2(estimator.heuristic(1, &graph)), 1.0);
@@ -136,44 +111,7 @@ mod tests {
         assert_eq!(round2(estimator.heuristic(4, &graph)), 2.82);
     }
 
-    struct MockEdge<K: NodeKey> {
-        id: EdgeId,
-        from: K,
-        to: K,
-    }
-
-    impl<K: NodeKey> Edge<K> for MockEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn from(&self) -> K {
-            self.from
-        }
-        fn to(&self) -> K {
-            self.to
-        }
-    }
-
-    struct MockNode {
-        id: u32,
-        data: Point,
-    }
-
-    impl Node for MockNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
-
-    impl HasData for MockNode {
-        type Data = Point;
-        fn data(&self) -> &Self::Data {
-            &self.data
-        }
-    }
-
+    #[derive(Debug, Default, Clone, Copy)]
     struct Point {
         x: f64,
         y: f64,

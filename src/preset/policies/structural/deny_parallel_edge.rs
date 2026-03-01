@@ -34,57 +34,18 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::{
-        core::{Node, edge::EdgeId, node::NodeKey},
-        preset::{BaseGraph, EdgeIdProvider},
+        preset::BaseGraph,
+        testing::{MockEdge, MockNode, mock_edge},
     };
 
-    use super::*;
-
-    #[derive(Clone)]
-    pub struct MockNode {}
-
-    impl Node for MockNode {
-        type Key = u32;
-        fn id(&self) -> Self::Key {
-            0
-        }
-    }
-
-    #[derive(Clone)]
-    pub struct MockEdge<K: NodeKey> {
-        id: EdgeId,
-        to: K,
-        from: K,
-    }
-
-    impl<K: NodeKey> MockEdge<K> {
-        fn new(from: K, to: K) -> Self {
-            MockEdge {
-                id: EdgeIdProvider::random(),
-                from,
-                to,
-            }
-        }
-    }
-
-    impl<K: NodeKey> Edge<K> for MockEdge<K> {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn to(&self) -> K {
-            self.to
-        }
-        fn from(&self) -> K {
-            self.from
-        }
-    }
-
+    type TestGraph = BaseGraph<MockNode<u32, ()>, MockEdge<u32>>;
     #[test]
     fn denies_parallel_edges() {
         let policy = DenyParallelEdge;
-        let mut graph = BaseGraph::<MockNode, _>::new();
-        let edge = MockEdge::new(0, 1);
+        let mut graph = TestGraph::new();
+        let edge = mock_edge(0, 0, 1);
 
         assert!(policy.is_compliant(&Mutation::AddEdge(edge.clone()), &graph));
 
@@ -97,10 +58,10 @@ mod tests {
     fn allows_flipped_edges() {
         let policy = DenyParallelEdge;
 
-        let mut graph = BaseGraph::<MockNode, _>::new();
+        let mut graph = TestGraph::new();
 
-        let forward = MockEdge::new(0, 1);
-        let reverse = MockEdge::new(1, 0);
+        let forward = mock_edge(0, 0, 1);
+        let reverse = mock_edge(1, 1, 0);
 
         assert!(policy.is_compliant(&Mutation::AddEdge(forward.clone()), &graph));
 

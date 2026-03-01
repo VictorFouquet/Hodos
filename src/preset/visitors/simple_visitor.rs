@@ -108,8 +108,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        core::{Edge, Node, edge::EdgeId},
         preset::{BaseGraph, EdgeIdProvider},
+        testing::{MockEdge, MockNode, mock_edge, mock_node},
     };
 
     use super::*;
@@ -140,13 +140,9 @@ mod tests {
         let mut visitor = SimpleVisitor::<_, MockGraph>::new(Terminate);
 
         let mut graph = MockGraph::new();
-        graph.add_node(MockNode { id: 0 });
-        graph.add_node(MockNode { id: 1 });
-        graph.add_edge(MockEdge {
-            id: EdgeIdProvider::random(),
-            from: 0,
-            to: 1,
-        });
+        graph.add_node(mock_node(0));
+        graph.add_node(mock_node(1));
+        graph.add_edge(mock_edge(EdgeIdProvider::random(), 0, 1));
 
         assert_eq!(visitor.next_to_explore(0, &graph)[0].0, 1);
     }
@@ -156,13 +152,9 @@ mod tests {
         let mut visitor = SimpleVisitor::<_, MockGraph>::new(Terminate);
 
         let mut graph = MockGraph::new();
-        graph.add_node(MockNode { id: 0 });
-        graph.add_node(MockNode { id: 1 });
-        graph.add_edge(MockEdge {
-            id: EdgeIdProvider::random(),
-            from: 0,
-            to: 1,
-        });
+        graph.add_node(mock_node(0));
+        graph.add_node(mock_node(1));
+        graph.add_edge(mock_edge(EdgeIdProvider::random(), 0, 1));
 
         visitor.visit(1, &MockGraph::new());
 
@@ -174,7 +166,7 @@ mod tests {
         let visitor = SimpleVisitor::new(Terminate);
 
         let mut graph = MockGraph::new();
-        graph.add_node(MockNode { id: 0 });
+        graph.add_node(mock_node(0));
         assert!(visitor.should_stop(0, &graph));
     }
 
@@ -185,32 +177,7 @@ mod tests {
         }
     }
 
-    struct MockNode {
-        id: u32,
-    }
-    impl Node for MockNode {
-        type Key = u32;
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
-
-    struct MockEdge {
-        id: EdgeId,
-        from: u32,
-        to: u32,
-    }
-    impl Edge<u32> for MockEdge {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn from(&self) -> u32 {
-            self.from
-        }
-        fn to(&self) -> u32 {
-            self.to
-        }
-    }
-
-    type MockGraph = BaseGraph<MockNode, MockEdge>;
+    type TestNode = MockNode<u32, ()>;
+    type TestEdge = MockEdge<u32>;
+    type MockGraph = BaseGraph<TestNode, TestEdge>;
 }

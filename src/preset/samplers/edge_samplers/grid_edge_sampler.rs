@@ -143,6 +143,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::testing::mock_data_node;
+
     use super::*;
 
     fn test_context() -> Grid2D<char> {
@@ -216,10 +218,7 @@ mod tests {
         let sampler = UniformGridEdgeSampler::connect_four();
         let context = test_context();
 
-        let node = MockNode {
-            id: (1, 1),
-            data: Point { x: 1.0, y: 1.0 },
-        };
+        let node = mock_data_node((1, 1), Point { x: 1.0, y: 1.0 });
 
         let candidates = sampler.with_node(&node, &context);
         assert_eq!(4, candidates.len());
@@ -252,10 +251,7 @@ mod tests {
         });
         let context = test_context();
 
-        let node = MockNode {
-            id: (1, 1),
-            data: Point { x: 1.0, y: 1.0 },
-        };
+        let node = mock_data_node((1, 1), Point { x: 1.0, y: 1.0 });
 
         let candidates = sampler.with_node(&node, &context);
         assert_eq!(8, candidates.len());
@@ -312,26 +308,6 @@ mod tests {
         }
         fn y(&self) -> f64 {
             self.y
-        }
-    }
-
-    pub struct MockNode {
-        id: (u32, u32),
-        data: Point,
-    }
-
-    impl Node for MockNode {
-        type Key = (u32, u32);
-
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
-
-    impl HasData for MockNode {
-        type Data = Point;
-        fn data(&self) -> &Self::Data {
-            &self.data
         }
     }
 }

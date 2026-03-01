@@ -49,81 +49,52 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{Edge, Node};
+    use crate::core::Edge;
     use crate::preset::{BaseGraph, HasWeight};
+    use crate::testing::{MockEdge, MockNode, mock_weighted_edge};
+
+    type TestGraph = BaseGraph<MockNode<u32, ()>, MockEdge<u32>>;
 
     #[test]
     fn allows_according_to_simple_boolean() {
+        assert!(AllowWhenEdge::new(|_n: &MockEdge<u32>| true).is_compliant(
+            &Mutation::<TestGraph>::AddEdge(mock_weighted_edge(0, 0, 0, 0.1)),
+            &()
+        ));
         assert!(
-            AllowWhenEdge::new(|_n: &MockEdge| true)
-                .is_compliant(&Mutation::<MockGraph>::AddEdge(mock_edge(0, 0, 0.1)), &())
-        );
-        assert!(
-            !AllowWhenEdge::new(|_n: &MockEdge| false)
-                .is_compliant(&Mutation::<MockGraph>::AddEdge(mock_edge(0, 0, 0.1)), &())
+            !AllowWhenEdge::new(|_n: &MockEdge<u32>| false).is_compliant(
+                &Mutation::<TestGraph>::AddEdge(mock_weighted_edge(0, 0, 0, 0.1)),
+                &()
+            )
         );
     }
 
     #[test]
     fn allows_with_predicate() {
         assert!(
-            AllowWhenEdge::new(|e: &MockEdge| e.weight() < 1.0)
-                .is_compliant(&Mutation::<MockGraph>::AddEdge(mock_edge(0, 0, 0.0)), &())
+            AllowWhenEdge::new(|e: &MockEdge<u32>| e.weight() < 1.0).is_compliant(
+                &Mutation::<TestGraph>::AddEdge(mock_weighted_edge(0, 0, 0, 0.0)),
+                &()
+            )
         );
         assert!(
-            !AllowWhenEdge::new(|e: &MockEdge| e.weight() < 1.0)
-                .is_compliant(&Mutation::<MockGraph>::AddEdge(mock_edge(0, 0, 2.0)), &())
+            !AllowWhenEdge::new(|e: &MockEdge<u32>| e.weight() < 1.0).is_compliant(
+                &Mutation::<TestGraph>::AddEdge(mock_weighted_edge(0, 0, 0, 2.0)),
+                &()
+            )
         );
 
         assert!(
-            AllowWhenEdge::new(|e: &MockEdge| e.from() != e.to())
-                .is_compliant(&Mutation::<MockGraph>::AddEdge(mock_edge(0, 1, 0.0)), &())
+            AllowWhenEdge::new(|e: &MockEdge<u32>| e.from() != e.to()).is_compliant(
+                &Mutation::<TestGraph>::AddEdge(mock_weighted_edge(0, 0, 1, 0.0)),
+                &()
+            )
         );
         assert!(
-            !AllowWhenEdge::new(|e: &MockEdge| e.from() != e.to())
-                .is_compliant(&Mutation::<MockGraph>::AddEdge(mock_edge(0, 0, 0.0)), &())
+            !AllowWhenEdge::new(|e: &MockEdge<u32>| e.from() != e.to()).is_compliant(
+                &Mutation::<TestGraph>::AddEdge(mock_weighted_edge(0, 0, 0, 0.0)),
+                &()
+            )
         );
     }
-
-    #[derive(Default, Clone, Copy)]
-    pub struct MockNode;
-
-    impl Node for MockNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            0
-        }
-    }
-
-    #[derive(Default, Clone, Copy)]
-    struct MockEdge {
-        from: u32,
-        to: u32,
-        weight: f64,
-    }
-
-    fn mock_edge(from: u32, to: u32, weight: f64) -> MockEdge {
-        MockEdge { from, to, weight }
-    }
-
-    impl Edge<<MockNode as Node>::Key> for MockEdge {
-        fn id(&self) -> crate::core::EdgeId {
-            0
-        }
-        fn from(&self) -> <MockNode as Node>::Key {
-            self.from
-        }
-        fn to(&self) -> <MockNode as Node>::Key {
-            self.to
-        }
-    }
-
-    impl HasWeight for MockEdge {
-        fn weight(&self) -> f64 {
-            self.weight
-        }
-    }
-
-    type MockGraph = BaseGraph<MockNode, MockEdge>;
 }

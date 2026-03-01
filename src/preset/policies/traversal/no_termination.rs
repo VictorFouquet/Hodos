@@ -11,23 +11,15 @@ impl<N: Node, T> Policy<N, T> for NoTermination {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::testing::mock_node;
 
-    struct MockNode {
-        id: u32,
-    }
-    impl Node for MockNode {
-        type Key = u32;
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
+    use super::*;
 
     #[test]
     fn always_returns_false() {
         let policy = NoTermination;
-        assert!(!policy.is_compliant(&MockNode { id: 0 }, &()));
-        assert!(!policy.is_compliant(&MockNode { id: 42 }, &()));
-        assert!(!policy.is_compliant(&MockNode { id: 999 }, &()));
+        assert!(!policy.is_compliant(&mock_node::<u32, ()>(0), &()));
+        assert!(!policy.is_compliant(&mock_node::<u32, ()>(42), &()));
+        assert!(!policy.is_compliant(&mock_node::<u32, ()>(999), &()));
     }
 }
