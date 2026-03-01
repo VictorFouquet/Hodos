@@ -1,11 +1,14 @@
-use crate::{core::BuildEdge, preset::WeightedEdge};
+use crate::{
+    core::{BuildEdge, NodeKey},
+    preset::WeightedEdge,
+};
 
 pub struct WeightedEdgeBuilder;
 
-impl BuildEdge<u32, (u32, u32, f64)> for WeightedEdgeBuilder {
-    type BuiltEdge = WeightedEdge<u32>;
+impl<K: NodeKey> BuildEdge<K, (K, K, f64)> for WeightedEdgeBuilder {
+    type BuiltEdge = WeightedEdge<K>;
 
-    fn build(&self, sample: &(u32, u32, f64)) -> Self::BuiltEdge {
+    fn build(&self, sample: &(K, K, f64)) -> Self::BuiltEdge {
         WeightedEdge::new(sample.0, sample.1, sample.2)
     }
 }

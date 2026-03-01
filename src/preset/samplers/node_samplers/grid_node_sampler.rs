@@ -1,6 +1,26 @@
 use std::marker::PhantomData;
 
-use crate::{core::NodeSampler, preset::samplers::Grid2D};
+use crate::{
+    core::NodeSampler,
+    preset::{HasPosition, samplers::Grid2D},
+};
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct CellData<T> {
+    pub value: T,
+    pub x: u32,
+    pub y: u32,
+}
+
+impl<T> HasPosition for CellData<T> {
+    fn x(&self) -> f64 {
+        self.x as f64
+    }
+
+    fn y(&self) -> f64 {
+        self.y as f64
+    }
+}
 
 /// Samples a graph from a 2D Grid representation.
 ///
@@ -26,9 +46,9 @@ impl<T> NodeSampler<Grid2D<T>> for GridNodeSampler<T>
 where
     T: Clone + Copy,
 {
-    type NodeCandidate = ((u32, u32), T);
+    type NodeCandidate = ((u32, u32), CellData<T>);
 
-    fn next(&mut self, context: &Grid2D<T>) -> Option<Vec<((u32, u32), T)>> {
+    fn next(&mut self, context: &Grid2D<T>) -> Option<Vec<((u32, u32), CellData<T>)>> {
         let i = self.current_y as usize;
 
         if i >= context.len() {
@@ -37,7 +57,14 @@ where
 
         let j = self.current_x as usize;
 
-        let nodes = vec![((j as u32, i as u32), context[i][j])];
+        let nodes = vec![(
+            (j as u32, i as u32),
+            CellData {
+                x: j as u32,
+                y: i as u32,
+                value: context[i][j],
+            },
+        )];
 
         self.current_x += 1;
         if self.current_x >= (context[i].len() as i32) {
@@ -104,10 +131,10 @@ mod tests {
         let context = test_context();
 
         let nodes1 = sampler.next(&context).unwrap();
-        assert_eq!(nodes1[0].1, ' ');
+        assert_eq!(nodes1[0].1.value, ' ');
 
         let nodes2 = sampler.next(&context).unwrap();
-        assert_eq!(nodes2[0].1, '#');
+        assert_eq!(nodes2[0].1.value, '#');
     }
 
     #[test]

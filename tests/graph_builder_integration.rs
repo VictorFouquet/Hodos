@@ -1,257 +1,288 @@
-// mod graph_builder_integration {
-//     use hodos::core::{Edge, Graph, Node};
+mod graph_builder_integration {
+    use hodos::core::{Edge, Graph, Node};
 
-//     mod from_matrix {
-//         use super::*;
-//         use hodos::preset::policies::value::{AllowAll, AllowWhen};
-//         use hodos::preset::samplers::{BinaryMatrixSampler, WeightedMatrixSampler};
-//         use hodos::preset::structural_traits::HasWeight;
-//         use hodos::preset::{
-//             EmptyNodeBuilder, GraphBuilder, UnweightedEdgeBuilder, WeightedEdge,
-//             WeightedEdgeBuilder,
-//         };
+    mod from_matrix {
+        use super::*;
+        use hodos::core::BuildGraph;
+        use hodos::preset::policies::logic::Composite;
+        use hodos::preset::policies::value::{AllowAll, AllowWhenEdge};
+        use hodos::preset::samplers::{MatrixEdgeSampler, VecNodeSampler};
+        use hodos::preset::structural_traits::HasWeight;
+        use hodos::preset::{
+            BaseGraph, BatchGraphBuilder, EmptyNode, EmptyNodeBuilder, UnweightedEdge,
+            UnweightedEdgeBuilder, WeightedEdge, WeightedEdgeBuilder,
+        };
 
-//         #[test]
-//         fn builds_graph_from_binary_matrix_and_allow_all_policy() {
-//             let matrix = vec![
-//                 vec![false, true, false],
-//                 vec![true, false, true],
-//                 vec![false, true, false],
-//             ];
-//             let sampler = BinaryMatrixSampler::default();
+        #[test]
+        fn builds_graph_from_binary_matrix_and_allow_all_policy() {
+            let matrix = vec![
+                vec![false, true, false],
+                vec![true, false, true],
+                vec![false, true, false],
+            ];
 
-//             let mut graph_builder =
-//                 GraphBuilder::allow_all(EmptyNodeBuilder, UnweightedEdgeBuilder, sampler);
-//             let graph = graph_builder.build(&matrix);
+            let mut graph_builder = BatchGraphBuilder::new(
+                VecNodeSampler::default(),
+                EmptyNodeBuilder,
+                MatrixEdgeSampler,
+                UnweightedEdgeBuilder,
+                AllowAll,
+            );
 
-//             assert_eq!(graph.get_nodes().len(), 3);
-//             assert!(graph.get_nodes().iter().any(|n| n.id() == 0));
-//             assert!(graph.get_nodes().iter().any(|n| n.id() == 1));
-//             assert!(graph.get_nodes().iter().any(|n| n.id() == 2));
+            let graph: BaseGraph<EmptyNode, UnweightedEdge<u32>> = graph_builder.build(&matrix);
 
-//             assert_eq!(graph.get_edges().len(), 4);
+            assert_eq!(graph.get_nodes().len(), 3);
+            assert!(graph.get_nodes().iter().any(|n| n.id() == 0));
+            assert!(graph.get_nodes().iter().any(|n| n.id() == 1));
+            assert!(graph.get_nodes().iter().any(|n| n.id() == 2));
 
-//             let expected_edges = vec![(0, 1), (1, 0), (1, 2), (2, 1)];
+            assert_eq!(graph.get_edges().len(), 4);
 
-//             for expected in expected_edges {
-//                 assert!(
-//                     graph
-//                         .get_edges()
-//                         .iter()
-//                         .any(|e| e.from() == expected.0 && e.to() == expected.1)
-//                 );
-//             }
-//         }
+            let expected_edges = vec![(0, 1), (1, 0), (1, 2), (2, 1)];
 
-//         #[test]
-//         fn builds_graph_from_weighted_matrix_and_allow_weight_above_policy() {
-//             let matrix = vec![
-//                 vec![None, Some(4.0), Some(0.0)],
-//                 vec![Some(6.0), None, Some(8.0)],
-//                 vec![Some(0.0), Some(10.0), Some(-1.0)],
-//             ];
-//             let sampler = WeightedMatrixSampler::default();
-//             let node_policy = AllowAll;
-//             let edge_policy = AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() > 0.0);
+            for expected in expected_edges {
+                assert!(
+                    graph
+                        .get_edges()
+                        .iter()
+                        .any(|e| e.from() == expected.0 && e.to() == expected.1)
+                );
+            }
+        }
 
-//             let mut graph_builder =
-//                 GraphBuilder::new(EmptyNodeBuilder, WeightedEdgeBuilder, sampler)
-//                     .with_node_validation(node_policy)
-//                     .with_edge_validation(edge_policy);
-//             let graph = graph_builder.build(&matrix);
+        #[test]
+        fn builds_graph_from_weighted_matrix_and_allow_weight_above_policy() {
+            let matrix = vec![
+                vec![None, Some(4.0), Some(0.0)],
+                vec![Some(6.0), None, Some(8.0)],
+                vec![Some(0.0), Some(10.0), Some(-1.0)],
+            ];
+            let node_policy = AllowAll;
+            let edge_policy = AllowWhenEdge::new(|e: &WeightedEdge<u32>| e.weight() > 0.0);
 
-//             assert_eq!(graph.get_nodes().len(), 3);
-//             assert!(graph.get_nodes().iter().any(|n| n.id() == 0));
-//             assert!(graph.get_nodes().iter().any(|n| n.id() == 1));
-//             assert!(graph.get_nodes().iter().any(|n| n.id() == 2));
+            let mut graph_builder = BatchGraphBuilder::new(
+                VecNodeSampler::default(),
+                EmptyNodeBuilder,
+                MatrixEdgeSampler,
+                WeightedEdgeBuilder,
+                Composite::And(node_policy, edge_policy),
+            );
 
-//             assert_eq!(graph.get_edges().len(), 4);
+            let graph: BaseGraph<EmptyNode, WeightedEdge<u32>> = graph_builder.build(&matrix);
 
-//             let expected_edges = vec![(0, 1, 4.0), (1, 0, 6.0), (1, 2, 8.0), (2, 1, 10.0)];
+            assert_eq!(graph.get_nodes().len(), 3);
+            assert!(graph.get_nodes().iter().any(|n| n.id() == 0));
+            assert!(graph.get_nodes().iter().any(|n| n.id() == 1));
+            assert!(graph.get_nodes().iter().any(|n| n.id() == 2));
 
-//             for expected in expected_edges {
-//                 assert!(graph.get_edges().iter().any(|e| e.from() == expected.0
-//                     && e.to() == expected.1
-//                     && e.weight() == expected.2));
-//             }
-//         }
-//     }
+            assert_eq!(graph.get_edges().len(), 4);
 
-//     mod from_grid_2d {
-//         use super::*;
-//         use hodos::preset::policies::structural::DenyDanglingEdge;
-//         use hodos::preset::policies::value::DenyValue;
-//         use hodos::preset::samplers::{Grid2D, Grid2DSampler};
-//         use hodos::preset::{DataNodeBuilder, GraphBuilder, UnweightedEdgeBuilder};
+            let expected_edges = vec![(0, 1, 4.0), (1, 0, 6.0), (1, 2, 8.0), (2, 1, 10.0)];
 
-//         fn test_context() -> Grid2D<char> {
-//             vec![
-//                 vec![' ', '#', ' '], // 0, 1, 2
-//                 vec![' ', ' ', ' '], // 3, 4, 5
-//                 vec![' ', '#', '#'], // 6, 7, 8
-//             ]
-//         }
+            for expected in expected_edges {
+                assert!(graph.get_edges().iter().any(|e| e.from() == expected.0
+                    && e.to() == expected.1
+                    && e.weight() == expected.2));
+            }
+        }
+    }
 
-//         #[test]
-//         fn builds_graph_nodes_from_grid_2d_and_deny_node_value_policy() {
-//             let grid = test_context();
-//             let sampler = Grid2DSampler::<char>::default();
-//             let node_policy = DenyValue::new(vec!['#']);
-//             let edge_policy = DenyDanglingEdge;
+    mod from_grid_2d {
+        use super::*;
+        use hodos::core::BuildGraph;
+        use hodos::preset::policies::logic::Composite;
+        use hodos::preset::policies::structural::DenyDanglingEdge;
+        use hodos::preset::policies::value::DenyBy;
+        use hodos::preset::samplers::{
+            CellData, Grid2D, GridNodeSampler, UniformGridEdgeSampler, WeightedGridEdgeSampler,
+        };
+        use hodos::preset::{
+            BatchGraphBuilder, DataGraph, DataNode, DataNodeBuilder, HasData,
+            UnweightedEdgeBuilder, WeightedDataGraph, WeightedEdgeBuilder,
+        };
 
-//             let mut graph_builder =
-//                 GraphBuilder::new(DataNodeBuilder::new(|k| k), UnweightedEdgeBuilder, sampler)
-//                     .with_node_validation(node_policy)
-//                     .with_edge_validation(edge_policy);
-//             let graph = graph_builder.build(&grid);
+        fn test_context() -> Grid2D<char> {
+            vec![
+                vec![' ', '#', ' '], // 0, 1, 2
+                vec![' ', ' ', ' '], // 3, 4, 5
+                vec![' ', '#', '#'], // 6, 7, 8
+            ]
+        }
 
-//             let expected_ids = [0, 2, 3, 4, 5, 6];
-//             assert_eq!(graph.get_nodes().len(), expected_ids.len());
-//             for id in expected_ids {
-//                 assert!(graph.get_nodes().iter().any(|n| n.id() == id));
-//             }
-//         }
+        #[test]
+        fn builds_graph_nodes_from_grid_2d_and_deny_node_value_policy() {
+            let grid = test_context();
 
-//         #[test]
-//         fn filters_obstacles_from_grid_2d_and_deny_node_value_policy() {
-//             let grid = test_context();
-//             let sampler = Grid2DSampler::<char>::default();
-//             let node_policy = DenyValue::new(vec!['#']);
-//             let edge_policy = DenyDanglingEdge;
+            let node_policy = DenyBy::new(vec!['#'], |n: &DataNode<CellData<char>, (u32, u32)>| {
+                n.data().value
+            });
+            let edge_policy = DenyDanglingEdge;
 
-//             let mut graph_builder =
-//                 GraphBuilder::new(DataNodeBuilder::new(|k| k), UnweightedEdgeBuilder, sampler)
-//                     .with_node_validation(node_policy)
-//                     .with_edge_validation(edge_policy);
-//             let graph = graph_builder.build(&grid);
+            let mut graph_builder = BatchGraphBuilder::new(
+                GridNodeSampler::<char>::default(),
+                DataNodeBuilder,
+                WeightedGridEdgeSampler::connect_four(),
+                WeightedEdgeBuilder,
+                Composite::And(node_policy, edge_policy),
+            );
 
-//             let obstacle_ids = [1, 7, 8];
-//             for id in obstacle_ids {
-//                 assert!(!graph.get_nodes().iter().any(|n| n.id() == id));
-//             }
-//         }
+            let graph: WeightedDataGraph<CellData<char>, (u32, u32)> = graph_builder.build(&grid);
 
-//         #[test]
-//         fn filters_edges_from_grid_2d_and_deny_dangling_edge_policy() {
-//             let grid = test_context();
-//             let sampler = Grid2DSampler::<char>::default();
-//             let node_policy = DenyValue::new(vec!['#']);
-//             let edge_policy = DenyDanglingEdge;
+            let expected_ids = [(0, 0), (2, 0), (0, 1), (1, 1), (2, 1), (0, 2)];
+            assert_eq!(graph.get_nodes().len(), expected_ids.len());
+            for id in expected_ids {
+                assert!(graph.get_nodes().iter().any(|n| n.id() == id));
+            }
+        }
 
-//             let mut graph_builder =
-//                 GraphBuilder::new(DataNodeBuilder::new(|k| k), UnweightedEdgeBuilder, sampler)
-//                     .with_node_validation(node_policy)
-//                     .with_edge_validation(edge_policy);
-//             let graph = graph_builder.build(&grid);
+        #[test]
+        fn filters_obstacles_from_grid_2d_and_deny_node_value_policy() {
+            let grid = test_context();
 
-//             let expected_edges = vec![
-//                 (0, 3),
-//                 (2, 5),
-//                 (3, 0),
-//                 (3, 4),
-//                 (3, 6),
-//                 (4, 3),
-//                 (4, 5),
-//                 (5, 2),
-//                 (5, 4),
-//                 (6, 3),
-//             ];
+            let mut graph_builder = BatchGraphBuilder::new(
+                GridNodeSampler::default(),
+                DataNodeBuilder,
+                UniformGridEdgeSampler::connect_four(),
+                UnweightedEdgeBuilder,
+                Composite::And(
+                    DenyBy::new(vec!['#'], |n: &DataNode<CellData<char>, (u32, u32)>| {
+                        n.data().value
+                    }),
+                    DenyDanglingEdge,
+                ),
+            );
 
-//             assert_eq!(graph.get_edges().len(), expected_edges.len());
+            let graph: DataGraph<CellData<char>, (u32, u32)> = graph_builder.build(&grid);
 
-//             for expected in expected_edges {
-//                 assert!(
-//                     graph
-//                         .get_edges()
-//                         .iter()
-//                         .any(|e| e.from() == expected.0 && e.to() == expected.1)
-//                 );
-//             }
-//         }
-//     }
+            let obstacle_ids = [(1, 0), (1, 2), (2, 2)];
 
-//     mod from_adjacency_list {
-//         use super::*;
-//         use hodos::preset::edges::WeightedEdge;
-//         use hodos::preset::policies::logic::Composite;
-//         use hodos::preset::policies::value::{AllowAll, AllowWhen, DenyValue};
-//         use hodos::preset::samplers::{
-//             WeightedAdjacencyListWithData, WeightedAdjacencyWithDataSampler,
-//         };
-//         use hodos::preset::structural_traits::HasWeight;
-//         use hodos::preset::{DataNodeBuilder, GraphBuilder, WeightedEdgeBuilder};
+            assert_eq!(graph.get_nodes().len(), 6);
 
-//         fn test_context() -> WeightedAdjacencyListWithData<char> {
-//             WeightedAdjacencyListWithData::<char> {
-//                 data: vec![' ', '#', ' ', ' ', ' ', ' ', ' ', '#', '#'],
-//                 adjacency: vec![
-//                     vec![(3, 5.0)],
-//                     vec![],
-//                     vec![(5, 10.0)],
-//                     vec![(3, 1.0), (4, 6.0), (6, 12.0)],
-//                     vec![(3, 2.0), (5, 7.0)],
-//                     vec![(2, 14.0), (4, 5.0)],
-//                     vec![(3, 7.0)],
-//                     vec![],
-//                     vec![],
-//                 ],
-//             }
-//         }
+            for id in obstacle_ids {
+                assert!(!graph.get_nodes().iter().any(|n| n.id() == id));
+            }
+        }
 
-//         #[test]
-//         fn builds_graph_nodes_from_weighted_adj_with_data_and_deny_node_value_policy() {
-//             let grid = test_context();
-//             let sampler = WeightedAdjacencyWithDataSampler::<char>::default();
-//             let node_policy = DenyValue::new(vec!['#']);
-//             let edge_policy = AllowAll;
+        #[test]
+        fn filters_edges_from_grid_2d_and_deny_dangling_edge_policy() {
+            let grid = test_context();
 
-//             let mut graph_builder =
-//                 GraphBuilder::new(DataNodeBuilder::new(|k| k), WeightedEdgeBuilder, sampler)
-//                     .with_node_validation(node_policy)
-//                     .with_edge_validation(edge_policy);
-//             let graph = graph_builder.build(&grid);
+            let mut graph_builder = BatchGraphBuilder::new(
+                GridNodeSampler::default(),
+                DataNodeBuilder,
+                UniformGridEdgeSampler::connect_four(),
+                UnweightedEdgeBuilder,
+                Composite::And(
+                    DenyDanglingEdge,
+                    DenyBy::new(vec!['#'], |n: &DataNode<CellData<char>, (u32, u32)>| {
+                        n.data().value
+                    }),
+                ),
+            );
 
-//             let expected_ids = [0, 2, 3, 4, 5, 6];
-//             assert_eq!(graph.get_nodes().len(), expected_ids.len());
-//             for id in expected_ids {
-//                 assert!(graph.get_nodes().iter().any(|n| n.id() == id));
-//             }
-//         }
+            let graph: DataGraph<CellData<char>, (u32, u32)> = graph_builder.build(&grid);
 
-//         #[test]
-//         fn builds_graph_edges_from_weighted_adj_with_data_and_allow_in_range_weight_policy() {
-//             let grid = test_context();
-//             let sampler = WeightedAdjacencyWithDataSampler::<char>::default();
-//             let node_policy = DenyValue::new(vec!['#']);
-//             let edge_policy = Composite::And(
-//                 AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() > 4.0),
-//                 AllowWhen::new(|e: &WeightedEdge<u32>| e.weight() < 11.0),
-//             );
+            let expected_edges = vec![
+                ((0, 0), (0, 1)),
+                ((2, 0), (2, 1)),
+                ((0, 1), (0, 0)),
+                ((0, 1), (1, 1)),
+                ((0, 1), (0, 2)),
+                ((1, 1), (0, 1)),
+                ((1, 1), (2, 1)),
+                ((2, 1), (2, 0)),
+                ((2, 1), (1, 1)),
+                ((0, 2), (0, 1)),
+            ];
 
-//             let mut graph_builder =
-//                 GraphBuilder::new(DataNodeBuilder::new(|k| k), WeightedEdgeBuilder, sampler)
-//                     .with_node_validation(node_policy)
-//                     .with_edge_validation(edge_policy);
-//             let graph = graph_builder.build(&grid);
+            assert_eq!(graph.get_edges().len(), expected_edges.len());
 
-//             let expected_ids = [0, 2, 3, 4, 5, 6];
-//             assert_eq!(graph.get_nodes().len(), expected_ids.len());
+            for expected in expected_edges {
+                assert!(
+                    graph
+                        .get_edges()
+                        .iter()
+                        .any(|e| e.from() == expected.0 && e.to() == expected.1)
+                );
+            }
+        }
+    }
 
-//             let expected_edges = vec![
-//                 (0, 3, 5.0),
-//                 (2, 5, 10.0),
-//                 (3, 4, 6.0),
-//                 (4, 5, 7.0),
-//                 (5, 4, 5.0),
-//                 (6, 3, 7.0),
-//             ];
-//             assert_eq!(graph.get_edges().len(), expected_edges.len());
+    mod from_adjacency_list {
+        use super::*;
+        use hodos::core::BuildGraph;
+        use hodos::preset::edges::WeightedEdge;
+        use hodos::preset::policies::value::{AllowWhenEdge, DenyWhenNode};
+        use hodos::preset::samplers::{ListEdgeSampler, VecNodeSampler, WeightedAdjacencyList};
+        use hodos::preset::structural_traits::HasWeight;
+        use hodos::preset::{
+            BatchGraphBuilder, EmptyNode, EmptyNodeBuilder, WeightedEdgeBuilder, WeightedGraph,
+        };
 
-//             for expected in expected_edges {
-//                 assert!(graph.get_edges().iter().any(|e| e.from() == expected.0
-//                     && e.to() == expected.1
-//                     && e.weight() == expected.2));
-//             }
-//         }
-//     }
-// }
+        fn test_context() -> WeightedAdjacencyList {
+            vec![
+                vec![(3, 5.0)],
+                vec![],
+                vec![(5, 10.0)],
+                vec![(3, 1.0), (4, 6.0), (6, 12.0)],
+                vec![(3, 2.0), (5, 7.0)],
+                vec![(2, 14.0), (4, 5.0)],
+                vec![(3, 7.0)],
+                vec![],
+                vec![],
+            ]
+        }
+
+        #[test]
+        fn builds_graph_nodes_from_weighted_adjacency_list_with_filter_policy() {
+            let grid = test_context();
+
+            let mut graph_builder = BatchGraphBuilder::new(
+                VecNodeSampler::default(),
+                EmptyNodeBuilder,
+                ListEdgeSampler,
+                WeightedEdgeBuilder,
+                DenyWhenNode::new(|n: &EmptyNode| n.id() % 2 == 0),
+            );
+
+            let graph: WeightedGraph = graph_builder.build(&grid);
+
+            let expected_ids = [1, 3, 5, 7];
+            assert_eq!(graph.get_nodes().len(), expected_ids.len());
+            for id in expected_ids {
+                assert!(graph.get_nodes().iter().any(|n| n.id() == id));
+            }
+        }
+
+        #[test]
+        fn builds_graph_edges_from_weighted_adjacency_list_and_filter_policy() {
+            let grid = test_context();
+
+            let mut graph_builder = BatchGraphBuilder::new(
+                VecNodeSampler::default(),
+                EmptyNodeBuilder,
+                ListEdgeSampler,
+                WeightedEdgeBuilder,
+                AllowWhenEdge::new(|e: &WeightedEdge<u32>| e.weight() > 4.0 && e.weight() < 11.0),
+            );
+
+            let graph: WeightedGraph = graph_builder.build(&grid);
+
+            let expected_edges = vec![
+                (0, 3, 5.0),
+                (2, 5, 10.0),
+                (3, 4, 6.0),
+                (4, 5, 7.0),
+                (5, 4, 5.0),
+                (6, 3, 7.0),
+            ];
+            assert_eq!(graph.get_edges().len(), expected_edges.len());
+
+            for expected in expected_edges {
+                assert!(graph.get_edges().iter().any(|e| e.from() == expected.0
+                    && e.to() == expected.1
+                    && e.weight() == expected.2));
+            }
+        }
+    }
+}

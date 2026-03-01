@@ -16,11 +16,11 @@ mod policy_integration {
             use hodos::preset::policies::value::{AllowWhenEdge, AllowWhenNode};
             use hodos::preset::{HasData, HasWeight};
 
-            type DataWeightedGraph = BaseGraph<DataNode<bool>, WeightedEdge<u32>>;
+            type DataWeightedGraph = BaseGraph<DataNode<bool, u32>, WeightedEdge<u32>>;
             #[test]
             fn rejects_nodes_when_budget_exhausted_despite_allowed_value() {
                 let policy = Composite::And(
-                    AllowWhenNode::new(|n: &DataNode<bool>| *n.data()),
+                    AllowWhenNode::new(|n: &DataNode<bool, u32>| *n.data()),
                     AllowWhenEdge::new(|e: &WeightedEdge<u32>| e.weight() < 0.3),
                 );
 
@@ -53,7 +53,7 @@ mod policy_integration {
             #[test]
             fn rejects_nodes_when_budget_exhausted_despite_allowed_value() {
                 let policy = Composite::And(AllowValue::new(vec![true]), NodeBudget::new(1));
-                let mut graph = BaseGraph::<DataNode<bool>, UnweightedEdge<u32>>::new();
+                let mut graph = BaseGraph::<DataNode<bool, u32>, UnweightedEdge<u32>>::new();
 
                 let node1 = DataNode::new(0, true);
                 let node2 = DataNode::new(1, true);
@@ -67,7 +67,7 @@ mod policy_integration {
             #[test]
             fn accepts_unique_nodes_or_whitelisted_values() {
                 let policy = Composite::Or(DenyNodeOverride, AllowValue::new(vec![999]));
-                let mut graph = BaseGraph::<DataNode<u32>, UnweightedEdge<u32>>::new();
+                let mut graph = BaseGraph::<DataNode<u32, u32>, UnweightedEdge<u32>>::new();
 
                 let unique = DataNode::new(0, 1);
                 let whitelisted_dup = DataNode::new(0, 999);

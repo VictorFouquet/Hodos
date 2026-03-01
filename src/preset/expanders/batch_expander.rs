@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::core::{BuildEdge, EdgeSampler, Expander, Graph, Mutation};
 
 pub struct BatchExpander<ES, EB> {
@@ -21,15 +23,16 @@ where
     EB: BuildEdge<G::Key, ES::EdgeCandidate, BuiltEdge = G::Edge>,
 {
     fn get_mutations(&self, domain: &Ctx, node: G::Node) -> Vec<Mutation<G>> {
-        let mut mutations = Vec::new();
+        let mut mutations = VecDeque::new();
 
-        for sample in self.edge_sampler.with_node(&node, domain) {
+        let edge_samples = self.edge_sampler.with_node(&node, domain);
+        for sample in edge_samples {
             let edge = self.edge_builder.build(&sample);
-            mutations.push(Mutation::AddEdge(edge));
+            mutations.push_back(Mutation::AddEdge(edge));
         }
 
-        mutations.push(Mutation::AddNode(node));
+        mutations.push_front(Mutation::AddNode(node));
 
-        mutations
+        mutations.into_iter().collect()
     }
 }

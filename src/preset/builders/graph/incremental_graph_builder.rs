@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::core::{BuildGraph, BuildNode, Expander, Graph, Mutation, NodeSampler, Policy};
 
-pub struct GraphBuilder<Ctx, G, NS, NB, E, P>
+pub struct IncrementalGraphBuilder<Ctx, G, NS, NB, E, P>
 where
     G: Graph,
     NS: NodeSampler<Ctx>,
@@ -18,7 +18,7 @@ where
     _phantom: PhantomData<(Ctx, G)>,
 }
 
-impl<Ctx, G, NS, NB, E, P> GraphBuilder<Ctx, G, NS, NB, E, P>
+impl<Ctx, G, NS, NB, E, P> IncrementalGraphBuilder<Ctx, G, NS, NB, E, P>
 where
     G: Graph,
     NS: NodeSampler<Ctx>,
@@ -27,7 +27,7 @@ where
     P: Policy<Mutation<G>, G>,
 {
     pub fn new(node_sampler: NS, node_builder: NB, expander: E, policy: P) -> Self {
-        GraphBuilder {
+        IncrementalGraphBuilder {
             node_sampler,
             node_builder,
             expander,
@@ -37,7 +37,7 @@ where
     }
 }
 
-impl<Ctx, G, NS, NB, E, P> BuildGraph<Ctx, G> for GraphBuilder<Ctx, G, NS, NB, E, P>
+impl<Ctx, G, NS, NB, E, P> BuildGraph<Ctx, G> for IncrementalGraphBuilder<Ctx, G, NS, NB, E, P>
 where
     G: Graph + Default,
     NS: NodeSampler<Ctx>,
@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn builder_should_stop_when_sampler_returns_none() {
-        let mut builder = GraphBuilder::new(
+        let mut builder = IncrementalGraphBuilder::new(
             MockSampler::default(),
             MockNodeBuilder,
             mock_expander(),
@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn builder_should_respect_node_policy_rejection() {
-        let mut builder = GraphBuilder::new(
+        let mut builder = IncrementalGraphBuilder::new(
             MockSampler::default(),
             MockNodeBuilder,
             mock_expander(),
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn builder_should_respect_edge_policy_rejection() {
-        let mut builder = GraphBuilder::new(
+        let mut builder = IncrementalGraphBuilder::new(
             MockSampler::default(),
             MockNodeBuilder,
             mock_expander(),

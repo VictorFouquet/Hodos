@@ -1,24 +1,19 @@
-use crate::{core::BuildNode, preset::DataNode};
+use crate::{
+    core::{BuildNode, NodeKey},
+    preset::DataNode,
+};
 
-pub struct DataNodeBuilder<F> {
-    id_generator: F,
-}
+#[derive(Debug, Default)]
+pub struct DataNodeBuilder;
 
-impl<F> DataNodeBuilder<F> {
-    pub fn new(id_generator: F) -> Self {
-        DataNodeBuilder { id_generator }
-    }
-}
-
-impl<F, K, T> BuildNode<(K, T)> for DataNodeBuilder<F>
+impl<K, T> BuildNode<(K, T)> for DataNodeBuilder
 where
-    F: Fn(K) -> u32,
-    K: Copy + Clone,
+    K: Copy + Clone + NodeKey,
     T: Copy + Clone,
 {
-    type BuiltNode = DataNode<T>;
+    type BuiltNode = DataNode<T, K>;
 
     fn build(&self, reference: &(K, T)) -> Self::BuiltNode {
-        DataNode::new((self.id_generator)(reference.0), reference.1)
+        DataNode::new(reference.0, reference.1)
     }
 }

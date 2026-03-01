@@ -10,14 +10,17 @@ impl<N> EdgeSampler<N, AdjacencyList> for ListEdgeSampler
 where
     N: Node<Key = u32>,
 {
-    type EdgeCandidate = u32;
+    type EdgeCandidate = (u32, u32);
 
     fn with_node(&self, node: &N, context: &AdjacencyList) -> Vec<Self::EdgeCandidate> {
         if node.id() as usize >= context.len() {
             return vec![];
         }
 
-        context[node.id() as usize].to_vec()
+        context[node.id() as usize]
+            .iter()
+            .map(|c| (node.id(), *c))
+            .collect()
     }
 }
 
@@ -25,14 +28,17 @@ impl<N> EdgeSampler<N, WeightedAdjacencyList> for ListEdgeSampler
 where
     N: Node<Key = u32>,
 {
-    type EdgeCandidate = (u32, f64);
+    type EdgeCandidate = (u32, u32, f64);
 
     fn with_node(&self, node: &N, context: &WeightedAdjacencyList) -> Vec<Self::EdgeCandidate> {
         if node.id() as usize >= context.len() {
             return vec![];
         }
 
-        context[node.id() as usize].to_vec()
+        context[node.id() as usize]
+            .iter()
+            .map(|c| (node.id(), c.0, c.1))
+            .collect()
     }
 }
 
@@ -50,16 +56,18 @@ mod tests {
 
         let mut candidates = sampler.with_node(&node(0), &domain);
         assert_eq!(1, candidates.len());
-        assert_eq!(1, candidates[0]);
+        assert_eq!(0, candidates[0].0);
+        assert_eq!(1, candidates[0].1);
 
         candidates = sampler.with_node(&node(1), &domain);
         assert_eq!(2, candidates.len());
-        assert!(candidates.iter().any(|c| *c == 0));
-        assert!(candidates.iter().any(|c| *c == 2));
+        assert!(candidates.iter().any(|c| c.0 == 1 && c.1 == 0));
+        assert!(candidates.iter().any(|c| c.0 == 1 && c.1 == 2));
 
         candidates = sampler.with_node(&node(2), &domain);
         assert_eq!(1, candidates.len());
-        assert_eq!(1, candidates[0]);
+        assert_eq!(2, candidates[0].0);
+        assert_eq!(1, candidates[0].1);
     }
 
     #[test]
@@ -70,18 +78,28 @@ mod tests {
 
         let mut candidates = sampler.with_node(&node(0), &domain);
         assert_eq!(1, candidates.len());
-        assert_eq!(1, candidates[0].0);
-        assert_eq!(1.0, candidates[0].1);
+        assert_eq!(0, candidates[0].0);
+        assert_eq!(1, candidates[0].1);
+        assert_eq!(1.0, candidates[0].2);
 
         candidates = sampler.with_node(&node(1), &domain);
         assert_eq!(2, candidates.len());
-        assert!(candidates.iter().any(|c| c.0 == 0 && c.1 == 1.0));
-        assert!(candidates.iter().any(|c| c.0 == 2 && c.1 == 2.0));
+        assert!(
+            candidates
+                .iter()
+                .any(|c| c.0 == 1 && c.1 == 0 && c.2 == 1.0)
+        );
+        assert!(
+            candidates
+                .iter()
+                .any(|c| c.0 == 1 && c.1 == 2 && c.2 == 2.0)
+        );
 
         candidates = sampler.with_node(&node(2), &domain);
         assert_eq!(1, candidates.len());
-        assert_eq!(1, candidates[0].0);
-        assert_eq!(2.0, candidates[0].1);
+        assert_eq!(2, candidates[0].0);
+        assert_eq!(1, candidates[0].1);
+        assert_eq!(2.0, candidates[0].2);
     }
 
     fn node(id: u32) -> MockNode {

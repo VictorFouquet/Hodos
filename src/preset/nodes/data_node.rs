@@ -1,4 +1,4 @@
-use crate::core::Node;
+use crate::core::{Node, NodeKey};
 use crate::preset::structural_traits::HasData;
 
 /// A graph node that can contain associated data.
@@ -25,18 +25,18 @@ use crate::preset::structural_traits::HasData;
 /// assert_eq!(node.data().y, 2);
 /// ```
 #[derive(Debug, Default, Clone, Copy)]
-pub struct DataNode<T> {
-    id: u32,
+pub struct DataNode<T, K> {
+    id: K,
     data: T,
 }
 
-impl<T> DataNode<T> {
-    pub fn new(id: u32, data: T) -> Self {
+impl<T, K> DataNode<T, K> {
+    pub fn new(id: K, data: T) -> Self {
         DataNode { id, data }
     }
 }
 
-impl<T: Copy + Clone> HasData for DataNode<T> {
+impl<T: Copy + Clone, K> HasData for DataNode<T, K> {
     type Data = T;
 
     fn data(&self) -> &Self::Data {
@@ -48,8 +48,8 @@ impl<T: Copy + Clone> HasData for DataNode<T> {
     }
 }
 
-impl<T: Clone> Node for DataNode<T> {
-    type Key = u32;
+impl<T: Clone, K: NodeKey> Node for DataNode<T, K> {
+    type Key = K;
 
     fn id(&self) -> Self::Key {
         self.id

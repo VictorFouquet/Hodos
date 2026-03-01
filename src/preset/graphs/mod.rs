@@ -5,9 +5,10 @@ use crate::core::{Edge, Graph, Node, edge::EdgeId};
 use super::{DataNode, EmptyNode, UnweightedEdge, WeightedEdge};
 
 pub type SimpleGraph = BaseGraph<EmptyNode, UnweightedEdge<<EmptyNode as Node>::Key>>;
-pub type DataGraph<T> = BaseGraph<DataNode<T>, UnweightedEdge<<DataNode<T> as Node>::Key>>;
+pub type DataGraph<T, K> = BaseGraph<DataNode<T, K>, UnweightedEdge<<DataNode<T, K> as Node>::Key>>;
 pub type WeightedGraph = BaseGraph<EmptyNode, WeightedEdge<<EmptyNode as Node>::Key>>;
-pub type WeightedDataGraph<T> = BaseGraph<DataNode<T>, WeightedEdge<<DataNode<T> as Node>::Key>>;
+pub type WeightedDataGraph<T, K> =
+    BaseGraph<DataNode<T, K>, WeightedEdge<<DataNode<T, K> as Node>::Key>>;
 
 #[derive(Default, Debug)]
 pub struct BaseGraph<N: Node, E: Edge<N::Key>> {
@@ -128,11 +129,14 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::testing::{MockEdge, MockNode, mock_edge, mock_node};
+
+    type TestGraph = BaseGraph<MockNode<u32, ()>, MockEdge<u32>>;
 
     #[test]
     fn add_and_get_node() {
-        let mut graph: BaseGraph<MockNode, MockEdge> = BaseGraph::new();
-        let node = MockNode { id: 1 };
+        let mut graph: TestGraph = BaseGraph::new();
+        let node = mock_node(1);
         graph.add_node(node);
 
         let retrieved = graph.get_node(1);
@@ -145,9 +149,9 @@ mod tests {
 
     #[test]
     fn gets_all_nodes() {
-        let mut graph: BaseGraph<MockNode, MockEdge> = BaseGraph::new();
-        graph.add_node(MockNode { id: 1 });
-        graph.add_node(MockNode { id: 2 });
+        let mut graph: TestGraph = BaseGraph::new();
+        graph.add_node(mock_node(1));
+        graph.add_node(mock_node(2));
 
         let nodes = graph.get_nodes();
         let ids: Vec<u32> = nodes.iter().map(|n| n.id()).collect();
@@ -158,39 +162,41 @@ mod tests {
 
     #[test]
     fn add_edges() {
-        let mut graph: BaseGraph<MockNode, MockEdge> = BaseGraph::new();
-        let edge1 = edge(0, 1, 2);
-        let edge2 = edge(1, 1, 3);
-        let edge3 = edge(2, 2, 1);
+        let mut graph: TestGraph = BaseGraph::new();
 
         assert!(graph.get_edges().is_empty());
 
-        graph.add_edge(edge1.clone());
-        graph.add_edge(edge2.clone());
-        graph.add_edge(edge3.clone());
+        graph.add_edge(mock_edge(0, 0, 0));
+        graph.add_edge(mock_edge(1, 0, 0));
+        graph.add_edge(mock_edge(2, 0, 0));
 
         assert_eq!(3, graph.get_edges().len());
     }
 
     #[test]
     fn get_edges_from() {
-        let mut graph: BaseGraph<MockNode, MockEdge> = BaseGraph::new();
-        let edge1 = edge(0, 1, 2);
-        let edge2 = edge(1, 1, 3);
-        let edge3 = edge(2, 2, 1);
+        let mut graph: TestGraph = BaseGraph::new();
 
-        graph.add_edge(edge1.clone());
-        graph.add_edge(edge2.clone());
-        graph.add_edge(edge3.clone());
+        let node1 = 1;
+        let node2 = 2;
+        let node3 = 3;
 
-        let edges_from_1 = graph.get_edges_from(1);
+        let edge0 = 0;
+        let edge1 = 1;
+        let edge2 = 2;
+
+        graph.add_edge(mock_edge(edge0, node1, node2));
+        graph.add_edge(mock_edge(edge1, node1, node3));
+        graph.add_edge(mock_edge(edge2, node2, node1));
+
+        let edges_from_1 = graph.get_edges_from(node1);
         assert_eq!(edges_from_1.len(), 2);
-        assert!(edges_from_1.iter().any(|e| e.id == edge1.id));
-        assert!(edges_from_1.iter().any(|e| e.id == edge2.id));
+        assert!(edges_from_1.iter().any(|e| e.id() == edge0));
+        assert!(edges_from_1.iter().any(|e| e.id() == edge1));
 
-        let edges_from_2 = graph.get_edges_from(2);
+        let edges_from_2 = graph.get_edges_from(node2);
         assert_eq!(edges_from_2.len(), 1);
-        assert!(edges_from_2.iter().any(|e| e.id == edge3.id));
+        assert!(edges_from_2.iter().any(|e| e.id() == edge2));
 
         let edges_from_42 = graph.get_edges_from(42);
         assert!(edges_from_42.is_empty());
@@ -201,23 +207,28 @@ mod tests {
 
     #[test]
     fn get_edges_to() {
-        let mut graph: BaseGraph<MockNode, MockEdge> = BaseGraph::new();
-        let edge1 = edge(0, 0, 2);
-        let edge2 = edge(1, 1, 2);
-        let edge3 = edge(2, 2, 1);
+        let mut graph: TestGraph = BaseGraph::new();
 
-        graph.add_edge(edge1.clone());
-        graph.add_edge(edge2.clone());
-        graph.add_edge(edge3.clone());
+        let node0 = 0;
+        let node1 = 1;
+        let node2 = 2;
 
-        let edges_to_1 = graph.get_edges_to(1);
+        let edge0_id = 0;
+        let edge1_id = 1;
+        let edge2_id = 2;
+
+        graph.add_edge(mock_edge(edge0_id, node0, node2));
+        graph.add_edge(mock_edge(edge1_id, node1, node2));
+        graph.add_edge(mock_edge(edge2_id, node2, node1));
+
+        let edges_to_1 = graph.get_edges_to(node1);
         assert_eq!(1, edges_to_1.len());
-        assert!(edges_to_1.iter().any(|e| e.id == edge3.id));
+        assert!(edges_to_1.iter().any(|e| e.id() == edge2_id));
 
-        let edges_to_2 = graph.get_edges_to(2);
+        let edges_to_2 = graph.get_edges_to(node2);
         assert_eq!(2, edges_to_2.len());
-        assert!(edges_to_2.iter().any(|e| e.id == edge1.id));
-        assert!(edges_to_2.iter().any(|e| e.id == edge2.id));
+        assert!(edges_to_2.iter().any(|e| e.id() == edge0_id));
+        assert!(edges_to_2.iter().any(|e| e.id() == edge1_id));
 
         let edges_to_42 = graph.get_edges_to(42);
         assert!(edges_to_42.is_empty());
@@ -225,126 +236,106 @@ mod tests {
 
     #[test]
     fn get_edges_between() {
-        let mut graph: BaseGraph<MockNode, MockEdge> = BaseGraph::new();
-        let edge1 = edge(0, 0, 1);
-        let edge2 = edge(1, 1, 0);
-        let edge3 = edge(2, 1, 0);
-        let edge4 = edge(3, 0, 2);
+        let mut graph: TestGraph = BaseGraph::new();
 
-        graph.add_edge(edge1.clone());
-        graph.add_edge(edge2.clone());
-        graph.add_edge(edge3.clone());
-        graph.add_edge(edge4.clone());
+        let node0 = 0;
+        let node1 = 1;
+        let node2 = 2;
 
-        assert_eq!(
-            graph.get_edges_between(0, 1).sort_by_key(|e| e.id()),
-            graph.get_edges_between(1, 0).sort_by_key(|e| e.id())
-        );
+        let edge0_id = 0;
+        let edge1_id = 1;
+        let edge2_id = 2;
+        let edge3_id = 3;
 
-        let edges_between: Vec<&MockEdge> = graph.get_edges_between(0, 1);
+        graph.add_edge(mock_edge(edge0_id, node0, node1));
+        graph.add_edge(mock_edge(edge1_id, node1, node0));
+        graph.add_edge(mock_edge(edge2_id, node1, node0));
+        graph.add_edge(mock_edge(edge3_id, node0, node2));
 
-        assert_eq!(3, edges_between.len());
-        assert!(edges_between.iter().any(|e| e.id == edge1.id));
-        assert!(edges_between.iter().any(|e| e.id == edge2.id));
-        assert!(edges_between.iter().any(|e| e.id == edge3.id));
+        let between_0_1 = graph.get_edges_between(node0, node1);
+        let between_1_0 = graph.get_edges_between(node1, node0);
+
+        assert_eq!(3, between_0_1.len());
+        assert_eq!(3, between_1_0.len());
+
+        assert!(between_0_1.iter().any(|e| e.id() == edge0_id));
+        assert!(between_1_0.iter().any(|e| e.id() == edge0_id));
+
+        assert!(between_0_1.iter().any(|e| e.id() == edge1_id));
+        assert!(between_1_0.iter().any(|e| e.id() == edge1_id));
+
+        assert!(between_0_1.iter().any(|e| e.id() == edge2_id));
+        assert!(between_1_0.iter().any(|e| e.id() == edge2_id));
     }
 
     #[test]
     fn deletes_edge_by_id() {
-        let mut graph: BaseGraph<MockNode, MockEdge> = BaseGraph::new();
-        let edge1 = edge(0, 0, 1);
+        let mut graph: TestGraph = BaseGraph::new();
 
-        graph.add_edge(edge1.clone());
+        let id = 0;
+
+        graph.add_edge(mock_edge(id, 0, 0));
 
         assert_eq!(1, graph.get_edges().len());
 
-        graph.delete_edge(edge1.id());
+        graph.delete_edge(id);
 
         assert!(graph.get_edges().is_empty());
     }
 
     #[test]
     fn deletes_several_edges_by_id() {
-        let mut graph: BaseGraph<MockNode, MockEdge> = BaseGraph::new();
-        let edge1 = edge(0, 0, 1);
-        let edge2 = edge(1, 1, 0);
-        let edge3 = edge(2, 2, 3);
+        let mut graph: TestGraph = BaseGraph::new();
+        let node0 = 0;
+        let node1 = 1;
 
-        graph.add_edge(edge1.clone());
-        graph.add_edge(edge2.clone());
-        graph.add_edge(edge3.clone());
+        let edge0_id = 0;
+        let edge1_id = 1;
+        let edge2_id = 2;
+
+        graph.add_edge(mock_edge(edge0_id, node0, node1));
+        graph.add_edge(mock_edge(edge1_id, node1, node0));
+        graph.add_edge(mock_edge(edge2_id, 2, 3));
 
         assert_eq!(3, graph.get_edges().len());
 
-        graph.delete_edges(vec![edge1.id(), edge2.id()]);
+        graph.delete_edges(vec![edge0_id, edge1_id]);
 
         assert_eq!(1, graph.get_edges().len());
-        assert!(graph.get_edges().into_iter().any(|e| e.id == edge3.id));
+        assert!(graph.get_edges().into_iter().any(|e| e.id() == edge2_id));
 
-        assert!(graph.get_edges_from(edge1.from()).is_empty());
-        assert!(graph.get_edges_to(edge1.to()).is_empty());
-        assert!(graph.get_edges_from(edge2.from()).is_empty());
-        assert!(graph.get_edges_to(edge2.to()).is_empty());
+        assert!(graph.get_edges_from(node0).is_empty());
+        assert!(graph.get_edges_to(node1).is_empty());
+
+        assert!(graph.get_edges_from(node1).is_empty());
+        assert!(graph.get_edges_to(node0).is_empty());
     }
 
     #[test]
     fn deletes_edges_with_predicate() {
-        let mut graph: BaseGraph<MockNode, MockEdge> = BaseGraph::new();
-        let edge1 = edge(0, 0, 1);
-        let edge2 = edge(1, 1, 0);
-        let edge3 = edge(2, 2, 3);
+        let mut graph: TestGraph = BaseGraph::new();
 
-        graph.add_edge(edge1.clone());
-        graph.add_edge(edge2.clone());
-        graph.add_edge(edge3.clone());
+        let node0 = 0;
+        let node1 = 1;
+        let node2 = 2;
+        let node3 = 3;
+
+        let id = 42;
+
+        graph.add_edge(mock_edge(0, node0, node0));
+        graph.add_edge(mock_edge(1, node1, node0));
+        graph.add_edge(mock_edge(id, node2, node3));
 
         assert_eq!(3, graph.get_edges().len());
 
-        graph.delete_edges_where(|e| e.from() == edge1.from() || e.to() == edge2.to());
+        graph.delete_edges_where(|e| e.from() == node0 || e.to() == node0);
 
         assert_eq!(1, graph.get_edges().len());
-        assert!(graph.get_edges().into_iter().any(|e| e.id == edge3.id));
+        assert!(graph.get_edges().into_iter().any(|e| e.id() == id));
 
-        assert!(graph.get_edges_from(edge1.from()).is_empty());
-        assert!(graph.get_edges_to(edge1.to()).is_empty());
-        assert!(graph.get_edges_from(edge2.from()).is_empty());
-        assert!(graph.get_edges_to(edge2.to()).is_empty());
-    }
+        assert!(graph.get_edges_from(node0).is_empty());
+        assert!(graph.get_edges_from(node1).is_empty());
 
-    #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-    struct MockNode {
-        id: u32,
-    }
-
-    impl Node for MockNode {
-        type Key = u32;
-
-        fn id(&self) -> Self::Key {
-            self.id
-        }
-    }
-
-    #[derive(Debug, PartialEq, Eq, Clone)]
-    struct MockEdge {
-        id: EdgeId,
-        from: u32,
-        to: u32,
-    }
-
-    fn edge(id: EdgeId, from: u32, to: u32) -> MockEdge {
-        MockEdge { id, from, to }
-    }
-
-    impl Edge<u32> for MockEdge {
-        fn id(&self) -> EdgeId {
-            self.id
-        }
-        fn from(&self) -> u32 {
-            self.from
-        }
-
-        fn to(&self) -> u32 {
-            self.to
-        }
+        assert!(graph.get_edges_to(node0).is_empty());
     }
 }
