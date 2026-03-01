@@ -30,7 +30,7 @@ use std::hash::Hash;
 /// // Allow nodes with terrain '=' or '~'
 /// let policy = AllowBy::new(
 ///     vec!['=', '~'],
-///     |node: &DataNode<GridCell>| node.data().terrain
+///     |node: &DataNode<GridCell, (u32, u32)>| node.data().terrain
 /// );
 /// ```
 #[derive(Debug)]

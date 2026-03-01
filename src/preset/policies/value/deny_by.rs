@@ -30,7 +30,7 @@ use std::hash::Hash;
 /// // Deny nodes with terrain '#' or 'X'
 /// let policy = DenyBy::new(
 ///     vec!['#', 'X'],
-///     |node: &DataNode<GridCell>| node.data().terrain
+///     |node: &DataNode<GridCell, (u32, u32)>| node.data().terrain
 /// );
 /// ```
 #[derive(Debug)]

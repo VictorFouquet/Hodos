@@ -50,10 +50,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        core::{EdgeSampler, Node},
-        testing::mock_node,
-    };
+    use crate::{core::EdgeSampler, testing::mock_node};
 
     use super::MatrixEdgeSampler;
 

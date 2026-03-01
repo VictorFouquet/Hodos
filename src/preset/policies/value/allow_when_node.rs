@@ -12,7 +12,7 @@ use crate::core::{Graph, Mutation, Policy};
 /// use hodos::preset::policies::value::DenyWhenNode;
 /// use hodos::preset::structural_traits::HasData;
 ///
-/// let policy = DenyWhenNode::new(|node: &DataNode<bool>| {
+/// let policy = DenyWhenNode::new(|node: &DataNode<bool, u32>| {
 ///     *node.data()
 /// });
 /// ```

@@ -46,7 +46,7 @@ impl<K, D> HasData for MockNode<K, D> {
 
     fn data(&self) -> &Self::Data {
         if let Some(data) = &self.data {
-            return &data;
+            return data;
         }
         panic!("data called without setting it first");
     }
