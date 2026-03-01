@@ -74,6 +74,7 @@ mod tests {
     use crate::preset::BaseGraph;
     use crate::testing::MockEdge;
     use crate::testing::MockNode;
+    use crate::testing::MockNodeBuilder;
     use crate::testing::mock_edge;
     use crate::testing::mock_node;
 
@@ -81,7 +82,7 @@ mod tests {
     fn builder_should_stop_when_sampler_returns_none() {
         let mut builder = IncrementalGraphBuilder::new(
             MockSampler::default(),
-            MockNodeBuilder,
+            MockNodeBuilder::new(|s: &u32| mock_node(*s)),
             mock_expander(),
             AcceptAllPolicy,
         );
@@ -95,7 +96,7 @@ mod tests {
     fn builder_should_respect_node_policy_rejection() {
         let mut builder = IncrementalGraphBuilder::new(
             MockSampler::default(),
-            MockNodeBuilder,
+            MockNodeBuilder::new(|s: &u32| mock_node(*s)),
             mock_expander(),
             RejectAllNodePolicy,
         );
@@ -109,7 +110,7 @@ mod tests {
     fn builder_should_respect_edge_policy_rejection() {
         let mut builder = IncrementalGraphBuilder::new(
             MockSampler::default(),
-            MockNodeBuilder,
+            MockNodeBuilder::new(|s: &u32| mock_node(*s)),
             mock_expander(),
             RejectAllEdgePolicy,
         );
@@ -122,14 +123,6 @@ mod tests {
     type TestNode = MockNode<u32, ()>;
     type TestEdge = MockEdge<u32>;
     type TestGraph = BaseGraph<TestNode, TestEdge>;
-
-    struct MockNodeBuilder;
-    impl BuildNode<u32> for MockNodeBuilder {
-        type BuiltNode = TestNode;
-        fn build(&self, sample: &u32) -> Self::BuiltNode {
-            mock_node(*sample)
-        }
-    }
 
     #[derive(Default)]
     pub struct MockSampler {
